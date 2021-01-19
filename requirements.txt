@@ -1,0 +1,3 @@
+opencv-python
+ivy-core
+ivy-mech

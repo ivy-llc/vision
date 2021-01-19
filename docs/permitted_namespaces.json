@@ -1,0 +1,8 @@
+{
+    "ivy_vision.optical_flow.": "ivy_vision.",
+    "ivy_vision.projective_geometry.": "ivy_vision.",
+    "ivy_vision.rendering.": "ivy_vision.",
+    "ivy_vision.single_view_geometry.": "ivy_vision.",
+    "ivy_vision.two_view_geometry.": "ivy_vision.",
+    "ivy_vision.voxel_grids.": "ivy_vision."
+}
