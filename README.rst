@@ -7,11 +7,20 @@
 .. raw:: html
 
     <br/>
+    <a href="https://pypi.org/project/ivy-vision">
+        <img style="float: left; padding-right: 4px; padding-bottom: 4px;" src="https://badge.fury.io/py/ivy-vision.svg">
+    </a>
+    <a href="https://www.apache.org/licenses/LICENSE-2.0">
+        <img style="float: left; padding-right: 4px; padding-bottom: 4px;" src="https://img.shields.io/pypi/l/ivy-vision">
+    </a>
     <a href="https://github.com/ivy-dl/vision/actions?query=workflow%3Adocs">
         <img style="float: left; padding-right: 4px; padding-bottom: 4px;" src="https://img.shields.io/github/workflow/status/ivy-dl/vision/docs?label=docs">
     </a>
-    <a href="https://github.com/ivy-dl/vision/actions?query=workflow%3Atests">
-        <img style="float: left; padding-right: 4px; padding-bottom: 4px;" src="https://img.shields.io/github/workflow/status/ivy-dl/vision/tests?label=tests">
+    <a href="https://github.com/ivy-dl/vision/actions?query=workflow%3Anightly-tests">
+        <img style="float: left; padding-right: 4px; padding-bottom: 4px;" src="https://img.shields.io/github/workflow/status/ivy-dl/vision/nightly-tests?label=nightly">
+    </a>
+    <a href="https://github.com/ivy-dl/vision/actions?query=workflow%3Apypi-tests">
+        <img style="float: left; padding-right: 4px; padding-bottom: 4px;" src="https://img.shields.io/github/workflow/status/ivy-dl/vision/pypi-tests?label=pypi">
     </a>
     <a href="https://discord.gg/EN9YS3QW8w">
         <img style="float: left; padding-right: 4px; padding-bottom: 4px;" src="https://img.shields.io/discord/799879767196958751?color=blue&label=%20&logo=discord&logoColor=white">

@@ -1,0 +1,25 @@
+name: pypi-tests
+on: [push]
+jobs:
+  run-pypi-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️Ivy Vision
+        uses: actions/checkout@v2
+        with:
+          path: ivy_vision
+          persist-credentials: false
+
+      - name: Install Dependencies
+        run: |
+          pip3 install --upgrade pip
+          pip3 install wheel setuptools pytest
+          pip3 install -r ivy_vision/requirements.txt
+          pip3 install -r ivy_vision/demos/requirements.txt
+          pip3 install jax jaxlib tensorflow tensorflow-addons torch mxnet
+          pip3 install torch-scatter -f https://pytorch-geometric.com/whl/torch-1.7.0+cu102.html
+          pip3 install ivy-vision
+      - name: Run Tests
+        run: |
+          mv ivy_vision/ivy_vision_tests ivy_vision_tests
+          python3 -m pytest ivy_vision_tests/ --ignore ivy_vision_tests/test_demos.py

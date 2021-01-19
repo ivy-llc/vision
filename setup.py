@@ -17,7 +17,7 @@ from distutils.core import setup
 import setuptools
 
 setup(name='ivy-vision',
-      version='0.0.0',
+      version='1.1.1',
       description='3D Vision functions with end-to-end support for deep learning developers, written in Ivy.',
       author='Ivy Team',
       author_email='ivydl.team@gmail.com',
