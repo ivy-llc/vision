@@ -80,27 +80,31 @@ Jax, Tensorflow, PyTorch, MXNet, and Numpy.
 **A Family of Libraries**
 
 Ivy vision is one library in a family of Ivy libraries.
-There are also Ivy libraries for mechanics, robotics, and differentiable gym environments.
+There are also Ivy libraries for mechanics, robotics, differentiable memory, and differentiable gym environments.
 Click on the icons below for their respective github pages.
 
 .. raw:: html
 
     <div style="display: block;">
-        <img width="10%" style="float: left;" src="https://raw.githubusercontent.com/ivy-dl/ivy-dl.github.io/master/img/externally_linked/logos/empty.png">
+        <img width="8%" style="float: left;" src="https://raw.githubusercontent.com/ivy-dl/ivy-dl.github.io/master/img/externally_linked/logos/empty.png">
         <a href="https://github.com/ivy-dl/mech">
-            <img width="16%" style="float: left;" src="https://raw.githubusercontent.com/ivy-dl/ivy-dl.github.io/master/img/externally_linked/logos/ivy_mech.png">
+            <img width="15%" style="float: left;" src="https://raw.githubusercontent.com/ivy-dl/ivy-dl.github.io/master/img/externally_linked/logos/ivy_mech.png">
         </a>
-        <img width="3.2%" style="float: left;" src="https://raw.githubusercontent.com/ivy-dl/ivy-dl.github.io/master/img/externally_linked/logos/empty.png">
+        <img width="2%" style="float: left;" src="https://raw.githubusercontent.com/ivy-dl/ivy-dl.github.io/master/img/externally_linked/logos/empty.png">
         <a href="https://github.com/ivy-dl/vision">
-            <img width="16%" style="float: left;" src="https://raw.githubusercontent.com/ivy-dl/ivy-dl.github.io/master/img/externally_linked/logos/ivy_vision.png">
+            <img width="15%" style="float: left;" src="https://raw.githubusercontent.com/ivy-dl/ivy-dl.github.io/master/img/externally_linked/logos/ivy_vision.png">
         </a>
-        <img width="3.2%" style="float: left;" src="https://raw.githubusercontent.com/ivy-dl/ivy-dl.github.io/master/img/externally_linked/logos/empty.png">
+        <img width="2%" style="float: left;" src="https://raw.githubusercontent.com/ivy-dl/ivy-dl.github.io/master/img/externally_linked/logos/empty.png">
         <a href="https://github.com/ivy-dl/robot">
-            <img width="16%" style="float: left;" src="https://raw.githubusercontent.com/ivy-dl/ivy-dl.github.io/master/img/externally_linked/logos/ivy_robot.png">
+            <img width="15%" style="float: left;" src="https://raw.githubusercontent.com/ivy-dl/ivy-dl.github.io/master/img/externally_linked/logos/ivy_robot.png">
         </a>
-        <img width="3.2%" style="float: left;" src="https://raw.githubusercontent.com/ivy-dl/ivy-dl.github.io/master/img/externally_linked/logos/empty.png">
+        <img width="2%" style="float: left;" src="https://raw.githubusercontent.com/ivy-dl/ivy-dl.github.io/master/img/externally_linked/logos/empty.png">
+        <a href="https://github.com/ivy-dl/memory">
+            <img width="15%" style="float: left;" src="https://raw.githubusercontent.com/ivy-dl/ivy-dl.github.io/master/img/externally_linked/logos/ivy_memory.png">
+        </a>
+        <img width="2%" style="float: left;" src="https://raw.githubusercontent.com/ivy-dl/ivy-dl.github.io/master/img/externally_linked/logos/empty.png">
         <a href="https://github.com/ivy-dl/gym">
-            <img width="16%" style="float: left;" src="https://raw.githubusercontent.com/ivy-dl/ivy-dl.github.io/master/img/externally_linked/logos/ivy_gym.png">
+            <img width="15%" style="float: left;" src="https://raw.githubusercontent.com/ivy-dl/ivy-dl.github.io/master/img/externally_linked/logos/ivy_gym.png">
         </a>
     </div>
     <br clear="all" />
@@ -402,3 +406,15 @@ and your needs are not met by the functions currently on offer,
 then we are very happy to accept pull requests!
 
 We look forward to working with the community on expanding and improving the Ivy vision library.
+
+Citation
+--------
+
+::
+
+    @article{lenton2021ivy,
+      title={Ivy: Templated Deep Learning for Inter-Framework Portability},
+      author={Lenton, Daniel and Pardo, Fabio and Falck, Fabian and James, Stephen and Clark, Ronald},
+      journal={arXiv preprint arXiv:2102.02886},
+      year={2021}
+    }
