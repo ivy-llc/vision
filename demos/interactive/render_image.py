@@ -8,6 +8,7 @@ import ivy.mxnd
 import ivy_mech
 import ivy_vision
 import numpy as np
+from ivy.framework_handler import set_framework, unset_framework
 from ivy_demo_utils.ivy_scene.scene_utils import SimCam, BaseSimulator
 from ivy_demo_utils.framework_utils import choose_random_framework, get_framework_from_str
 
@@ -35,8 +36,8 @@ class DummyCam:
 
 class Simulator(BaseSimulator):
 
-    def __init__(self, interactive, try_use_sim, f):
-        super().__init__(interactive, try_use_sim, f)
+    def __init__(self, interactive, try_use_sim):
+        super().__init__(interactive, try_use_sim)
 
         # initialize scene
         if self.with_pyrep:
@@ -76,8 +77,8 @@ class Simulator(BaseSimulator):
             self._default_camera.set_orientation(np.array([i*np.pi/180 for i in [-134.8, -33.52, 151.26]]))
 
             # public objects
-            self.cams = [SimCam(cam, f) for cam in self._vision_sensors[0:3]]
-            self.target_cam = SimCam(self._vision_sensor_3, f)
+            self.cams = [SimCam(cam) for cam in self._vision_sensors[0:3]]
+            self.target_cam = SimCam(self._vision_sensor_3)
 
             # wait for user input
             self._user_prompt(
@@ -152,13 +153,14 @@ class Simulator(BaseSimulator):
 
 def main(interactive=True, try_use_sim=True, f=None):
     f = choose_random_framework() if f is None else f
+    set_framework(f)
     with_mxnd = f is ivy.mxnd
     if with_mxnd:
         print('\nMXnet does not support "sum" or "min" reductions for scatter_nd,\n'
               'instead it only supports non-deterministic replacement for duplicates.\n'
               'Depth buffer rendering (requies min) or fusion buffer (requies sum) are therefore unsupported.\n'
               'The rendering in this demo with MXNet backend exhibits non-deterministic jagged edges as a result.')
-    sim = Simulator(interactive, try_use_sim, f)
+    sim = Simulator(interactive, try_use_sim)
     import matplotlib.pyplot as plt
     xyzs = list()
     rgbs = list()
@@ -226,6 +228,7 @@ def main(interactive=True, try_use_sim=True, f=None):
         xyzs.clear()
         rgbs.clear()
     sim.close()
+    unset_framework()
 
 
 if __name__ == '__main__':

@@ -35,8 +35,8 @@ class DummyCam:
 
 class Simulator(BaseSimulator):
 
-    def __init__(self, interactive, try_use_sim, f):
-        super().__init__(interactive, try_use_sim, f)
+    def __init__(self, interactive, try_use_sim):
+        super().__init__(interactive, try_use_sim)
 
         # initialize scene
         if self.with_pyrep:
@@ -49,7 +49,7 @@ class Simulator(BaseSimulator):
             self.default_camera_ext_mat_homo = ivy.inv(ivy_mech.make_transformation_homogeneous(inv_ext_mat))
 
             # public objects
-            self.cams = [SimCam(cam, f) for cam in self._vision_sensors]
+            self.cams = [SimCam(cam) for cam in self._vision_sensors]
 
             # wait for user input
             self._user_prompt('\nInitialized scene with 6 projective cameras in the centre.\n\n'
@@ -100,7 +100,7 @@ class Simulator(BaseSimulator):
 def main(interactive=True, try_use_sim=True, f=None):
     f = choose_random_framework() if f is None else f
     set_framework(f)
-    sim = Simulator(interactive, try_use_sim, f)
+    sim = Simulator(interactive, try_use_sim)
     vis = Visualizer(ivy.to_numpy(sim.default_camera_ext_mat_homo))
     xyzs = list()
     rgbs = list()
