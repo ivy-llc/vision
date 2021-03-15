@@ -3,8 +3,8 @@ Collection of Optical Flow Functions
 """
 
 # global
+import ivy as _ivy
 import ivy_mech as _ivy_mech
-from ivy.framework_handler import get_framework as _get_framework
 
 # local
 from ivy_vision import two_view_geometry as _ivy_tvg
@@ -15,7 +15,7 @@ MIN_DENOMINATOR = 1e-12
 
 
 def depth_from_flow_and_cam_mats(flow, full_mats, inv_full_mats=None, camera_centers=None, uniform_pixel_coords=None,
-                                 triangulation_method='cmp', batch_shape=None, image_dims=None, dev=None, f=None):
+                                 triangulation_method='cmp', batch_shape=None, image_dims=None, dev_str=None):
     """
     Compute depth map :math:`\mathbf{X}\in\mathbb{R}^{h×w×1}` in frame 1 using optical flow
     :math:`\mathbf{U}_{1→2}\in\mathbb{R}^{h×w×2}` from frame 1 to 2, and the camera geometry.\n
@@ -36,14 +36,10 @@ def depth_from_flow_and_cam_mats(flow, full_mats, inv_full_mats=None, camera_cen
     :type batch_shape: sequence of ints, optional
     :param image_dims: Image dimensions. Inferred from inputs in None.
     :type image_dims: sequence of ints, optional
-    :param dev: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev: str, optional
-    :param f: Machine learning library. Inferred from inputs if None.
-    :type f: ml_framework, optional
+    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
+    :type dev_str: str, optional
     :return: Depth map in frame 1 *[batch_shape,h,w,1]*
     """
-
-    f = _get_framework(flow, f=f)
 
     if batch_shape is None:
         batch_shape = flow.shape[:-3]
@@ -55,35 +51,35 @@ def depth_from_flow_and_cam_mats(flow, full_mats, inv_full_mats=None, camera_cen
     batch_shape = list(batch_shape)
     image_dims = list(image_dims)
 
-    if dev is None:
-        dev = f.get_device(flow)
+    if dev_str is None:
+        dev_str = _ivy.dev_str(flow)
 
     if inv_full_mats is None:
-        inv_full_mats = f.inv(_ivy_mech.make_transformation_homogeneous(
-            full_mats, batch_shape + [2], dev, f=f))[..., 0:3, :]
+        inv_full_mats = _ivy.inv(_ivy_mech.make_transformation_homogeneous(
+            full_mats, batch_shape + [2], dev_str))[..., 0:3, :]
 
     if camera_centers is None:
-        camera_centers = _ivy_svg.inv_ext_mat_to_camera_center(inv_full_mats, f=f)
+        camera_centers = _ivy_svg.inv_ext_mat_to_camera_center(inv_full_mats)
 
     if uniform_pixel_coords is None:
-        uniform_pixel_coords = _ivy_svg.create_uniform_pixel_coords_image(image_dims, batch_shape, dev=dev, f=f)
+        uniform_pixel_coords = _ivy_svg.create_uniform_pixel_coords_image(image_dims, batch_shape, dev_str=dev_str)
 
     # BS x H x W x 3
-    flow_homo = f.concatenate((flow, f.zeros(batch_shape + image_dims + [1], dev=dev)), -1)
+    flow_homo = _ivy.concatenate((flow, _ivy.zeros(batch_shape + image_dims + [1], dev_str=dev_str)), -1)
 
     # BS x H x W x 3
     transformed_pixel_coords = uniform_pixel_coords + flow_homo
 
     # BS x 2 x H x W x 3
-    pixel_coords = f.concatenate((f.expand_dims(uniform_pixel_coords, -4),
-                                     f.expand_dims(transformed_pixel_coords, -4)), -4)
+    pixel_coords = _ivy.concatenate((_ivy.expand_dims(uniform_pixel_coords, -4),
+                                     _ivy.expand_dims(transformed_pixel_coords, -4)), -4)
 
     # BS x H x W x 1
     return _ivy_tvg.triangulate_depth(pixel_coords, full_mats, inv_full_mats, camera_centers, triangulation_method,
-                                      batch_shape, image_dims, f=f)[..., -1:]
+                                      batch_shape, image_dims)[..., -1:]
 
 
-def flow_from_depth_and_cam_mats(pixel_coords1, cam1to2_full_mat, batch_shape=None, image_dims=None, f=None):
+def flow_from_depth_and_cam_mats(pixel_coords1, cam1to2_full_mat, batch_shape=None, image_dims=None):
     """
     Compute optical flow :math:`\mathbf{U}_{1→2}\in\mathbb{R}^{h×w×2}` from frame 1 to 2, using depth map
     :math:`\mathbf{X}\in\mathbb{R}^{h×w×1}` in frame 1, and the camera geometry.\n
@@ -96,12 +92,8 @@ def flow_from_depth_and_cam_mats(pixel_coords1, cam1to2_full_mat, batch_shape=No
     :type batch_shape: sequence of ints, optional
     :param image_dims: Image dimensions. Inferred from inputs in None.
     :type image_dims: sequence of ints, optional
-    :param f: Machine learning library. Inferred from inputs if None.
-    :type f: ml_framework, optional
     :return: Optical flow from frame 1 to 2 *[batch_shape,h,w,2]*
     """
-
-    f = _get_framework(pixel_coords1, f=f)
 
     if batch_shape is None:
         batch_shape = pixel_coords1.shape[:-3]
@@ -115,7 +107,7 @@ def flow_from_depth_and_cam_mats(pixel_coords1, cam1to2_full_mat, batch_shape=No
 
     # BS x H x W x 3
     projected_pixel_coords = _ivy_tvg.pixel_to_pixel_coords(pixel_coords1, cam1to2_full_mat, batch_shape,
-                                                            image_dims, f=f)
+                                                            image_dims)
     projected_pixel_coords_normalized = projected_pixel_coords / (projected_pixel_coords[..., -1:] + MIN_DENOMINATOR)
 
     # BS x H x W x 3
@@ -126,7 +118,7 @@ def flow_from_depth_and_cam_mats(pixel_coords1, cam1to2_full_mat, batch_shape=No
 
 
 def project_flow_to_epipolar_line(flow, fund_mat, uniform_pixel_coords=None, batch_shape=None, image_dims=None,
-                                  dev=None, f=None):
+                                  dev_str=None):
     """
     Project optical flow :math:`\mathbf{U}_{1→2}\in\mathbb{R}^{h×w×2}` to epipolar line in frame 1.\n
     `[reference] <https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_an_equation>`_
@@ -141,14 +133,10 @@ def project_flow_to_epipolar_line(flow, fund_mat, uniform_pixel_coords=None, bat
     :type batch_shape: sequence of ints, optional
     :param image_dims: Image dimensions. Inferred from inputs in None.
     :type image_dims: sequence of ints, optional
-    :param dev: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev: str, optional
-    :param f: Machine learning library. Inferred from inputs if None.
-    :type f: ml_framework, optional
+    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
+    :type dev_str: str, optional
     :return: Optical flow from frame 1 to 2, projected to frame 1 epipolar line *[batch_shape,h,w,2]*
     """
-
-    f = _get_framework(flow, f=f)
 
     if batch_shape is None:
         batch_shape = flow.shape[:-3]
@@ -161,10 +149,10 @@ def project_flow_to_epipolar_line(flow, fund_mat, uniform_pixel_coords=None, bat
     image_dims = list(image_dims)
 
     if uniform_pixel_coords is None:
-        uniform_pixel_coords = _ivy_svg.create_uniform_pixel_coords_image(image_dims, batch_shape, dev, f=f)
+        uniform_pixel_coords = _ivy_svg.create_uniform_pixel_coords_image(image_dims, batch_shape, dev_str)
 
     # BS x H x W x 3
-    epipolar_lines = _ivy_pg.transform(uniform_pixel_coords, fund_mat, batch_shape, image_dims, f=f)
+    epipolar_lines = _ivy_pg.transform(uniform_pixel_coords, fund_mat, batch_shape, image_dims)
 
     # BS x H x W x 2
     flow_pixels = uniform_pixel_coords[..., 0:2] + flow
@@ -189,12 +177,13 @@ def project_flow_to_epipolar_line(flow, fund_mat, uniform_pixel_coords=None, bat
     y = (a * (-bx0 + ay0) - bc) / (a_sqrd_plus_b_sqrd + MIN_DENOMINATOR)
 
     # BS x H x W x 2
-    projected_pixels = f.concatenate((x, y), -1)
+    projected_pixels = _ivy.concatenate((x, y), -1)
     projected_flow = projected_pixels - uniform_pixel_coords[..., 0:2]
     return projected_flow
 
 
-def pixel_cost_volume(image1, image2, search_range, batch_shape=None, f=None):
+# noinspection PyUnresolvedReferences
+def pixel_cost_volume(image1, image2, search_range, batch_shape=None):
     """
     Compute cost volume from image feature patch comparisons between first image
     :math:`\mathbf{X}_1\in\mathbb{R}^{h×w×d}` and second image :math:`\mathbf{X}_2\in\mathbb{R}^{h×w×d}`, as used in
@@ -209,12 +198,8 @@ def pixel_cost_volume(image1, image2, search_range, batch_shape=None, f=None):
     :type search_range: int
     :param batch_shape: Shape of batch. Inferred from inputs if None.
     :type batch_shape: sequence of ints, optional
-    :param f: Machine learning library. Inferred from inputs if None.
-    :type f: ml_framework, optional
     :return: Cost volume between the images *[batch_shape,h,w,(search_range*2+1)^2]*
     """
-
-    f = _get_framework(image1, f=f)
 
     if batch_shape is None:
         batch_shape = image1.shape[:-3]
@@ -232,7 +217,7 @@ def pixel_cost_volume(image1, image2, search_range, batch_shape=None, f=None):
     pad_dims = [[0, 0]] * len(batch_shape) + [[search_range, search_range]] * 2 + [[0, 0]]
 
     # BS x (H+2*SR) x (W+2*SR) x D
-    padded_lvl = f.zero_pad(image2, pad_dims)
+    padded_lvl = _ivy.zero_pad(image2, pad_dims)
 
     # create list
     cost_vol = []
@@ -244,18 +229,19 @@ def pixel_cost_volume(image1, image2, search_range, batch_shape=None, f=None):
             tensor_slice = padded_lvl[..., y:y + h, x:x + w, :]
 
             # BS x H x W x 1
-            cost = f.reduce_mean(image1 * tensor_slice, axis=-1, keepdims=True)
+            cost = _ivy.reduce_mean(image1 * tensor_slice, axis=-1, keepdims=True)
 
             # append to list
             cost_vol.append(cost)
 
     # BS x H x W x (max_offset^2)
-    return f.concatenate(cost_vol, -1)
+    return _ivy.concatenate(cost_vol, -1)
 
 
+# noinspection PyUnresolvedReferences
 def velocity_from_flow_cam_coords_and_cam_mats(flow_t_to_tm1, cam_coords_t, cam_coords_tm1,
                                                cam_tm1_to_t_ext_mat, delta_t, uniform_pixel_coords=None,
-                                               batch_shape=None, image_dims=None, dev=None, f=None):
+                                               batch_shape=None, image_dims=None, dev_str=None):
     """
     Compute relative cartesian velocity from optical flow, camera co-ordinates, and camera extrinsics.
 
@@ -275,14 +261,10 @@ def velocity_from_flow_cam_coords_and_cam_mats(flow_t_to_tm1, cam_coords_t, cam_
     :type batch_shape: sequence of ints, optional
     :param image_dims: Image dimensions. Inferred from inputs in None.
     :type image_dims: sequence of ints, optional
-    :param dev: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev: str, optional
-    :param f: Machine learning library. Inferred from inputs if None.
-    :type f: ml_framework, optional
+    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
+    :type dev_str: str, optional
     :return: Cartesian velocity measurements relative to the camera *[batch_shape,h,w,3]*
     """
-
-    f = _get_framework(flow_t_to_tm1, f=f)
 
     if batch_shape is None:
         batch_shape = flow_t_to_tm1.shape[:-3]
@@ -294,11 +276,11 @@ def velocity_from_flow_cam_coords_and_cam_mats(flow_t_to_tm1, cam_coords_t, cam_
     batch_shape = list(batch_shape)
     image_dims = list(image_dims)
 
-    if dev is None:
-        dev = f.get_device(flow_t_to_tm1)
+    if dev_str is None:
+        dev_str = _ivy.dev_str(flow_t_to_tm1)
 
     if uniform_pixel_coords is None:
-        uniform_pixel_coords = _ivy_svg.create_uniform_pixel_coords_image(image_dims, batch_shape, dev, f=f)
+        uniform_pixel_coords = _ivy_svg.create_uniform_pixel_coords_image(image_dims, batch_shape, dev_str)
 
     # Interpolate cam coords from frame t-1
 
@@ -306,13 +288,13 @@ def velocity_from_flow_cam_coords_and_cam_mats(flow_t_to_tm1, cam_coords_t, cam_
     warp = uniform_pixel_coords[..., 0:2] + flow_t_to_tm1
 
     # BS x H x W x 4
-    cam_coords_tm1_interp = f.image.bilinear_resample(cam_coords_tm1, warp, batch_shape, image_dims)
+    cam_coords_tm1_interp = _ivy.image.bilinear_resample(cam_coords_tm1, warp)
 
     # Project to frame t
 
     # BS x H x W x 4
     cam_coords_t_proj = _ivy_tvg.cam_to_cam_coords(cam_coords_tm1_interp, cam_tm1_to_t_ext_mat,
-                                                   batch_shape, image_dims, f=f)
+                                                   batch_shape, image_dims)
 
     # delta co-ordinates
 
@@ -322,23 +304,23 @@ def velocity_from_flow_cam_coords_and_cam_mats(flow_t_to_tm1, cam_coords_t, cam_
     # velocity
 
     # BS x H x W x 3
-    vel = delta_cam_coords_t / f.reshape(delta_t, batch_shape + [1] * 3)
+    vel = delta_cam_coords_t / _ivy.reshape(delta_t, batch_shape + [1] * 3)
 
     # Validity mask
 
     # BS x H x W x 1
     validity_mask = \
-        f.reduce_sum(f.cast(warp < f.array([image_dims[1], image_dims[0]], 'float32', dev=dev),
+        _ivy.reduce_sum(_ivy.cast(warp < _ivy.array([image_dims[1], image_dims[0]], 'float32', dev_str=dev_str),
                                   'int32'), -1, keepdims=True) == 2
 
     # pruned
 
     # BS x H x W x 3,    BS x H x W x 1
-    return f.where(validity_mask, vel, f.zeros_like(vel, dev=dev)), validity_mask
+    return _ivy.where(validity_mask, vel, _ivy.zeros_like(vel, dev_str=dev_str)), validity_mask
 
 
 def project_cam_coords_with_object_transformations(cam_coords_1, id_image, obj_ids, obj_trans,
-                                                   cam_1_to_2_ext_mat, batch_shape=None, image_dims=None, f=None):
+                                                   cam_1_to_2_ext_mat, batch_shape=None, image_dims=None):
     """
     Compute velocity image from co-ordinate image, id image, and object transformations.
 
@@ -356,12 +338,8 @@ def project_cam_coords_with_object_transformations(cam_coords_1, id_image, obj_i
     :type batch_shape: sequence of ints, optional
     :param image_dims: Image dimensions. Inferred from inputs in None.
     :type image_dims: sequence of ints, optional
-    :param f: Machine learning library. Inferred from inputs if None.
-    :type f: ml_framework, optional
     :return: Relative velocity image *[batch_shape,h,w,3]*
     """
-
-    f = _get_framework(cam_coords_1, f=f)
 
     if batch_shape is None:
         batch_shape = cam_coords_1.shape[:-3]
@@ -377,36 +355,36 @@ def project_cam_coords_with_object_transformations(cam_coords_1, id_image, obj_i
     # Transform the co-ordinate image by each transformation
 
     # BS x (num_obj x 3) x 4
-    obj_trans = f.reshape(obj_trans, batch_shape + [-1, 4])
+    obj_trans = _ivy.reshape(obj_trans, batch_shape + [-1, 4])
 
     # BS x 4 x H x W
-    cam_coords_1_ = f.transpose(cam_coords_1, list(range(num_batch_dims)) + [i + num_batch_dims for i in [2, 0, 1]])
+    cam_coords_1_ = _ivy.transpose(cam_coords_1, list(range(num_batch_dims)) + [i + num_batch_dims for i in [2, 0, 1]])
 
     # BS x 4 x (HxW)
-    cam_coords_1_ = f.reshape(cam_coords_1_, batch_shape + [4, -1])
+    cam_coords_1_ = _ivy.reshape(cam_coords_1_, batch_shape + [4, -1])
 
     # BS x (num_obj x 3) x (HxW)
-    cam_coords_2_all_obj_trans = f.matmul(obj_trans, cam_coords_1_)
+    cam_coords_2_all_obj_trans = _ivy.matmul(obj_trans, cam_coords_1_)
 
     # BS x (HxW) x (num_obj x 3)
     cam_coords_2_all_obj_trans = \
-        f.transpose(cam_coords_2_all_obj_trans, list(range(num_batch_dims)) + [i + num_batch_dims for i in [1, 0]])
+        _ivy.transpose(cam_coords_2_all_obj_trans, list(range(num_batch_dims)) + [i + num_batch_dims for i in [1, 0]])
 
     # BS x H x W x num_obj x 3
-    cam_coords_2_all_obj_trans = f.reshape(cam_coords_2_all_obj_trans, batch_shape + image_dims + [-1, 3])
+    cam_coords_2_all_obj_trans = _ivy.reshape(cam_coords_2_all_obj_trans, batch_shape + image_dims + [-1, 3])
 
     # Multiplier
 
     # BS x 1 x 1 x num_obj
-    obj_ids = f.reshape(obj_ids, batch_shape + [1, 1] + [-1])
+    obj_ids = _ivy.reshape(obj_ids, batch_shape + [1, 1] + [-1])
 
     # BS x H x W x num_obj x 1
-    multiplier = f.cast(f.expand_dims(obj_ids == id_image, -1), 'float32')
+    multiplier = _ivy.cast(_ivy.expand_dims(obj_ids == id_image, -1), 'float32')
 
     # compute validity mask, for pixels which are on moving objects
 
     # BS x H x W x 1
-    motion_mask = f.reduce_sum(multiplier, -2) > 0
+    motion_mask = _ivy.reduce_sum(multiplier, -2) > 0
 
     # make invalid transformations equal to zero
 
@@ -416,17 +394,17 @@ def project_cam_coords_with_object_transformations(cam_coords_1, id_image, obj_i
     # reduce to get only valid transformations
 
     # BS x H x W x 3
-    cam_coords_2_all_obj_trans = f.reduce_sum(cam_coords_2_all_obj_trans_w_zeros, -2)
+    cam_coords_2_all_obj_trans = _ivy.reduce_sum(cam_coords_2_all_obj_trans_w_zeros, -2)
 
     # find cam coords to for zero motion pixels
 
     # BS x H x W x 3
-    cam_coords_2_wo_motion = _ivy_tvg.cam_to_cam_coords(cam_coords_1, cam_1_to_2_ext_mat, batch_shape, image_dims, f=f)
+    cam_coords_2_wo_motion = _ivy_tvg.cam_to_cam_coords(cam_coords_1, cam_1_to_2_ext_mat, batch_shape, image_dims)
 
     # BS x H x W x 4
     cam_coords_2_all_trans_homo =\
-        _ivy_mech.make_coordinates_homogeneous(cam_coords_2_all_obj_trans, batch_shape + image_dims, f=f)
-    cam_coords_2 = f.where(motion_mask, cam_coords_2_all_trans_homo, cam_coords_2_wo_motion)
+        _ivy_mech.make_coordinates_homogeneous(cam_coords_2_all_obj_trans, batch_shape + image_dims)
+    cam_coords_2 = _ivy.where(motion_mask, cam_coords_2_all_trans_homo, cam_coords_2_wo_motion)
 
     # return
 
@@ -435,7 +413,7 @@ def project_cam_coords_with_object_transformations(cam_coords_1, id_image, obj_i
 
 
 def velocity_from_cam_coords_id_image_and_object_trans(cam_coords_t, id_image, obj_ids, obj_trans, delta_t,
-                                                       batch_shape=None, image_dims=None, dev=None, f=None):
+                                                       batch_shape=None, image_dims=None, dev_str=None):
     """
     Compute velocity image from co-ordinate image, id image, and object transformations.
 
@@ -453,14 +431,10 @@ def velocity_from_cam_coords_id_image_and_object_trans(cam_coords_t, id_image, o
     :type batch_shape: sequence of ints, optional
     :param image_dims: Image dimensions. Inferred from inputs in None.
     :type image_dims: sequence of ints, optional
-    :param dev: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev: str, optional
-    :param f: Machine learning library. Inferred from inputs if None.
-    :type f: ml_framework, optional
+    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
+    :type dev_str: str, optional
     :return: Relative velocity image *[batch_shape,h,w,3]*
     """
-
-    f = _get_framework(cam_coords_t, f=f)
 
     if batch_shape is None:
         batch_shape = cam_coords_t.shape[:-3]
@@ -468,8 +442,8 @@ def velocity_from_cam_coords_id_image_and_object_trans(cam_coords_t, id_image, o
     if image_dims is None:
         image_dims = cam_coords_t.shape[-3:-1]
 
-    if dev is None:
-        dev = f.get_device(cam_coords_t)
+    if dev_str is None:
+        dev_str = _ivy.dev_str(cam_coords_t)
 
     # shapes as list
     batch_shape = list(batch_shape)
@@ -480,12 +454,12 @@ def velocity_from_cam_coords_id_image_and_object_trans(cam_coords_t, id_image, o
     # BS x H x W x 4
     cam_coords_t_all_trans, motion_mask =\
         project_cam_coords_with_object_transformations(cam_coords_t, id_image, obj_ids, obj_trans,
-                                                       f.identity(4, batch_shape=batch_shape)[..., 0:3, :],
+                                                       _ivy.identity(4, batch_shape=batch_shape)[..., 0:3, :],
                                                        batch_shape, image_dims)
 
     # BS x H x W x 4
     cam_coords_t_all_trans = \
-        f.where(motion_mask, cam_coords_t_all_trans, f.zeros_like(cam_coords_t_all_trans, dev=dev))
+        _ivy.where(motion_mask, cam_coords_t_all_trans, _ivy.zeros_like(cam_coords_t_all_trans, dev_str=dev_str))
 
     # compute velocities
 
@@ -495,12 +469,12 @@ def velocity_from_cam_coords_id_image_and_object_trans(cam_coords_t, id_image, o
     # prune velocities
 
     # BS x H x W x 3
-    return f.where(motion_mask, vel, f.zeros_like(vel, dev=dev))
+    return _ivy.where(motion_mask, vel, _ivy.zeros_like(vel, dev_str=dev_str))
 
 
 def flow_from_cam_coords_id_image_and_object_trans(cam_coords_f1, id_image, obj_ids, obj_trans,
                                                    calib_mat, cam_1_to_2_ext_mat, batch_shape=None,
-                                                   image_dims=None, f=None):
+                                                   image_dims=None):
     """
     Compute optical flow from co-ordinate image, id image, and object transformations.
 
@@ -520,12 +494,8 @@ def flow_from_cam_coords_id_image_and_object_trans(cam_coords_f1, id_image, obj_
     :type batch_shape: sequence of ints, optional
     :param image_dims: Image dimensions. Inferred from inputs in None.
     :type image_dims: sequence of ints, optional
-    :param f: Machine learning library. Inferred from inputs if None.
-    :type f: ml_framework, optional
     :return: Relative velocity image *[batch_shape,h,w,3]*
     """
-
-    f = _get_framework(cam_coords_f1, f=f)
 
     if batch_shape is None:
         batch_shape = cam_coords_f1.shape[:-3]
@@ -547,8 +517,8 @@ def flow_from_cam_coords_id_image_and_object_trans(cam_coords_f1, id_image, obj_
     # co-ordinates to pixel co-ordinates
 
     # BS x H x W x 3
-    pixel_coords_f1 = _ivy_svg.cam_to_pixel_coords(cam_coords_f1, calib_mat, batch_shape, image_dims, f=f)
-    pixel_coords_trans_f2 = _ivy_svg.cam_to_pixel_coords(cam_coords_trans_f2, calib_mat, batch_shape, image_dims, f=f)
+    pixel_coords_f1 = _ivy_svg.cam_to_pixel_coords(cam_coords_f1, calib_mat, batch_shape, image_dims)
+    pixel_coords_trans_f2 = _ivy_svg.cam_to_pixel_coords(cam_coords_trans_f2, calib_mat, batch_shape, image_dims)
 
     # unscaled pixel coords
     unscaled_pixel_coords_f1 = pixel_coords_f1[..., 0:2] / (pixel_coords_f1[..., -1:] + MIN_DENOMINATOR)

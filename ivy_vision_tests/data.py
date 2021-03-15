@@ -1,10 +1,10 @@
 # global
 import os
-import xml.etree.ElementTree as ETree
 import cv2
-import numpy as np
-import ivy.numpy as ivy_np
 import ivy_mech
+import ivy.numpy
+import numpy as np
+import xml.etree.ElementTree as ETree
 
 MIN_DENOMINATOR = 1e-12
 
@@ -135,10 +135,11 @@ class TestData:
             (self.batch_size, self.num_cameras, self.image_dims[0], self.image_dims[1], 1))), -1)
 
         # sphere coords
-        self.sphere_coords = \
-            np.reshape(ivy_mech.cartesian_to_polar_coords(
-                np.reshape(self.cam_coords_not_homo, (-1, 3)), f=ivy_np),
-                (self.batch_size, self.num_cameras, self.image_dims[0], self.image_dims[1], 3))
+        with ivy.numpy.use:
+            self.sphere_coords = \
+                np.reshape(ivy_mech.cartesian_to_polar_coords(
+                    np.reshape(self.cam_coords_not_homo, (-1, 3))),
+                    (self.batch_size, self.num_cameras, self.image_dims[0], self.image_dims[1], 3))
 
         # angular_pixel_coords
         self.sphere_img_dims = [90, 180]
@@ -182,10 +183,11 @@ class TestData:
             (self.batch_size, self.num_cameras, self.image_dims[0], self.image_dims[1], 1))), -1)
 
         # projected sphere coords
-        self.proj_sphere_coords = \
-            np.reshape(ivy_mech.cartesian_to_polar_coords(
-                np.reshape(self.proj_cam_coords[..., 0:3], (-1, 3)), f=ivy_np),
-                (self.batch_size, self.num_cameras, self.image_dims[0], self.image_dims[1], 3))
+        with ivy.numpy.use:
+            self.proj_sphere_coords = \
+                np.reshape(ivy_mech.cartesian_to_polar_coords(
+                    np.reshape(self.proj_cam_coords[..., 0:3], (-1, 3))),
+                    (self.batch_size, self.num_cameras, self.image_dims[0], self.image_dims[1], 3))
 
         # projected pixel coords
         self.proj_cam_coords_not_homo = self.proj_cam_coords[:, :, :, :, 0:3]

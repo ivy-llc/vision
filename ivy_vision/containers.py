@@ -1,10 +1,10 @@
 # global
+import ivy as _ivy
 try:
     import tensorflow as _tf
 except (ModuleNotFoundError, ImportError):
     _tf = None
 from ivy.core.container import Container as _Container
-from ivy.framework_handler import get_framework as _get_framework
 
 # local
 import ivy_vision.sdf as ivy_sdf
@@ -17,8 +17,7 @@ class PrimitiveScene(_Container):
                  sphere_positions=None,
                  sphere_radii=None,
                  cuboid_ext_mats=None,
-                 cuboid_dims=None,
-                 f=None):
+                 cuboid_dims=None):
         """
         Initialize scene description as a composition of primitive shapes.
         # ToDo: extend this to include cylinders and cones once supported in ivy_vision.sdf module
@@ -31,10 +30,7 @@ class PrimitiveScene(_Container):
         :type cuboid_ext_mats: array, optional
         :param cuboid_dims: Cuboid dimensions, in order of x, y, z *[batch_shape,num_cuboids,3]*
         :type cuboid_dims: array, optional
-        :param f: Machine learning library. Inferred from inputs if None.
-        :type f: ml_framework, optional
         """
-        self._f = _get_framework([sphere_positions, sphere_radii, cuboid_ext_mats, cuboid_dims], f=f)
         self['sphere_positions'] = sphere_positions
         self['sphere_radii'] = sphere_radii
         self['cuboid_ext_mats'] = cuboid_ext_mats
@@ -81,21 +77,19 @@ class PrimitiveScene(_Container):
         return __class__(sphere_positions, sphere_radii, cuboid_ext_mats, cuboid_dims)
 
     @staticmethod
-    def as_identity(batch_shape, f):
+    def as_identity(batch_shape):
         """
         Return primitive scene object with array attributes as either zeros or identity matrices.
 
         :param batch_shape: Batch shape for each geometric array attribute
         :type batch_shape: sequence of ints
-        :param f: Machine learning framework.
-        :type f: ml_framework
         :return: New primitive scene object, with each entry as either zeros or identity matrices.
         """
         batch_shape = list(batch_shape)
-        sphere_positions = f.identity(4, batch_shape=batch_shape)[..., 0:3, :]
-        sphere_radii = f.ones(batch_shape + [1])
-        cuboid_ext_mats = f.identity(4, batch_shape=batch_shape)[..., 0:3, :]
-        cuboid_dims = f.ones(batch_shape + [3])
+        sphere_positions = _ivy.identity(4, batch_shape=batch_shape)[..., 0:3, :]
+        sphere_radii = _ivy.ones(batch_shape + [1])
+        cuboid_ext_mats = _ivy.identity(4, batch_shape=batch_shape)[..., 0:3, :]
+        cuboid_dims = _ivy.ones(batch_shape + [3])
         return __class__(sphere_positions, sphere_radii, cuboid_ext_mats, cuboid_dims)
 
     # Public Methods #
@@ -221,22 +215,20 @@ class Intrinsics(_Container):
         return __class__(focal_lengths, persp_angles, pp_offsets, calib_mats, inv_calib_mats)
 
     @staticmethod
-    def as_identity(batch_shape, f):
+    def as_identity(batch_shape):
         """
         Return camera intrinsics object with array attributes as either zeros or identity matrices.
 
         :param batch_shape: Batch shape for each geometric array attribute
         :type batch_shape: sequence of ints
-        :param f: Machine learning framework.
-        :type f: ml_framework
         :return: New camera intrinsics object, with each entry as either zeros or identity matrices.
         """
         batch_shape = list(batch_shape)
-        focal_lengths = f.ones(batch_shape + [2])
-        persp_angles = f.ones(batch_shape + [2])
-        pp_offsets = f.zeros(batch_shape + [2])
-        calib_mats = f.identity(3, batch_shape=batch_shape)
-        inv_calib_mats = f.identity(3, batch_shape=batch_shape)
+        focal_lengths = _ivy.ones(batch_shape + [2])
+        persp_angles = _ivy.ones(batch_shape + [2])
+        pp_offsets = _ivy.zeros(batch_shape + [2])
+        calib_mats = _ivy.identity(3, batch_shape=batch_shape)
+        inv_calib_mats = _ivy.identity(3, batch_shape=batch_shape)
         return __class__(focal_lengths, persp_angles, pp_offsets, calib_mats, inv_calib_mats)
 
     # Public Methods #
@@ -341,22 +333,20 @@ class Extrinsics(_Container):
         return __class__(cam_centers, Rs, inv_Rs, ext_mats_homo, inv_ext_mats_homo)
 
     @staticmethod
-    def as_identity(batch_shape, f):
+    def as_identity(batch_shape):
         """
         Return camera extrinsics object with array attributes as either zeros or identity matrices.
 
         :param batch_shape: Batch shape for each geometric array attribute.
         :type batch_shape: sequence of ints
-        :param f: Machine learning framework.
-        :type f: ml_framework
         :return: New camera extrinsics object, with each entry as either zeros or identity matrices.
         """
         batch_shape = list(batch_shape)
-        cam_centers = f.zeros(batch_shape + [3, 1])
-        Rs = f.identity(3, batch_shape=batch_shape)
-        inv_Rs = f.identity(3, batch_shape=batch_shape)
-        ext_mats_homo = f.identity(4, batch_shape=batch_shape)
-        inv_ext_mats_homo = f.identity(4, batch_shape=batch_shape)
+        cam_centers = _ivy.zeros(batch_shape + [3, 1])
+        Rs = _ivy.identity(3, batch_shape=batch_shape)
+        inv_Rs = _ivy.identity(3, batch_shape=batch_shape)
+        ext_mats_homo = _ivy.identity(4, batch_shape=batch_shape)
+        inv_ext_mats_homo = _ivy.identity(4, batch_shape=batch_shape)
         return __class__(cam_centers, Rs, inv_Rs, ext_mats_homo, inv_ext_mats_homo)
 
     # Public Methods #
@@ -455,20 +445,18 @@ class CameraGeometry(_Container):
         return __class__(intrinsics, extrinsics, full_mats_homo, inv_full_mats_homo)
 
     @staticmethod
-    def as_identity(batch_shape, f):
+    def as_identity(batch_shape):
         """
         Return camera geometry object with array attributes as either zeros or identity matrices.
 
         :param batch_shape: Batch shape for each geometric array attribute
         :type batch_shape: sequence of ints
-        :param f: Machine learning framework.
-        :type f: ml_framework
         :return: New camera geometry object, with each entry as either zeros or identity matrices.
         """
-        intrinsics = Intrinsics.as_identity(batch_shape, f)
-        extrinsics = Extrinsics.as_identity(batch_shape, f)
-        full_mats_homo = f.identity(4, batch_shape=batch_shape)
-        inv_full_mats_homo = f.identity(4, batch_shape=batch_shape)
+        intrinsics = Intrinsics.as_identity(batch_shape)
+        extrinsics = Extrinsics.as_identity(batch_shape)
+        full_mats_homo = _ivy.identity(4, batch_shape=batch_shape)
+        inv_full_mats_homo = _ivy.identity(4, batch_shape=batch_shape)
         return __class__(intrinsics, extrinsics, full_mats_homo, inv_full_mats_homo)
 
     # Public Methods #

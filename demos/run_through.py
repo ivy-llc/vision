@@ -2,10 +2,12 @@
 import os
 import ivy
 import cv2
+import ivy.mxnd
 import argparse
 import ivy_vision
 import numpy as np
 import matplotlib.pyplot as plt
+from ivy.framework_handler import set_framework
 from ivy_demo_utils.framework_utils import choose_random_framework, get_framework_from_str
 
 b = 12
@@ -282,6 +284,7 @@ def main(interactive=True, f=None):
 
     # choose random framework
     f = choose_random_framework() if f is None else f
+    set_framework(f)
 
     # Camera Geometry #
     # ----------------#
@@ -290,8 +293,8 @@ def main(interactive=True, f=None):
 
     # common intrinsic params
     img_dims = [512, 512]
-    pp_offsets = f.array([dim / 2 - 0.5 for dim in img_dims], 'float32')
-    cam_persp_angles = f.array([60 * np.pi / 180] * 2, 'float32')
+    pp_offsets = ivy.array([dim / 2 - 0.5 for dim in img_dims], 'float32')
+    cam_persp_angles = ivy.array([60 * np.pi / 180] * 2, 'float32')
 
     # ivy cam intrinsics container
     intrinsics = ivy_vision.persp_angles_and_pp_offsets_to_intrinsics_object(
@@ -300,8 +303,8 @@ def main(interactive=True, f=None):
     # extrinsics
 
     # 3 x 4
-    cam1_inv_ext_mat = f.array(np.load(data_dir + '/cam1_inv_ext_mat.npy'), 'float32')
-    cam2_inv_ext_mat = f.array(np.load(data_dir + '/cam2_inv_ext_mat.npy'), 'float32')
+    cam1_inv_ext_mat = ivy.array(np.load(data_dir + '/cam1_inv_ext_mat.npy'), 'float32')
+    cam2_inv_ext_mat = ivy.array(np.load(data_dir + '/cam2_inv_ext_mat.npy'), 'float32')
 
     # full geometry
 
@@ -339,24 +342,24 @@ def main(interactive=True, f=None):
     # load images
 
     # h x w x 3
-    color1 = f.array(cv2.imread(data_dir + '/rgb1.png').astype(np.float32) / 255)
-    color2 = f.array(cv2.imread(data_dir + '/rgb2.png').astype(np.float32) / 255)
+    color1 = ivy.array(cv2.imread(data_dir + '/rgb1.png').astype(np.float32) / 255)
+    color2 = ivy.array(cv2.imread(data_dir + '/rgb2.png').astype(np.float32) / 255)
 
     # h x w x 1
-    depth1 = f.array(np.reshape(np.frombuffer(cv2.imread(
+    depth1 = ivy.array(np.reshape(np.frombuffer(cv2.imread(
         data_dir + '/depth1.png', -1).tobytes(), np.float32), img_dims + [1]))
-    depth2 = f.array(np.reshape(np.frombuffer(cv2.imread(
+    depth2 = ivy.array(np.reshape(np.frombuffer(cv2.imread(
         data_dir + '/depth2.png', -1).tobytes(), np.float32), img_dims + [1]))
 
     # depth limits
-    depth_min = f.reduce_min(f.concatenate((depth1, depth2), 0))
-    depth_max = f.reduce_max(f.concatenate((depth1, depth2), 0))
+    depth_min = ivy.reduce_min(f.concatenate((depth1, depth2), 0))
+    depth_max = ivy.reduce_max(f.concatenate((depth1, depth2), 0))
     depth_limits = [depth_min, depth_max]
 
     # pixel coords
 
     # h x w x 3
-    u_pix_coords = ivy_vision.create_uniform_pixel_coords_image(img_dims, f=f)
+    u_pix_coords = ivy_vision.create_uniform_pixel_coords_image(img_dims)
     pixel_coords1 = u_pix_coords * depth1
     pixel_coords2 = u_pix_coords * depth2
 
@@ -367,10 +370,10 @@ def main(interactive=True, f=None):
     # -----------------------------#
 
     # required mat formats
-    cam1to2_full_mat_homo = f.matmul(cam2_geom.full_mats_homo, cam1_geom.inv_full_mats_homo)
+    cam1to2_full_mat_homo = ivy.matmul(cam2_geom.full_mats_homo, cam1_geom.inv_full_mats_homo)
     cam1to2_full_mat = cam1to2_full_mat_homo[..., 0:3, :]
-    full_mats_homo = f.concatenate((f.expand_dims(cam1_geom.full_mats_homo, 0),
-                                    f.expand_dims(cam2_geom.full_mats_homo, 0)), 0)
+    full_mats_homo = ivy.concatenate((f.expand_dims(cam1_geom.full_mats_homo, 0),
+                                      ivy.expand_dims(cam2_geom.full_mats_homo, 0)), 0)
     full_mats = full_mats_homo[..., 0:3, :]
 
     # flow
@@ -399,10 +402,10 @@ def main(interactive=True, f=None):
     depth2_warp_to_f1 = ivy.bilinear_resample(depth2, warp)
 
     # depth validity
-    depth_validity = f.abs(depth1_wrt_f2 - depth2_warp_to_f1) < 0.01
+    depth_validity = ivy.abs(depth1_wrt_f2 - depth2_warp_to_f1) < 0.01
 
     # inverse warp rendering with mask
-    color2_warp_to_f1_masked = f.where(depth_validity, color2_warp_to_f1, f.zeros_like(color2_warp_to_f1))
+    color2_warp_to_f1_masked = ivy.where(depth_validity, color2_warp_to_f1, ivy.zeros_like(color2_warp_to_f1))
 
     # show images
     show_inverse_warped_images(depth1_wrt_f2, depth2_warp_to_f1, depth_validity,
@@ -413,17 +416,17 @@ def main(interactive=True, f=None):
 
     # forward warp rendering
     pixel_coords1_proj = ivy_vision.pixel_to_pixel_coords(pixel_coords2,
-                                                          f.inv(cam1to2_full_mat_homo)[..., 0:3, :])
-    pix_coords_w_color_in_f1 = f.concatenate((pixel_coords1_proj, color2), -1)
+                                                          ivy.inv(cam1to2_full_mat_homo)[..., 0:3, :])
+    pix_coords_w_color_in_f1 = ivy.concatenate((pixel_coords1_proj, color2), -1)
 
     # without depth buffer
-    f1_forward_warp_no_db, _, _ = ivy_vision.render_pixel_coords(
-        f.reshape(pix_coords_w_color_in_f1, (-1, 6)), f.zeros_like(pix_coords_w_color_in_f1[..., 2:]),
+    f1_forward_warp_no_db, _, _ = ivy_vision.quantize_pixel_coords(
+        ivy.reshape(pix_coords_w_color_in_f1, (-1, 6)), ivy.zeros_like(pix_coords_w_color_in_f1[..., 2:]),
         img_dims, with_db=False)
 
     # with depth buffer
-    f1_forward_warp_w_db, _, _ = ivy_vision.render_pixel_coords(
-        f.reshape(pix_coords_w_color_in_f1, (-1, 6)), f.zeros_like(pix_coords_w_color_in_f1[..., 2:]),
+    f1_forward_warp_w_db, _, _ = ivy_vision.quantize_pixel_coords(
+        ivy.reshape(pix_coords_w_color_in_f1, (-1, 6)), ivy.zeros_like(pix_coords_w_color_in_f1[..., 2:]),
         img_dims, with_db=False if hasattr(ivy, 'mxnd') and f is ivy.mxnd else True)
 
     # show images

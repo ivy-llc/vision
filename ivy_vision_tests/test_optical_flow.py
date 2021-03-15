@@ -1,15 +1,16 @@
 # global
 import ivy
+import pytest
 import numpy as np
 import ivy.numpy as ivy_np
 try:
     import tensorflow as tf
 except ImportError:
     pass
+import ivy_tests.helpers as helpers
 
 # local
 from ivy_vision_tests.data import TestData
-import ivy_vision_tests.helpers as helpers
 from ivy_vision import optical_flow as ivy_flow
 
 
@@ -47,62 +48,45 @@ class TwoViewGeometryTestData(TestData):
 td = TwoViewGeometryTestData()
 
 
-def test_depth_from_flow_and_cam_poses():
-    for lib, call in helpers.calls:
-        if call is helpers.mx_graph_call:
-            # mxnet symbolic does not fully support array slicing
-            continue
-        assert np.allclose(call(ivy_flow.depth_from_flow_and_cam_mats, td.optical_flow, td.full_mats),
-                           td.depth_maps[:, 0:1], atol=1e-6)
-        assert np.allclose(
-            call(ivy_flow.depth_from_flow_and_cam_mats, td.optical_flow[0], td.full_mats[0]),
-            td.depth_maps[0, 0:1], atol=1e-6)
+def test_depth_from_flow_and_cam_poses(dev_str, call):
+    assert np.allclose(call(ivy_flow.depth_from_flow_and_cam_mats, td.optical_flow, td.full_mats),
+                       td.depth_maps[:, 0:1], atol=1e-6)
+    assert np.allclose(
+        call(ivy_flow.depth_from_flow_and_cam_mats, td.optical_flow[0], td.full_mats[0]),
+        td.depth_maps[0, 0:1], atol=1e-6)
 
 
-def test_flow_from_depth_and_cam_poses():
-    for lib, call in helpers.calls:
-        if call is helpers.mx_graph_call:
-            # mxnet symbolic does not fully support array slicing
-            continue
-        assert np.allclose(call(ivy_flow.flow_from_depth_and_cam_mats, td.pixel_coords[:, 0:1],
-                                td.cam2cam_full_mats[:, 0:1]), td.optical_flow, atol=1e-3)
-        assert np.allclose(call(ivy_flow.flow_from_depth_and_cam_mats, td.pixel_coords[0, 0:1],
-                                td.cam2cam_full_mats[0, 0:1]), td.optical_flow[0], atol=1e-3)
+def test_flow_from_depth_and_cam_poses(dev_str, call):
+    assert np.allclose(call(ivy_flow.flow_from_depth_and_cam_mats, td.pixel_coords[:, 0:1],
+                            td.cam2cam_full_mats[:, 0:1]), td.optical_flow, atol=1e-3)
+    assert np.allclose(call(ivy_flow.flow_from_depth_and_cam_mats, td.pixel_coords[0, 0:1],
+                            td.cam2cam_full_mats[0, 0:1]), td.optical_flow[0], atol=1e-3)
 
 
-def test_project_flow_to_epipolar_line():
-    for lib, call in helpers.calls:
-        if call is helpers.mx_graph_call:
-            # mxnet symbolic does not fully support array slicing
-            continue
-        assert np.allclose(
-            call(ivy_flow.project_flow_to_epipolar_line, td.optical_flow, td.fund_mats[0]), td.optical_flow, atol=1e-3)
-        assert np.allclose(
-            call(ivy_flow.project_flow_to_epipolar_line, td.optical_flow[0], td.fund_mats[0, 0]),
-            td.optical_flow[0], atol=1e-3)
+def test_project_flow_to_epipolar_line(dev_str, call):
+    assert np.allclose(
+        call(ivy_flow.project_flow_to_epipolar_line, td.optical_flow, td.fund_mats[0]), td.optical_flow, atol=1e-3)
+    assert np.allclose(
+        call(ivy_flow.project_flow_to_epipolar_line, td.optical_flow[0], td.fund_mats[0, 0]),
+        td.optical_flow[0], atol=1e-3)
 
 
-def test_pixel_cost_volume():
-    for lib, call in helpers.calls:
-        if call in [helpers.mx_call, helpers.mx_graph_call]:
-            # mxnet padding only supports inputs with 3 dimensions or smaller.
-            continue
-        assert np.allclose(call(ivy_flow.pixel_cost_volume, td.cv_image1, td.cv_image2, 1), td.cv, atol=1e-3)
-        assert np.allclose(call(ivy_flow.pixel_cost_volume, td.cv_image1[0], td.cv_image2[0], 1), td.cv[0], atol=1e-3)
+def test_pixel_cost_volume(dev_str, call):
+    if call in [helpers.mx_call]:
+        # mxnet padding only supports inputs with 3 dimensions or smaller.
+        pytest.skip()
+    assert np.allclose(call(ivy_flow.pixel_cost_volume, td.cv_image1, td.cv_image2, 1), td.cv, atol=1e-3)
+    assert np.allclose(call(ivy_flow.pixel_cost_volume, td.cv_image1[0], td.cv_image2[0], 1), td.cv[0], atol=1e-3)
 
 
-def test_velocity_from_flow_cam_coords_and_cam_mats():
-    for lib, call in helpers.calls:
-        if call is helpers.mx_graph_call:
-            # mxnet symbolic does not fully support array slicing
-            continue
-        assert call(ivy_flow.velocity_from_flow_cam_coords_and_cam_mats,
-                    td.optical_flow, td.cam_coords[:, 0], td.cam_coords[:, 1], td.cam2cam_ext_mats[:, 1], td.delta_t)
+def test_velocity_from_flow_cam_coords_and_cam_mats(dev_str, call):
+    assert call(ivy_flow.velocity_from_flow_cam_coords_and_cam_mats,
+                td.optical_flow, td.cam_coords[:, 0], td.cam_coords[:, 1], td.cam2cam_ext_mats[:, 1], td.delta_t)
 
 
-def test_project_cam_coords_with_object_transformations():
+def test_project_cam_coords_with_object_transformations(dev_str, call):
+
     # test data
-
     np.random.seed(0)
     cam_coords_t = np.array([[[[0., 1., 2., 1.], [1., 2., 3., 1.]],
                               [[2., 3., 4., 1.], [3., 4., 5., 1.]]]], np.float32)
@@ -122,18 +106,13 @@ def test_project_cam_coords_with_object_transformations():
                                     [9.704583, 6.375033, 5.863691, 1.]]]], dtype=np.float32)
 
     # testing
-
-    for lib, call in helpers.calls:
-        if call is helpers.mx_graph_call:
-            # mxnet symbolic does not fully support array slicing
-            continue
-        assert np.allclose(call(ivy_flow.project_cam_coords_with_object_transformations, cam_coords_t, id_image,
-                                obj_ids, obj_trans, cam2cam_mat, f=lib)[0], true_reprojection, atol=1e-6)
+    assert np.allclose(call(ivy_flow.project_cam_coords_with_object_transformations, cam_coords_t, id_image,
+                            obj_ids, obj_trans, cam2cam_mat)[0], true_reprojection, atol=1e-6)
 
 
-def test_velocity_from_cam_coords_id_image_and_object_trans():
+def test_velocity_from_cam_coords_id_image_and_object_trans(dev_str, call):
+
     # test data
-
     np.random.seed(0)
     cam_coords_t = np.array([[[[0., 1., 2., 1.], [1., 2., 3., 1.]],
                               [[2., 3., 4., 1.], [3., 4., 5., 1.]]]], np.float32)
@@ -153,18 +132,13 @@ def test_velocity_from_cam_coords_id_image_and_object_trans():
                            [-134.09166, -47.500656, -17.273817]]]], np.float32)
 
     # testing
-
-    for lib, call in helpers.calls:
-        if call is helpers.mx_graph_call:
-            # mxnet symbolic does not fully support array slicing
-            continue
-        assert np.allclose(call(ivy_flow.velocity_from_cam_coords_id_image_and_object_trans, cam_coords_t, id_image,
-                                obj_ids, obj_trans, delta_t, f=lib), true_vel, atol=1e-6)
+    assert np.allclose(call(ivy_flow.velocity_from_cam_coords_id_image_and_object_trans, cam_coords_t, id_image,
+                            obj_ids, obj_trans, delta_t), true_vel, atol=1e-6)
 
 
-def test_flow_from_cam_coords_id_image_and_object_trans():
+def test_flow_from_cam_coords_id_image_and_object_trans(dev_str, call):
+
     # test data
-
     np.random.seed(0)
     cam_coords_1 = np.array([[[[0., 1., 2., 1.], [1., 2., 3., 1.]],
                               [[2., 3., 4., 1.], [3., 4., 5., 1.]]]], np.float32)
@@ -185,9 +159,6 @@ def test_flow_from_cam_coords_id_image_and_object_trans():
                            [[0.12552917, 0.46584404],
                             [0.10946929, 0.34653413]]]], dtype=np.float)
 
-    for lib, call in helpers.calls:
-        if call is helpers.mx_graph_call:
-            # mxnet symbolic does not fully support array slicing
-            continue
-        assert np.allclose(call(ivy_flow.flow_from_cam_coords_id_image_and_object_trans, cam_coords_1, id_image,
-                                obj_ids, obj_trans, calib_mat, cam1to2_ext_mat, f=lib), true_flow, atol=1e-6)
+    # testing
+    assert np.allclose(call(ivy_flow.flow_from_cam_coords_id_image_and_object_trans, cam_coords_1, id_image,
+                            obj_ids, obj_trans, calib_mat, cam1to2_ext_mat), true_flow, atol=1e-6)

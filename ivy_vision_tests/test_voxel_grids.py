@@ -1,9 +1,10 @@
 # global
+import pytest
+import ivy.numpy
 import numpy as np
-import ivy.numpy as ivy_np
+import ivy_tests.helpers as helpers
 
 # local
-import ivy_vision_tests.helpers as helpers
 import ivy_vision.voxel_grids as ivy_vg
 from ivy_vision_tests.data import TestData
 
@@ -62,39 +63,42 @@ class VoxelGridsTestData(TestData):
 td = VoxelGridsTestData()
 
 
-def test_world_coords_to_bounding_voxel_grid():
-    for lib, call in helpers.calls:
-        if call in [helpers.tf_graph_call, helpers.mx_graph_call]:
-            # the need to dynamically infer array shapes for scatter makes this only valid in eager mode currently
-            continue
-        assert np.allclose(np.sum(
-            call(ivy_vg.coords_to_voxel_grid, td.simple_world_coords_flat, np.array([3, 3, 3]))[0], -1) > 0,
-                           td.simple_voxel_grid, atol=1e-6)
-        assert np.allclose(np.sum(
-            call(ivy_vg.coords_to_voxel_grid, td.simple_world_coords_flat, (1, 1, 1), 'RES')[0], -1) > 0,
-                           td.simple_voxel_grid, atol=1e-6)
-        if call is not helpers.mx_call:
-            # MXNet cannot slice arrays with more than 6 dimensions
-            assert np.allclose(np.sum(
-                call(ivy_vg.coords_to_voxel_grid, td.world_coords_flat, (32, 32, 32), 'DIMS')[0], -1) > 0,
-                               np.sum(ivy_vg.coords_to_voxel_grid(
-                                   td.world_coords_flat, (32, 32, 32), 'DIMS', f=ivy_np)[0], -1) > 0, atol=1e-6)
-            assert np.allclose(np.sum(
-                call(ivy_vg.coords_to_voxel_grid, td.world_coords_flat, (0.1, 0.1, 0.1), 'RES')[0], -1) > 0,
-                               np.sum(ivy_vg.coords_to_voxel_grid(
-                                td.world_coords_flat, (0.1, 0.1, 0.1), 'RES', f=ivy_np)[0], -1) > 0, atol=1e-6)
-        # with coord bounds
-        assert np.allclose(np.sum(
-            call(ivy_vg.coords_to_voxel_grid, td.simple_world_coords_flat, (3, 3, 3),
-                 coord_bounds=[-1]*3 + [4]*3)[0], -1) > 0, td.simple_voxel_grid_m1_4_bounded, atol=1e-6)
-        assert np.allclose(np.sum(
-            call(ivy_vg.coords_to_voxel_grid, td.simple_world_coords_flat, (3, 3, 3),
-                 coord_bounds=[0]*3 + [4]*3)[0], -1) > 0, td.simple_voxel_grid_0_4_bounded, atol=1e-6)
-        assert np.allclose(np.sum(
-            call(ivy_vg.coords_to_voxel_grid, td.simple_world_coords_batched_flat, (3, 3, 3),
-                 coord_bounds=[0.5]*3 + [2.5]*3)[0], -1) > 0, td.simple_voxel_grid_batched, atol=1e-6)
+def test_world_coords_to_bounding_voxel_grid(dev_str, call):
+    if call in [helpers.tf_graph_call]:
+        # the need to dynamically infer array shapes for scatter makes this only valid in eager mode currently
+        pytest.skip()
+    assert np.allclose(np.sum(
+        call(ivy_vg.coords_to_voxel_grid, td.simple_world_coords_flat, np.array([3, 3, 3]))[0], -1) > 0,
+                       td.simple_voxel_grid, atol=1e-6)
+    assert np.allclose(np.sum(
+        call(ivy_vg.coords_to_voxel_grid, td.simple_world_coords_flat, (1, 1, 1), 'RES')[0], -1) > 0,
+                       td.simple_voxel_grid, atol=1e-6)
 
-        # with features
-        assert np.allclose(
-            call(ivy_vg.coords_to_voxel_grid, td.simple_world_coords_flat, (3, 3, 3),
-                 features=td.simple_world_features_flat)[0][..., 3], td.simple_voxel_grid, atol=1e-6)
+    # with coord bounds
+    assert np.allclose(np.sum(
+        call(ivy_vg.coords_to_voxel_grid, td.simple_world_coords_flat, (3, 3, 3),
+             coord_bounds=[-1]*3 + [4]*3)[0], -1) > 0, td.simple_voxel_grid_m1_4_bounded, atol=1e-6)
+    assert np.allclose(np.sum(
+        call(ivy_vg.coords_to_voxel_grid, td.simple_world_coords_flat, (3, 3, 3),
+             coord_bounds=[0]*3 + [4]*3)[0], -1) > 0, td.simple_voxel_grid_0_4_bounded, atol=1e-6)
+    assert np.allclose(np.sum(
+        call(ivy_vg.coords_to_voxel_grid, td.simple_world_coords_batched_flat, (3, 3, 3),
+             coord_bounds=[0.5]*3 + [2.5]*3)[0], -1) > 0, td.simple_voxel_grid_batched, atol=1e-6)
+
+    # with features
+    assert np.allclose(
+        call(ivy_vg.coords_to_voxel_grid, td.simple_world_coords_flat, (3, 3, 3),
+             features=td.simple_world_features_flat)[0][..., 3], td.simple_voxel_grid, atol=1e-6)
+
+    # with multi-dimensions
+    if call in [helpers.mx_call]:
+        # MXNet cannot slice arrays with more than 6 dimensions
+        return
+    with ivy.numpy.use:
+        target = np.sum(ivy_vg.coords_to_voxel_grid(td.world_coords_flat, (32, 32, 32), 'DIMS')[0], -1) > 0
+    assert np.allclose(np.sum(
+        call(ivy_vg.coords_to_voxel_grid, td.world_coords_flat, (32, 32, 32), 'DIMS')[0], -1) > 0, target, atol=1e-6)
+    with ivy.numpy.use:
+        target = np.sum(ivy_vg.coords_to_voxel_grid(td.world_coords_flat, (0.1, 0.1, 0.1), 'RES')[0], -1) > 0
+    assert np.allclose(np.sum(
+        call(ivy_vg.coords_to_voxel_grid, td.world_coords_flat, (0.1, 0.1, 0.1), 'RES')[0], -1) > 0, target, atol=1e-6)

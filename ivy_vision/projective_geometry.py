@@ -3,10 +3,10 @@ Collection of General Projective-Geometry Functions
 """
 
 # global
-from ivy.framework_handler import get_framework as _get_framework
+import ivy as _ivy
 
 
-def transform(coords, trans, batch_shape=None, image_dims=None, f=None):
+def transform(coords, trans, batch_shape=None, image_dims=None):
     """
     Transform image of :math:`n`-dimensional co-ordinates :math:`\mathbf{x}\in\mathbb{R}^{h×w×n}` by
     transformation matrix :math:`\mathbf{f}\in\mathbb{R}^{m×n}`, to produce image of transformed co-ordinates
@@ -21,12 +21,8 @@ def transform(coords, trans, batch_shape=None, image_dims=None, f=None):
     :type batch_shape: sequence of ints, optional
     :param image_dims: Image dimensions. Inferred from inputs if None.
     :type image_dims: sequence of ints
-    :param f: Machine learning framework. Inferred from inputs if None.
-    :type f: ml_framework, optional
     :return: Transformed co-ordinate image *[batch_shape,height,width,m]*
     """
-
-    f = _get_framework(coords, f=f)
 
     if batch_shape is None:
         batch_shape = coords.shape[:-3]
@@ -43,22 +39,22 @@ def transform(coords, trans, batch_shape=None, image_dims=None, f=None):
     transpose_idxs = list(range(num_batch_dims)) + [num_batch_dims + 1, num_batch_dims]
 
     # BS x (HxW) x N
-    coords_flattened = f.reshape(coords, batch_shape + [image_dims[0] * image_dims[1], -1])
+    coords_flattened = _ivy.reshape(coords, batch_shape + [image_dims[0] * image_dims[1], -1])
 
     # BS x N x (HxW)
-    coords_reshaped = f.transpose(coords_flattened, transpose_idxs)
+    coords_reshaped = _ivy.transpose(coords_flattened, transpose_idxs)
 
     # BS x M x (HxW)
-    transformed_coords_vector = f.matmul(trans, coords_reshaped)
+    transformed_coords_vector = _ivy.matmul(trans, coords_reshaped)
 
     # BS x (HxW) x M
-    transformed_coords_vector_transposed = f.transpose(transformed_coords_vector, transpose_idxs)
+    transformed_coords_vector_transposed = _ivy.transpose(transformed_coords_vector, transpose_idxs)
 
     # BS x H x W x M
-    return f.reshape(transformed_coords_vector_transposed, batch_shape + image_dims + [-1])
+    return _ivy.reshape(transformed_coords_vector_transposed, batch_shape + image_dims + [-1])
 
 
-def projection_matrix_pseudo_inverse(proj_mat, batch_shape=None, f=None):
+def projection_matrix_pseudo_inverse(proj_mat, batch_shape=None):
     """
     Given projection matrix :math:`\mathbf{P}\in\mathbb{R}^{3×4}`, compute it's pseudo-inverse
     :math:`\mathbf{P}^+\in\mathbb{R}^{4×3}`.\n
@@ -69,12 +65,8 @@ def projection_matrix_pseudo_inverse(proj_mat, batch_shape=None, f=None):
     :type proj_mat: array
     :param batch_shape: Shape of batch. Inferred from inputs if None.
     :type batch_shape: sequence of ints, optional
-    :param f: Machine learning framework. Inferred from inputs if None.
-    :type f: ml_framework, optional
     :return: Projection matrix pseudo-inverse *[batch_shape,4,3]*
     """
-
-    f = _get_framework(proj_mat, f=f)
 
     if batch_shape is None:
         batch_shape = proj_mat.shape[:-2]
@@ -87,13 +79,13 @@ def projection_matrix_pseudo_inverse(proj_mat, batch_shape=None, f=None):
     transpose_idxs = list(range(num_batch_dims)) + [num_batch_dims + 1, num_batch_dims]
 
     # BS x 4 x 3
-    matrix_transposed = f.transpose(proj_mat, transpose_idxs)
+    matrix_transposed = _ivy.transpose(proj_mat, transpose_idxs)
 
     # BS x 4 x 3
-    return f.matmul(matrix_transposed, f.inv(f.matmul(proj_mat, matrix_transposed)))
+    return _ivy.matmul(matrix_transposed, _ivy.inv(_ivy.matmul(proj_mat, matrix_transposed)))
 
 
-def projection_matrix_inverse(proj_mat, f=None):
+def projection_matrix_inverse(proj_mat):
     """
     Given projection matrix :math:`\mathbf{P}\in\mathbb{R}^{3×4}`, compute it's inverse
     :math:`\mathbf{P}^{-1}\in\mathbb{R}^{3×4}`.\n
@@ -102,30 +94,26 @@ def projection_matrix_inverse(proj_mat, f=None):
 
     :param proj_mat: Projection matrix *[batch_shape,3,4]*
     :type proj_mat: array
-    :param f: Machine learning framework. Inferred from inputs if None.
-    :type f: ml_framework, optional
     :return: Projection matrix inverse *[batch_shape,3,4]*
     """
-
-    f = _get_framework(proj_mat, f=f)
 
     # BS x 3 x 3
     rotation_matrix = proj_mat[..., 0:3]
 
     # BS x 3 x 3
-    rotation_matrix_inverses = f.inv(rotation_matrix)
+    rotation_matrix_inverses = _ivy.inv(rotation_matrix)
 
     # BS x 3 x 1
     translations = proj_mat[..., 3:4]
 
     # BS x 3 x 1
-    translation_inverses = -f.matmul(rotation_matrix_inverses, translations)
+    translation_inverses = -_ivy.matmul(rotation_matrix_inverses, translations)
 
     # BS x 3 x 4
-    return f.concatenate((rotation_matrix_inverses, translation_inverses), -1)
+    return _ivy.concatenate((rotation_matrix_inverses, translation_inverses), -1)
 
 
-def solve_homogeneous_dlt(A, f=None):
+def solve_homogeneous_dlt(A):
     """
     Given :math:`\mathbf{A}\in\mathbb{R}^{d×d}`, solve the system of :math:`d` equations in :math:`d` unknowns
     :math:`\mathbf{Ax} = \mathbf{0}` using the homogeneous DLT method, to return :math:`\mathbf{x}\in\mathbb{R}^d`.\n
@@ -134,15 +122,11 @@ def solve_homogeneous_dlt(A, f=None):
 
     :param A: Matrix representing system of equations to solve *[batch_shape,d,d]*
     :type A: array
-    :param f: Machine learning framework. Inferred from inputs if None.
-    :type f: ml_framework, optional
     :return: Solution to the system of equations *[batch_shape,d]*
     """
 
-    f = _get_framework(A, f=f)
-
     # BS x D x D,    BS x D,    BS x D x D
-    U, D, VT = f.svd(A)
+    U, D, VT = _ivy.svd(A)
 
     # BS x D
     return VT[..., -1, :]

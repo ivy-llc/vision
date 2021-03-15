@@ -14,13 +14,12 @@ from ivy_demo_utils.framework_utils import choose_random_framework, get_framewor
 
 class DummyCam:
 
-    def __init__(self, calib_mat, inv_calib_mat, ext_mat, inv_ext_mat, name, f):
+    def __init__(self, calib_mat, inv_calib_mat, ext_mat, inv_ext_mat, name):
         self.calib_mat = calib_mat
         self.inv_calib_mat = inv_calib_mat
         self._ext_mat = ext_mat
         self._inv_ext_mat = inv_ext_mat
         self._name = name
-        self._f = f
 
     def get_ext_mat(self):
         return self._ext_mat
@@ -30,8 +29,8 @@ class DummyCam:
 
     def cap(self):
         this_dir = os.path.dirname(os.path.realpath(__file__))
-        return self._f.array(np.load(os.path.join(this_dir, 'ri_no_sim', '{}_depth.npy'.format(self._name)))),\
-               self._f.array(np.load(os.path.join(this_dir, 'ri_no_sim', '{}_rgb.npy'.format(self._name))))
+        return ivy.array(np.load(os.path.join(this_dir, 'ri_no_sim', '{}_depth.npy'.format(self._name)))),\
+               ivy.array(np.load(os.path.join(this_dir, 'ri_no_sim', '{}_rgb.npy'.format(self._name))))
 
 
 class Simulator(BaseSimulator):
@@ -102,38 +101,38 @@ class Simulator(BaseSimulator):
         else:
 
             cam_names = ['vs{}'.format(i) for i in range(3)] + ['tvs']
-            pp_offsets = f.array([item/2 - 0.5 for item in [1024, 1024]])
-            persp_angles = f.array([60 * np.pi/180]*2)
+            pp_offsets = ivy.array([item/2 - 0.5 for item in [1024, 1024]])
+            persp_angles = ivy.array([60 * np.pi/180]*2)
             intrinsics = ivy_vision.persp_angles_and_pp_offsets_to_intrinsics_object(
                 persp_angles, pp_offsets, [1024, 1024])
             calib_mat = intrinsics.calib_mats
             inv_calib_mat = intrinsics.inv_calib_mats
 
-            pp_offsets = f.array([item/2 - 0.5 for item in [512, 512]])
-            persp_angles = f.array([60 * np.pi/180]*2)
+            pp_offsets = ivy.array([item/2 - 0.5 for item in [512, 512]])
+            persp_angles = ivy.array([60 * np.pi/180]*2)
             target_intrinsics = ivy_vision.persp_angles_and_pp_offsets_to_intrinsics_object(
                 persp_angles, pp_offsets, [512, 512])
             target_calib_mat = target_intrinsics.calib_mats
             target_inv_calib_mat = target_intrinsics.inv_calib_mats
 
-            cam_positions = [f.array([1.35, -0.05, 1.95]),
-                             f.array([1.65, -2.075, 0.875]),
-                             f.array([-0.94, -1.71, 0.994]),
-                             f.array([0.35, -2.05, 0.68])]
+            cam_positions = [ivy.array([1.35, -0.05, 1.95]),
+                             ivy.array([1.65, -2.075, 0.875]),
+                             ivy.array([-0.94, -1.71, 0.994]),
+                             ivy.array([0.35, -2.05, 0.68])]
 
-            cam_quaternions = [f.array([-0.40934521,  0.83571182,  0.35003018, -0.10724328]),
-                               f.array([-0.13167774,  0.7011009,  0.65917628, -0.23791856]),
-                               f.array([0.44628197, 0.68734518, 0.56583211, 0.09068139]),
-                               f.array([-0.00698829,  0.70860066,  0.70552395, -0.00850271])]
+            cam_quaternions = [ivy.array([-0.40934521,  0.83571182,  0.35003018, -0.10724328]),
+                               ivy.array([-0.13167774,  0.7011009,  0.65917628, -0.23791856]),
+                               ivy.array([0.44628197, 0.68734518, 0.56583211, 0.09068139]),
+                               ivy.array([-0.00698829,  0.70860066,  0.70552395, -0.00850271])]
 
-            cam_quat_poses = [f.concatenate((pos, eul), -1) for pos, eul in zip(cam_positions, cam_quaternions)]
+            cam_quat_poses = [ivy.concatenate((pos, eul), -1) for pos, eul in zip(cam_positions, cam_quaternions)]
             cam_inv_ext_mats = [ivy_mech.quaternion_pose_to_mat_pose(qp) for qp in cam_quat_poses]
-            cam_ext_mats = [f.inv(ivy_mech.make_transformation_homogeneous(iem))[..., 0:3, :]
+            cam_ext_mats = [ivy.inv(ivy_mech.make_transformation_homogeneous(iem))[..., 0:3, :]
                             for iem in cam_inv_ext_mats]
-            self.cams = [DummyCam(calib_mat, inv_calib_mat, em, iem, n, f)
+            self.cams = [DummyCam(calib_mat, inv_calib_mat, em, iem, n)
                          for em, iem, n in zip(cam_ext_mats, cam_inv_ext_mats[:-1], cam_names[:-1])]
             self.target_cam = DummyCam(target_calib_mat, target_inv_calib_mat, cam_ext_mats[-1], cam_inv_ext_mats[-1],
-                                       cam_names[-1], f)
+                                       cam_names[-1])
 
             # message
             print('\nInitialized dummy scene with 3 acquiring projective cameras and 1 target projective camera '
@@ -177,11 +176,11 @@ def main(interactive=True, try_use_sim=True, f=None):
         pix_coords = ivy_vision.cam_to_pixel_coords(cam_coords, sim.target_cam.calib_mat)
         total_pix_coords = ivy.concatenate((pix_coords[:, 0], rgb), -1)
         final_image_dims = [512]*2
-        rendered_img_no_db, _, _ = ivy_vision.render_pixel_coords(
-            total_pix_coords, f.zeros(final_image_dims + [4]), final_image_dims, with_db=False)
+        rendered_img_no_db, _, _ = ivy_vision.quantize_pixel_coords(
+            total_pix_coords, ivy.zeros(final_image_dims + [4]), final_image_dims, with_db=False)
         with_db = not with_mxnd
-        rendered_img_with_db, _, _ = ivy_vision.render_pixel_coords(
-            total_pix_coords, f.zeros(final_image_dims + [4]), final_image_dims, with_db=with_db)
+        rendered_img_with_db, _, _ = ivy_vision.quantize_pixel_coords(
+            total_pix_coords, ivy.zeros(final_image_dims + [4]), final_image_dims, with_db=with_db)
 
         a_img = cv2.resize(ivy.to_numpy(rgbs[0]), (256, 256))
         a_img[0:50, 0:50] = np.zeros_like(a_img[0:50, 0:50])

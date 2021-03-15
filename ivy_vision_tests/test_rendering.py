@@ -1,8 +1,10 @@
 # global
+import ivy
+import pytest
 import numpy as np
+import ivy_tests.helpers as helpers
 
 # local
-import ivy_vision_tests.helpers as helpers
 from ivy_vision import rendering as ivy_ren
 from ivy_vision_tests.data import TestData
 
@@ -181,205 +183,181 @@ class RenderingTestData(TestData):
 td = RenderingTestData()
 
 
-def test_quantize_pixel_coords():
-    for lib, call in helpers.calls:
-        if call is helpers.mx_graph_call:
-            # mxnet symbolic does not fully support array slicing
-            continue
-        assert np.allclose(call(ivy_ren.render_pixel_coords,
-                                np.reshape(td.pixel_coords, (1, 2, -1, 3)),
-                                np.zeros_like(td.pixel_coords[..., -1:]),
-                                td.image_dims, batch_shape=[td.batch_size, 2])[0][..., 0:3],
-                           td.pixel_coords, atol=1e-3)
+def test_quantize_pixel_coords(dev_str, call):
+    assert np.allclose(call(ivy_ren.quantize_pixel_coords,
+                            np.reshape(td.pixel_coords, (1, 2, -1, 3)),
+                            np.zeros_like(td.pixel_coords[..., -1:]),
+                            td.image_dims, batch_shape=[td.batch_size, 2])[0][..., 0:3],
+                       td.pixel_coords, atol=1e-3)
 
 
-def test_quantize_pixel_coordinates_with_var():
-    for lib, call in helpers.calls:
-        if call in [helpers.mx_call, helpers.mx_graph_call]:
-            # mxnet does not support sum for scatter nd, only non-deterministic replacement for duplicates
-            continue
-        mean, var, counter = call(ivy_ren.render_pixel_coords,
-                                  td.coords_to_scatter,
-                                  np.zeros_like(td.simple_uniform_pixel_coords[..., -2:]),
-                                  [3, 3],
-                                  pixel_coords_var=td.vars_to_scatter,
-                                  prior_var=np.ones_like(td.simple_uniform_pixel_coords[..., -2:]) * 10,
-                                  var_threshold=np.array([[0., 1e4]]*2))
-        assert np.allclose(counter, td.quantized_counter, atol=1e-6)
-        assert np.allclose(mean, td.quantized_pixel_coords_from_cov, atol=1e-3)
-        assert np.allclose(var, td.quantized_cov_values, atol=1e-3)
+def test_quantize_pixel_coordinates_with_var(dev_str, call):
+    if call in [helpers.mx_call]:
+        # mxnet does not support sum for scatter nd, only non-deterministic replacement for duplicates
+        pytest.skip()
+    mean, var, counter = call(ivy_ren.quantize_pixel_coords,
+                              td.coords_to_scatter,
+                              np.zeros_like(td.simple_uniform_pixel_coords[..., -2:]),
+                              [3, 3],
+                              pixel_coords_var=td.vars_to_scatter,
+                              prior_var=np.ones_like(td.simple_uniform_pixel_coords[..., -2:]) * 10,
+                              var_threshold=np.array([[0., 1e4]]*2))
+    assert np.allclose(counter, td.quantized_counter, atol=1e-6)
+    assert np.allclose(mean, td.quantized_pixel_coords_from_cov, atol=1e-3)
+    assert np.allclose(var, td.quantized_cov_values, atol=1e-3)
 
-        assert call(ivy_ren.render_pixel_coords,
-                    np.ones((1, 9, 3)), np.ones((1, 3, 3, 1)), [3, 3],
-                    pixel_coords_var=np.random.uniform(size=(1, 9, 1)),
-                    prior_var=np.ones((1, 3, 3, 1)),
-                    var_threshold=np.array([[0., 0.5]]))
-        assert call(ivy_ren.render_pixel_coords,
-                    np.expand_dims(td.coords_to_scatter, 0),
-                    np.expand_dims(np.zeros_like(td.simple_uniform_pixel_coords[..., -2:]), 0),
-                    [3, 3],
-                    pixel_coords_var=np.expand_dims(td.vars_to_scatter, 0),
-                    prior_var=np.expand_dims(np.ones_like(td.simple_uniform_pixel_coords[..., -2:]), 0) * 10,
-                    var_threshold=np.array([[0.]*2]*2))
-
-
-def test_quantize_pixel_coords_with_var_db():
-    for lib, call in helpers.calls:
-        if call in [helpers.mx_call, helpers.mx_graph_call]:
-            # mxnet does not support min for scatter nd, only non-deterministic replacement for duplicates
-            continue
-        mean, var, validity_mask = call(ivy_ren.render_pixel_coords,
-                                        td.coords_to_scatter,
-                                        np.zeros_like(td.simple_uniform_pixel_coords[..., -2:]),
-                                        [3, 3],
-                                        with_db=True,
-                                        pixel_coords_var=td.vars_to_scatter,
-                                        prior_var=np.ones_like(td.simple_uniform_pixel_coords[..., -2:]) * 10,
-                                        var_threshold=np.array([[0., 1e4]]*2))
-        assert np.allclose(validity_mask, td.validity_mask, atol=1e-6)
-        assert np.allclose(mean, td.quantized_pixel_coords_from_cov_db, atol=1e-3)
-        assert np.allclose(var, td.quantized_cov_values_db, atol=1e-3)
-
-        assert call(ivy_ren.render_pixel_coords,
-                    np.ones((1, 9, 3)), np.ones((1, 3, 3, 1)), [3, 3],
-                    with_db=True,
-                    pixel_coords_var=np.random.uniform(size=(1, 9, 1)),
-                    prior_var=np.ones((1, 3, 3, 1)),
-                    var_threshold=np.array([[0., 0.5]]))
-        assert call(ivy_ren.render_pixel_coords,
-                    np.expand_dims(td.coords_to_scatter, 0),
-                    np.expand_dims(np.zeros_like(td.simple_uniform_pixel_coords[..., -2:]), 0),
-                    [3, 3],
-                    with_db=True,
-                    pixel_coords_var=np.expand_dims(td.vars_to_scatter, 0),
-                    prior_var=np.expand_dims(np.ones_like(td.simple_uniform_pixel_coords[..., -2:]), 0) * 10,
-                    var_threshold=np.array([[0., 0.]]*2))
+    assert call(ivy_ren.quantize_pixel_coords,
+                np.ones((1, 9, 3)), np.ones((1, 3, 3, 1)), [3, 3],
+                pixel_coords_var=np.random.uniform(size=(1, 9, 1)),
+                prior_var=np.ones((1, 3, 3, 1)),
+                var_threshold=np.array([[0., 0.5]]))
+    assert call(ivy_ren.quantize_pixel_coords,
+                np.expand_dims(td.coords_to_scatter, 0),
+                np.expand_dims(np.zeros_like(td.simple_uniform_pixel_coords[..., -2:]), 0),
+                [3, 3],
+                pixel_coords_var=np.expand_dims(td.vars_to_scatter, 0),
+                prior_var=np.expand_dims(np.ones_like(td.simple_uniform_pixel_coords[..., -2:]), 0) * 10,
+                var_threshold=np.array([[0.]*2]*2))
 
 
-def test_quantize_omni_pixel_coords():
-    for lib, call in helpers.calls:
-        if call is helpers.mx_graph_call:
-            # mxnet symbolic does not fully support array slicing
-            continue
-        assert np.allclose(call(ivy_ren.render_pixel_coords,
-                                np.reshape(td.pixel_coords / td.pixel_coords[..., -1:], (1, 2, -1, 3)),
-                                np.zeros_like(td.pixel_coords[..., -1:]),
-                                td.image_dims, batch_shape=[td.batch_size, 2])[0][..., 0:3],
-                           td.pixel_coords / td.pixel_coords[..., -1:], atol=1e-3)
+def test_quantize_pixel_coords_with_var_db(dev_str, call):
+    if call in [helpers.mx_call]:
+        # mxnet does not support min for scatter nd, only non-deterministic replacement for duplicates
+        pytest.skip()
+    mean, var, validity_mask = call(ivy_ren.quantize_pixel_coords,
+                                    td.coords_to_scatter,
+                                    np.zeros_like(td.simple_uniform_pixel_coords[..., -2:]),
+                                    [3, 3],
+                                    with_db=True,
+                                    pixel_coords_var=td.vars_to_scatter,
+                                    prior_var=np.ones_like(td.simple_uniform_pixel_coords[..., -2:]) * 10,
+                                    var_threshold=np.array([[0., 1e4]]*2))
+    assert np.allclose(validity_mask, td.validity_mask, atol=1e-6)
+    assert np.allclose(mean, td.quantized_pixel_coords_from_cov_db, atol=1e-3)
+    assert np.allclose(var, td.quantized_cov_values_db, atol=1e-3)
+
+    assert call(ivy_ren.quantize_pixel_coords,
+                np.ones((1, 9, 3)), np.ones((1, 3, 3, 1)), [3, 3],
+                with_db=True,
+                pixel_coords_var=np.random.uniform(size=(1, 9, 1)),
+                prior_var=np.ones((1, 3, 3, 1)),
+                var_threshold=np.array([[0., 0.5]]))
+    assert call(ivy_ren.quantize_pixel_coords,
+                np.expand_dims(td.coords_to_scatter, 0),
+                np.expand_dims(np.zeros_like(td.simple_uniform_pixel_coords[..., -2:]), 0),
+                [3, 3],
+                with_db=True,
+                pixel_coords_var=np.expand_dims(td.vars_to_scatter, 0),
+                prior_var=np.expand_dims(np.ones_like(td.simple_uniform_pixel_coords[..., -2:]), 0) * 10,
+                var_threshold=np.array([[0., 0.]]*2))
 
 
-def test_quantize_omni_pixel_coords_with_var():
-    for lib, call in helpers.calls:
-        if call in [helpers.mx_call, helpers.mx_graph_call]:
-            # mxnet does not support sum for scatter nd, only non-deterministic replacement for duplicates
-            continue
-        mean, var, counter = call(ivy_ren.render_pixel_coords,
-                                  td.simple_projected_omni_pixel_coords,
-                                  np.zeros_like(td.simple_uniform_pixel_coords[..., -2:]),
-                                  [3, 3], mode='omni',
-                                  pixel_coords_var=td.vars_to_scatter,
-                                  prior_var=np.ones_like(td.simple_uniform_pixel_coords[..., -2:]) * 10,
-                                  var_threshold=np.array([[0., 1e4]]*2))
-        assert np.allclose(counter, td.quantized_counter, atol=1e-6)
-        assert np.allclose(mean, td.quantized_omni_pixel_coords_from_cov, atol=1e-3)
-        assert np.allclose(var, td.quantized_cov_values, atol=1e-3)
-
-        assert call(ivy_ren.render_pixel_coords,
-                    np.ones((1, 9, 3)), np.ones((1, 3, 3, 1)), [3, 3], mode='omni',
-                    pixel_coords_var=np.random.uniform(size=(1, 9, 1)),
-                    prior_var=np.ones((1, 3, 3, 1)),
-                    var_threshold=np.array([[0., 0.5]]))
-        assert call(ivy_ren.render_pixel_coords,
-                    np.ones((1, 9, 3)), np.ones((1, 3, 3, 1)), [3, 3], mode='omni',
-                    pixel_coords_var=np.ones((1, 9, 1)),
-                    prior_var=np.ones((1, 3, 3, 1)),
-                    var_threshold=np.array([[0., 0.]]))
+def test_quantize_omni_pixel_coords(dev_str, call):
+    assert np.allclose(call(ivy_ren.quantize_pixel_coords,
+                            np.reshape(td.pixel_coords / td.pixel_coords[..., -1:], (1, 2, -1, 3)),
+                            np.zeros_like(td.pixel_coords[..., -1:]),
+                            td.image_dims, batch_shape=[td.batch_size, 2])[0][..., 0:3],
+                       td.pixel_coords / td.pixel_coords[..., -1:], atol=1e-3)
 
 
-def test_quantize_omni_pixel_coords_with_var_db():
-    for lib, call in helpers.calls:
-        if call in [helpers.mx_call, helpers.mx_graph_call]:
-            # mxnet does not support min for scatter nd, only non-deterministic replacement for duplicates
-            continue
-        mean, var, validity_mask = call(ivy_ren.render_pixel_coords,
-                                        td.simple_projected_omni_pixel_coords,
-                                        np.zeros_like(td.simple_uniform_pixel_coords[..., -2:]),
-                                        [3, 3], mode='omni', with_db=True,
-                                        pixel_coords_var=td.vars_to_scatter,
-                                        prior_var=np.ones_like(td.simple_uniform_pixel_coords[..., -2:]) * 10,
-                                        var_threshold=np.array([[0., 1e4]]*2))
-        assert np.allclose(validity_mask, td.validity_mask, atol=1e-6)
-        assert np.allclose(mean, td.quantized_omni_pixel_coords_from_cov_db, atol=1e-3)
-        assert np.allclose(var, td.quantized_cov_values_db, atol=1e-3)
+def test_quantize_omni_pixel_coords_with_var(dev_str, call):
+    if call in [helpers.mx_call]:
+        # mxnet does not support sum for scatter nd, only non-deterministic replacement for duplicates
+        pytest.skip()
+    mean, var, counter = call(ivy_ren.quantize_pixel_coords,
+                              td.simple_projected_omni_pixel_coords,
+                              np.zeros_like(td.simple_uniform_pixel_coords[..., -2:]),
+                              [3, 3], mode='omni',
+                              pixel_coords_var=td.vars_to_scatter,
+                              prior_var=np.ones_like(td.simple_uniform_pixel_coords[..., -2:]) * 10,
+                              var_threshold=np.array([[0., 1e4]]*2))
+    assert np.allclose(counter, td.quantized_counter, atol=1e-6)
+    assert np.allclose(mean, td.quantized_omni_pixel_coords_from_cov, atol=1e-3)
+    assert np.allclose(var, td.quantized_cov_values, atol=1e-3)
 
-        assert call(ivy_ren.render_pixel_coords,
-                    np.ones((1, 9, 3)), np.ones((1, 3, 3, 1)), [3, 3], mode='omni', with_db=True,
-                    pixel_coords_var=np.random.uniform(size=(1, 9, 1)),
-                    prior_var=np.ones((1, 3, 3, 1)),
-                    var_threshold=np.array([[0., 0.5]]))
-
-
-def test_rasterize_triangles():
-    for lib, call in helpers.calls:
-        if call in [helpers.tf_graph_call, helpers.mx_graph_call]:
-            # the need to dynamically infer array shapes for scatter makes this only valid in eager mode currently
-            continue
-        assert np.allclose(call(ivy_ren.rasterize_triangles, td.mesh_triangle, [3, 3]), td.rasterized_image, atol=1e-3)
-        assert np.allclose(call(ivy_ren.rasterize_triangles, np.expand_dims(td.mesh_triangle, 0), [3, 3],
-                                batch_shape=[1])[0], td.rasterized_image, atol=1e-3)
+    assert call(ivy_ren.quantize_pixel_coords,
+                np.ones((1, 9, 3)), np.ones((1, 3, 3, 1)), [3, 3], mode='omni',
+                pixel_coords_var=np.random.uniform(size=(1, 9, 1)),
+                prior_var=np.ones((1, 3, 3, 1)),
+                var_threshold=np.array([[0., 0.5]]))
+    assert call(ivy_ren.quantize_pixel_coords,
+                np.ones((1, 9, 3)), np.ones((1, 3, 3, 1)), [3, 3], mode='omni',
+                pixel_coords_var=np.ones((1, 9, 1)),
+                prior_var=np.ones((1, 3, 3, 1)),
+                var_threshold=np.array([[0., 0.]]))
 
 
-def test_weighted_image_smooth():
-    for lib, call in helpers.calls:
-        if call in [helpers.np_call, helpers.jnp_call, helpers.mx_graph_call]:
-            # numpy and jax do not yet support depthwise 2d convolutions, and mxnet symbolic not fully array slicing
-            continue
-        mean_ret, _ = call(ivy_ren.weighted_image_smooth, td.mean_img, 1/td.var_img, td.kernel_size, f=lib)
-        assert np.allclose(mean_ret, td.smoothed_img_from_weights, atol=1e-6)
+def test_quantize_omni_pixel_coords_with_var_db(dev_str, call):
+    if call in [helpers.mx_call]:
+        # mxnet does not support min for scatter nd, only non-deterministic replacement for duplicates
+        pytest.skip()
+    mean, var, validity_mask = call(ivy_ren.quantize_pixel_coords,
+                                    td.simple_projected_omni_pixel_coords,
+                                    np.zeros_like(td.simple_uniform_pixel_coords[..., -2:]),
+                                    [3, 3], mode='omni', with_db=True,
+                                    pixel_coords_var=td.vars_to_scatter,
+                                    prior_var=np.ones_like(td.simple_uniform_pixel_coords[..., -2:]) * 10,
+                                    var_threshold=np.array([[0., 1e4]]*2))
+    assert np.allclose(validity_mask, td.validity_mask, atol=1e-6)
+    assert np.allclose(mean, td.quantized_omni_pixel_coords_from_cov_db, atol=1e-3)
+    assert np.allclose(var, td.quantized_cov_values_db, atol=1e-3)
+
+    assert call(ivy_ren.quantize_pixel_coords,
+                np.ones((1, 9, 3)), np.ones((1, 3, 3, 1)), [3, 3], mode='omni', with_db=True,
+                pixel_coords_var=np.random.uniform(size=(1, 9, 1)),
+                prior_var=np.ones((1, 3, 3, 1)),
+                var_threshold=np.array([[0., 0.5]]))
 
 
-def test_smooth_image_fom_var_image():
-    for lib, call in helpers.calls:
-        if call in [helpers.np_call, helpers.jnp_call, helpers.mx_graph_call]:
-            # numpy and jax do not yet support depthwise 2d convolutions, and mxnet symbolic not fully array slicing
-            continue
-        mean_ret, var_ret = call(ivy_ren.smooth_image_fom_var_image, td.mean_img, td.var_img, td.kernel_size,
-                                 td.kernel_scale, f=lib)
-        assert np.allclose(mean_ret, td.smoothed_img_from_var, atol=1e-6)
-        assert np.allclose(var_ret, td.smoothed_var_from_var, atol=1e-6)
+def test_rasterize_triangles(dev_str, call):
+    if call in [helpers.tf_graph_call]:
+        # the need to dynamically infer array shapes for scatter makes this only valid in eager mode currently
+        pytest.skip()
+    assert np.allclose(call(ivy_ren.rasterize_triangles, td.mesh_triangle, [3, 3]), td.rasterized_image, atol=1e-3)
+    assert np.allclose(call(ivy_ren.rasterize_triangles, np.expand_dims(td.mesh_triangle, 0), [3, 3],
+                            batch_shape=[1])[0], td.rasterized_image, atol=1e-3)
 
 
-def test_pad_omni_image():
-    for lib, call in helpers.calls:
-        if call is helpers.mx_graph_call:
-            # mxnet symbolic does not fully support array slicing
-            continue
-        assert np.allclose(call(ivy_ren.pad_omni_image, td.omni_image, 1), td.padded_omni_image, atol=1e-3)
+def test_weighted_image_smooth(dev_str, call):
+    if call in [helpers.np_call, helpers.jnp_call]:
+        # numpy and jax do not yet support depthwise 2d convolutions
+        pytest.skip()
+    mean_ret, _ = call(ivy_ren.weighted_image_smooth, td.mean_img, 1/td.var_img, td.kernel_size)
+    assert np.allclose(mean_ret, td.smoothed_img_from_weights, atol=1e-6)
 
 
-def test_create_trimesh_indices_for_image():
-    for lib, call in helpers.calls:
-        if call in [helpers.mx_call, helpers.mx_graph_call]:
-            # mxnet matmul only support N-D*N-D array (N >= 3)
-            continue
-        assert np.allclose(call(ivy_ren.create_trimesh_indices_for_image, [1], [4, 3], f=lib),
-                           td.tri_mesh_4x3_indices, atol=1e-3)
+def test_smooth_image_fom_var_image(dev_str, call):
+    if call in [helpers.np_call, helpers.jnp_call]:
+        # numpy and jax do not yet support depthwise 2d convolutions
+        pytest.skip()
+    mean_ret, var_ret = call(ivy_ren.smooth_image_fom_var_image, td.mean_img, td.var_img, td.kernel_size,
+                             td.kernel_scale)
+    assert np.allclose(mean_ret, td.smoothed_img_from_var, atol=1e-6)
+    assert np.allclose(var_ret, td.smoothed_var_from_var, atol=1e-6)
 
 
-def test_coord_image_to_trimesh():
-    for lib, call in helpers.calls:
-        if call in [helpers.mx_call, helpers.mx_graph_call]:
-            # mxnet matmul only support N-D*N-D array (N >= 3)
-            continue
-        coord_img = lib.array(td.coord_img.tolist())
-        vertices, trimesh_indices = call(ivy_ren.coord_image_to_trimesh, coord_img,
-                                         batch_shape=[1], image_dims=[4, 3], dev='cpu', f=lib)
-        assert np.allclose(vertices, td.tri_mesh_4x3_vertices, atol=1e-3)
-        assert np.allclose(trimesh_indices, td.tri_mesh_4x3_indices, atol=1e-3)
-        if call in [helpers.mx_call, helpers.mx_graph_call]:
-            # mxnet does not support indices_where
-            continue
-        vertices, trimesh_indices = call(ivy_ren.coord_image_to_trimesh, td.coord_img, td.coord_validity_img,
-                                         batch_shape=[1], image_dims=[4, 3], dev='cpu', f=lib)
-        assert np.allclose(vertices, td.tri_mesh_4x3_vertices, atol=1e-3)
-        assert np.allclose(trimesh_indices, td.tri_mesh_4x3_valid_indices, atol=1e-3)
+def test_pad_omni_image(dev_str, call):
+    assert np.allclose(call(ivy_ren.pad_omni_image, td.omni_image, 1), td.padded_omni_image, atol=1e-3)
+
+
+def test_create_trimesh_indices_for_image(dev_str, call):
+    if call in [helpers.mx_call]:
+        # mxnet matmul only support N-D*N-D array (N >= 3)
+        pytest.skip()
+    assert np.allclose(call(ivy_ren.create_trimesh_indices_for_image, [1], [4, 3]),
+                       td.tri_mesh_4x3_indices, atol=1e-3)
+
+
+def test_coord_image_to_trimesh(dev_str, call):
+    if call in [helpers.mx_call]:
+        # mxnet matmul only support N-D*N-D array (N >= 3)
+        pytest.skip()
+    coord_img = ivy.array(td.coord_img.tolist())
+    vertices, trimesh_indices = call(ivy_ren.coord_image_to_trimesh, coord_img,
+                                     batch_shape=[1], image_dims=[4, 3], dev_str='cpu')
+    assert np.allclose(vertices, td.tri_mesh_4x3_vertices, atol=1e-3)
+    assert np.allclose(trimesh_indices, td.tri_mesh_4x3_indices, atol=1e-3)
+    vertices, trimesh_indices = call(ivy_ren.coord_image_to_trimesh, td.coord_img, td.coord_validity_img,
+                                     batch_shape=[1], image_dims=[4, 3], dev_str='cpu')
+    assert np.allclose(vertices, td.tri_mesh_4x3_vertices, atol=1e-3)
+    assert np.allclose(trimesh_indices, td.tri_mesh_4x3_valid_indices, atol=1e-3)
