@@ -129,8 +129,8 @@ class PrimitiveScene(_Container):
             cuboid_sdfs = ivy_sdf.cuboid_signed_distances(
                 self.cuboid_ext_mats, self.cuboid_dims, query_positions)
             all_sdfs_list.append(cuboid_sdfs)
-        sdfs_concatted = self._f.concatenate(all_sdfs_list, -1) if len(all_sdfs_list) > 1 else all_sdfs_list[0]
-        return self._f.reduce_min(sdfs_concatted, -1, keepdims=True)
+        sdfs_concatted = _ivy.concatenate(all_sdfs_list, -1) if len(all_sdfs_list) > 1 else all_sdfs_list[0]
+        return _ivy.reduce_min(sdfs_concatted, -1, keepdims=True)
 
     # Getters #
     # --------#
