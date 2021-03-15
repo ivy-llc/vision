@@ -352,8 +352,8 @@ def main(interactive=True, f=None):
         data_dir + '/depth2.png', -1).tobytes(), np.float32), img_dims + [1]))
 
     # depth limits
-    depth_min = ivy.reduce_min(f.concatenate((depth1, depth2), 0))
-    depth_max = ivy.reduce_max(f.concatenate((depth1, depth2), 0))
+    depth_min = ivy.reduce_min(ivy.concatenate((depth1, depth2), 0))
+    depth_max = ivy.reduce_max(ivy.concatenate((depth1, depth2), 0))
     depth_limits = [depth_min, depth_max]
 
     # pixel coords
@@ -372,7 +372,7 @@ def main(interactive=True, f=None):
     # required mat formats
     cam1to2_full_mat_homo = ivy.matmul(cam2_geom.full_mats_homo, cam1_geom.inv_full_mats_homo)
     cam1to2_full_mat = cam1to2_full_mat_homo[..., 0:3, :]
-    full_mats_homo = ivy.concatenate((f.expand_dims(cam1_geom.full_mats_homo, 0),
+    full_mats_homo = ivy.concatenate((ivy.expand_dims(cam1_geom.full_mats_homo, 0),
                                       ivy.expand_dims(cam2_geom.full_mats_homo, 0)), 0)
     full_mats = full_mats_homo[..., 0:3, :]
 

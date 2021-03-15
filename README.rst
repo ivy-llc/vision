@@ -128,13 +128,15 @@ Run Through
 
 We run through some of the different parts of the library via a simple ongoing example script.
 The full script is available in the demos_ folder, as file ``run_through.py``.
-First, we select a random backend framework ``f`` to use for the examples, from the options
-``ivy.jax``, ``ivy.tensorflow``, ``ivy.torch``, ``ivy.mxnd`` or ``ivy.numpy``.
+First, we select a random backend framework to use for the examples, from the options
+``ivy.jax``, ``ivy.tensorflow``, ``ivy.torch``, ``ivy.mxnd`` or ``ivy.numpy``,
+and use this to set the ivy backend framework.
 
 .. code-block:: python
 
     from ivy_demo_utils.framework_utils import choose_random_framework
-    f = choose_random_framework()
+    from ivy.framework_handler import set_framework
+    set_framework(choose_random_framework())
 
 **Camera Geometry**
 
@@ -150,8 +152,8 @@ All of these matrices are contained within the Ivy camera geometry class.
 
     # shared intrinsic params
     img_dims = [512, 512]
-    pp_offsets = f.array([dim / 2 - 0.5 for dim in img_dims], 'float32')
-    cam_persp_angles = f.array([60 * np.pi / 180] * 2, 'float32')
+    pp_offsets = ivy.array([dim / 2 - 0.5 for dim in img_dims], 'float32')
+    cam_persp_angles = ivy.array([60 * np.pi / 180] * 2, 'float32')
 
     # ivy cam intrinsics container
     intrinsics = ivy_vision.persp_angles_and_pp_offsets_to_intrinsics_object(
@@ -160,8 +162,8 @@ All of these matrices are contained within the Ivy camera geometry class.
     # extrinsics
 
     # 3 x 4
-    cam1_inv_ext_mat = f.array(np.load(data_dir + '/cam1_inv_ext_mat.npy'), 'float32')
-    cam2_inv_ext_mat = f.array(np.load(data_dir + '/cam2_inv_ext_mat.npy'), 'float32')
+    cam1_inv_ext_mat = ivy.array(np.load(data_dir + '/cam1_inv_ext_mat.npy'), 'float32')
+    cam2_inv_ext_mat = ivy.array(np.load(data_dir + '/cam2_inv_ext_mat.npy'), 'float32')
 
     # full geometry
 
@@ -214,13 +216,13 @@ This representation simplifies projections between frames.
     # loading
 
     # h x w x 3
-    color1 = f.array(cv2.imread(data_dir + '/rgb1.png').astype(np.float32) / 255)
-    color2 = f.array(cv2.imread(data_dir + '/rgb2.png').astype(np.float32) / 255)
+    color1 = ivy.array(cv2.imread(data_dir + '/rgb1.png').astype(np.float32) / 255)
+    color2 = ivy.array(cv2.imread(data_dir + '/rgb2.png').astype(np.float32) / 255)
 
     # h x w x 1
-    depth1 = f.array(np.reshape(np.frombuffer(cv2.imread(
+    depth1 = ivy.array(np.reshape(np.frombuffer(cv2.imread(
         data_dir + '/depth1.png', -1).tobytes(), np.float32), img_dims + [1]))
-    depth2 = f.array(np.reshape(np.frombuffer(cv2.imread(
+    depth2 = ivy.array(np.reshape(np.frombuffer(cv2.imread(
         data_dir + '/depth2.png', -1).tobytes(), np.float32), img_dims + [1]))
 
     # pixel coords
@@ -247,10 +249,10 @@ We start with some optical flow and depth triangulation functions.
 .. code-block:: python
 
     # required mat formats
-    cam1to2_full_mat_homo = f.matmul(cam2_geom.full_mats_homo, cam1_geom.inv_full_mats_homo)
+    cam1to2_full_mat_homo = ivy.matmul(cam2_geom.full_mats_homo, cam1_geom.inv_full_mats_homo)
     cam1to2_full_mat = cam1to2_full_mat_homo[..., 0:3, :]
-    full_mats_homo = f.concatenate((f.expand_dims(cam1_geom.full_mats_homo, 0),
-                                    f.expand_dims(cam2_geom.full_mats_homo, 0)), 0)
+    full_mats_homo = ivy.concatenate((ivy.expand_dims(cam1_geom.full_mats_homo, 0),
+                                    ivy.expand_dims(cam2_geom.full_mats_homo, 0)), 0)
     full_mats = full_mats_homo[..., 0:3, :]
 
     # flow
@@ -302,10 +304,10 @@ to inverse warp the color data from frame 2 to frame 1, as shown below.
     depth2_warp_to_f1 = ivy.bilinear_resample(depth2, warp)
 
     # depth validity
-    depth_validity = f.abs(depth1_wrt_f2 - depth2_warp_to_f1) < 0.01
+    depth_validity = ivy.abs(depth1_wrt_f2 - depth2_warp_to_f1) < 0.01
 
     # inverse warp rendering with mask
-    color2_warp_to_f1_masked = f.where(depth_validity, color2_warp_to_f1, f.zeros_like(color2_warp_to_f1))
+    color2_warp_to_f1_masked = ivy.where(depth_validity, color2_warp_to_f1, ivy.zeros_like(color2_warp_to_f1))
 
 Again, visualizations of these images are given below.
 The images represent intermediate steps for the inverse warping of color from frame 2 to frame 1,
@@ -337,17 +339,17 @@ and again render the new color image in target frame 1.
 
     # forward warp rendering
     pixel_coords1_proj = ivy_vision.pixel_to_pixel_coords(pixel_coords2,
-                                                          f.inv(cam1to2_full_mat_homo)[..., 0:3, :])
-    pix_coords_w_color_in_f1 = f.concatenate((pixel_coords1_proj, color2), -1)
+                                                          ivy.inv(cam1to2_full_mat_homo)[..., 0:3, :])
+    pix_coords_w_color_in_f1 = ivy.concatenate((pixel_coords1_proj, color2), -1)
 
     # without depth buffer
     f1_forward_warp_no_db, _, _ = ivy_vision.render_pixel_coords(
-        f.reshape(pix_coords_w_color_in_f1, (-1, 6)), f.zeros_like(pix_coords_w_color_in_f1[..., 2:]),
+        ivy.reshape(pix_coords_w_color_in_f1, (-1, 6)), ivy.zeros_like(pix_coords_w_color_in_f1[..., 2:]),
         img_dims, with_db=False)
 
     # with depth buffer
     f1_forward_warp_w_db, _, _ = ivy_vision.render_pixel_coords(
-        f.reshape(pix_coords_w_color_in_f1, (-1, 6)), f.zeros_like(pix_coords_w_color_in_f1[..., 2:]),
+        ivy.reshape(pix_coords_w_color_in_f1, (-1, 6)), ivy.zeros_like(pix_coords_w_color_in_f1[..., 2:]),
         img_dims, with_db=False if f is ivy.mxnd else True)
 
 Again, visualizations of these images are given below.
