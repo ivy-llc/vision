@@ -419,7 +419,7 @@ def _quantize_omni_pixel_coords_with_depth_buffer_and_var(pixel_coords, prior, f
     # --------------#
 
     # num_valid_indices x 1
-    validity_mask = _ivy.reduce_sum(_ivy.cast(var_vals < var_threshold[..., 0, :, 1], 'int32'), -1, keepdims=True) == d
+    validity_mask = _ivy.reduce_sum(_ivy.cast(var_vals < var_threshold[..., 1], 'int32'), -1, keepdims=True) == d
 
     # num_valid_indices x len(BS)+2
     validity_indices = _ivy.reshape(_ivy.cast(_ivy.indices_where(
@@ -555,7 +555,8 @@ def _quantize_omni_pixel_coords_with_depth_buffer_and_var(pixel_coords, prior, f
     # BS x H x W x D
     quantized_var_normed = quantized_var_scaled - (quantized_depth_mean - mean_depth_min) / \
                            (mean_depth_range * min_depth_diff + MIN_DENOMINATOR)
-    quantized_var = _ivy.maximum(quantized_var_normed * var_vals_range + var_vals_min, var_threshold[..., 0])
+    quantized_var = _ivy.maximum(quantized_var_normed * var_vals_range + var_vals_min,
+                                 _ivy.expand_dims(var_threshold[..., 0], -2))
     quantized_var = _ivy.where(validity_mask, quantized_var, prior_var)
 
     # BS x H x W x (2+D)    BS x H x W x D    BS x H x W x 1
