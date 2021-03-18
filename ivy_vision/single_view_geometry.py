@@ -19,7 +19,7 @@ from ivy_vision.containers import CameraGeometry as _CameraGeometry
 MIN_DENOMINATOR = 1e-12
 
 
-def create_uniform_pixel_coords_image(image_dims, batch_shape=None, normalized=False, dev_str='cpu'):
+def create_uniform_pixel_coords_image(image_dims, batch_shape=None, normalized=False, dev_str=None):
     """
     Create image of homogeneous integer :math:`xy` pixel co-ordinates :math:`\mathbf{X}\in\mathbb{Z}^{h×w×3}`, stored
     as floating point values. The origin is at the top-left corner of the image, with :math:`+x` rightwards, and
@@ -37,7 +37,7 @@ def create_uniform_pixel_coords_image(image_dims, batch_shape=None, normalized=F
     :param normalized: Whether to normalize x-y pixel co-ordinates to the range 0-1.
     :type normalized: bool
     :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
-    :type dev_str: str
+    :type dev_str: str, optional
     :return: Image of homogeneous pixel co-ordinates *[batch_shape,height,width,3]*
     """
 
