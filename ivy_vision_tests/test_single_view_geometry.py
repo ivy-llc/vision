@@ -63,6 +63,14 @@ def test_rot_mats_and_cam_centers_to_ext_mats(dev_str, call):
                        td.ext_mats[0], atol=1e-6)
 
 
+def test_depth_to_pixel_coords(dev_str, call):
+    assert (np.allclose(call(ivy_svg.depth_to_pixel_coords, td.depth_maps, td.uniform_pixel_coords),
+                        td.pixel_coords, atol=1e-4))
+    assert (np.allclose(call(ivy_svg.depth_to_pixel_coords, td.depth_maps), td.pixel_coords, atol=1e-4))
+    assert (np.allclose(call(ivy_svg.depth_to_pixel_coords, td.depth_maps[0], td.uniform_pixel_coords[0]),
+                        td.pixel_coords[0], atol=1e-4))
+
+
 def test_cam_to_pixel_coords(dev_str, call):
     assert (
         np.allclose(call(ivy_svg.cam_to_pixel_coords, td.cam_coords, td.calib_mats), td.pixel_coords, atol=1e-4))

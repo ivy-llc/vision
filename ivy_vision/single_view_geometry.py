@@ -207,6 +207,40 @@ def rot_mat_and_cam_center_to_ext_mat(rotation_mat, camera_center, batch_shape=N
     return _ivy.matmul(rotation_mat, identity_w_cam_center)
 
 
+def depth_to_pixel_coords(depth, uniform_pixel_coords=None, batch_shape=None, image_dims=None):
+    """
+    Get depth scaled homogeneous pixel co-ordinates image :math:`\mathbf{X}_p\in\mathbb{R}^{h×w×3}` from depth image
+    :math:`\mathbf{X}_d\in\mathbb{R}^{h×w×1}`.\n
+
+    :param depth: Depth image *[batch_shape,h,w,1]*
+    :type depth: array
+    :param uniform_pixel_coords: Image of homogeneous pixel co-ordinates. Created if None. *[batch_shape,h,w,3]*
+    :type uniform_pixel_coords: array, optional
+    :param batch_shape: Shape of batch. Inferred from inputs if None.
+    :type batch_shape: sequence of ints, optional
+    :param image_dims: Image dimensions. Inferred from inputs in None.
+    :type image_dims: sequence of ints, optional
+    :return: Depth scaled homogeneous pixel co-ordinates image *[batch_shape,h,w,3]*
+    """
+
+    if batch_shape is None:
+        batch_shape = depth.shape[:-3]
+
+    if image_dims is None:
+        image_dims = depth.shape[-3:-1]
+
+    # shapes as list
+    batch_shape = list(batch_shape)
+    image_dims = list(image_dims)
+
+    # BS x H x W x 3
+    if uniform_pixel_coords is None:
+        uniform_pixel_coords = create_uniform_pixel_coords_image(image_dims, batch_shape, dev_str=_ivy.dev_str(depth))
+
+    # BS x H x W x 3
+    return uniform_pixel_coords * depth
+
+
 def cam_to_pixel_coords(coords_wrt_cam, calib_mat, batch_shape=None, image_dims=None):
     """
     Get depth scaled homogeneous pixel co-ordinates image :math:`\mathbf{X}_p\in\mathbb{R}^{h×w×3}` from camera-centric
