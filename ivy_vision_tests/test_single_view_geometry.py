@@ -71,6 +71,15 @@ def test_depth_to_pixel_coords(dev_str, call):
                         td.pixel_coords[0], atol=1e-4))
 
 
+def test_depth_to_radial_depth(dev_str, call):
+    assert (np.allclose(call(ivy_svg.depth_to_radial_depth, td.depth_maps, td.inv_calib_mats, td.uniform_pixel_coords),
+                        td.radial_depth_maps, atol=1e-4))
+    assert (np.allclose(call(ivy_svg.depth_to_radial_depth, td.depth_maps, td.inv_calib_mats),
+                        td.radial_depth_maps, atol=1e-4))
+    assert (np.allclose(call(ivy_svg.depth_to_radial_depth, td.depth_maps[0], td.inv_calib_mats[0],
+                             td.uniform_pixel_coords[0]), td.radial_depth_maps[0], atol=1e-4))
+
+
 def test_cam_to_pixel_coords(dev_str, call):
     assert (
         np.allclose(call(ivy_svg.cam_to_pixel_coords, td.cam_coords, td.calib_mats), td.pixel_coords, atol=1e-4))

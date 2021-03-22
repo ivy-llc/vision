@@ -241,6 +241,48 @@ def depth_to_pixel_coords(depth, uniform_pixel_coords=None, batch_shape=None, im
     return uniform_pixel_coords * depth
 
 
+def depth_to_radial_depth(depth, inv_calib_mat, uniform_pixel_coords=None, batch_shape=None, image_dims=None):
+    """
+    Get radial depth image :math:`\mathbf{X}_{rd}\in\mathbb{R}^{h×w×1}` from depth image
+    :math:`\mathbf{X}_d\in\mathbb{R}^{h×w×1}`.\n
+
+    :param depth: Depth image *[batch_shape,h,w,1]*
+    :type depth: array
+    :param inv_calib_mat: Inverse calibration matrix *[batch_shape,3,3]*
+    :type inv_calib_mat: array
+    :param uniform_pixel_coords: Image of homogeneous pixel co-ordinates. Created if None. *[batch_shape,h,w,3]*
+    :type uniform_pixel_coords: array, optional
+    :param batch_shape: Shape of batch. Inferred from inputs if None.
+    :type batch_shape: sequence of ints, optional
+    :param image_dims: Image dimensions. Inferred from inputs in None.
+    :type image_dims: sequence of ints, optional
+    :return: Radial depth image *[batch_shape,h,w,1]*
+    """
+
+    if batch_shape is None:
+        batch_shape = depth.shape[:-3]
+
+    if image_dims is None:
+        image_dims = depth.shape[-3:-1]
+
+    # shapes as list
+    batch_shape = list(batch_shape)
+    image_dims = list(image_dims)
+
+    # BS x H x W x 3
+    if uniform_pixel_coords is None:
+        uniform_pixel_coords = create_uniform_pixel_coords_image(image_dims, batch_shape, dev_str=_ivy.dev_str(depth))
+
+    # BS x H x W x 3
+    pixel_coords = depth_to_pixel_coords(depth, uniform_pixel_coords, batch_shape, image_dims)
+
+    # BS x H x W x 3
+    cam_coords = pixel_to_cam_coords(pixel_coords, inv_calib_mat, batch_shape, image_dims)[..., 0:3]
+
+    # BS x H x W x 1
+    return _ivy.reduce_sum(cam_coords**2, -1, keepdims=True)**0.5
+
+
 def cam_to_pixel_coords(coords_wrt_cam, calib_mat, batch_shape=None, image_dims=None):
     """
     Get depth scaled homogeneous pixel co-ordinates image :math:`\mathbf{X}_p\in\mathbb{R}^{h×w×3}` from camera-centric
@@ -593,7 +635,7 @@ def calib_and_ext_to_full_mat(calib_mat, ext_mat):
     return _ivy.matmul(calib_mat, ext_mat)
 
 
-def cam_to_sphere_coords(cam_coords, batch_shape=None, image_dims=None):
+def cam_to_sphere_coords(cam_coords):
     """
     Convert camera-centric homogeneous cartesian co-ordinates image :math:`\mathbf{X}_c\in\mathbb{R}^{h×w×4}` to
     camera-centric ego-sphere polar co-ordinates image :math:`\mathbf{S}_c\in\mathbb{R}^{h×w×3}`.\n
@@ -601,27 +643,11 @@ def cam_to_sphere_coords(cam_coords, batch_shape=None, image_dims=None):
 
     :param cam_coords: Camera-centric homogeneous cartesian co-ordinates image *[batch_shape,h,w,4]*
     :type cam_coords: array
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_dims: Image dimensions. Inferred from inputs in None.
-    :type image_dims: sequence of ints, optional
     :return: Camera-centric ego-sphere polar co-ordinates image *[batch_shape,h,w,3]*
     """
 
-    if batch_shape is None:
-        batch_shape = cam_coords.shape[:-3]
-
-    if image_dims is None:
-        image_dims = cam_coords.shape[-3:-1]
-
-    # shapes as list
-    batch_shape = list(batch_shape)
-    image_dims = list(image_dims)
-
     # BS x H x W x 3
-    return _ivy.reshape(
-        _ivy_mec.cartesian_to_polar_coords(_ivy.reshape(cam_coords[..., 0:3], (-1, 3))),
-        batch_shape + image_dims + [3])
+    return _ivy_mec.cartesian_to_polar_coords(cam_coords[..., 0:3])
 
 
 def pixel_to_sphere_coords(pixel_coords, inv_calib_mat, batch_shape=None, image_dims=None):
@@ -655,7 +681,7 @@ def pixel_to_sphere_coords(pixel_coords, inv_calib_mat, batch_shape=None, image_
     cam_coords = pixel_to_cam_coords(pixel_coords, inv_calib_mat, batch_shape, image_dims)
 
     # BS x H x W x 3
-    return cam_to_sphere_coords(cam_coords, batch_shape, image_dims)
+    return cam_to_sphere_coords(cam_coords)
 
 
 def angular_pixel_to_sphere_coords(angular_pixel_coords, pixels_per_degree):

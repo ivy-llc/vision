@@ -136,10 +136,10 @@ class TestData:
 
         # sphere coords
         with ivy.numpy.use:
-            self.sphere_coords = \
-                np.reshape(ivy_mech.cartesian_to_polar_coords(
-                    np.reshape(self.cam_coords_not_homo, (-1, 3))),
-                    (self.batch_size, self.num_cameras, self.image_dims[0], self.image_dims[1], 3))
+            self.sphere_coords = ivy_mech.cartesian_to_polar_coords(self.cam_coords_not_homo)
+
+        # radial depth
+        self.radial_depth_maps = self.sphere_coords[..., -1:]
 
         # angular_pixel_coords
         self.sphere_img_dims = [90, 180]
