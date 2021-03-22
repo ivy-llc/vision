@@ -1,5 +1,7 @@
 from . import containers
 from .containers import *
+from . import implicit
+from .implicit import *
 from . import optical_flow
 from .optical_flow import *
 from . import projective_geometry
