@@ -45,3 +45,28 @@ def stratified_sample(starts, ends, num_samples, batch_shape=None):
 
     # BS x NS
     return linspace_vals + random_offsets
+
+
+# noinspection PyUnresolvedReferences
+def render_rays_via_quadrature_rule(radial_depths, features, densities):
+    """
+    Render features onto the image plane, given rays sampled at radial depths with readings of
+    feature values and densities at these sample points.
+
+    :param radial_depths: Radial depth values *[batch_shape,num_samples_per_ray+1]*
+    :type radial_depths: array
+    :param features: Feature values at the sample points *[batch_shape,num_samples_per_ray,feat_dim]*
+    :type features: array
+    :param densities: Volume density values at the sample points *[batch_shape,num_samples_per_ray]*
+    :type densities: array
+    :return: The feature renderins along the rays, computed via the quadrature rule *[batch_shape,feat_dim]*
+    """
+
+    # BS x NSPR
+    d = radial_depths[..., 1:] - radial_depths[..., :-1]
+
+    # BS x NSPR
+    T = ivy.exp(-ivy.cumsum(densities * d, -1))
+
+    # BS x FD
+    return ivy.reduce_sum(T * (1-ivy.exp(-densities*d)) * features, -1)

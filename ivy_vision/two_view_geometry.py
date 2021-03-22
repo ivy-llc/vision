@@ -126,7 +126,7 @@ def sphere_to_sphere_coords(sphere_coords1, cam1to2_ext_mat, batch_shape=None, i
     cam_coords2 = cam_to_cam_coords(cam_coords1, cam1to2_ext_mat, batch_shape, image_dims)
 
     # BS x H x W x 3
-    return _ivy_svg.cam_to_sphere_coords(cam_coords2, batch_shape, image_dims)
+    return _ivy_svg.cam_to_sphere_coords(cam_coords2)
 
 
 def angular_pixel_to_angular_pixel_coords(angular_pixel_coords1, cam1to2_ext_mat, pixels_per_degree, batch_shape=None,
