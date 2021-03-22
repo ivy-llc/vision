@@ -25,9 +25,9 @@ class ImplicitTestData(TestData):
                                   [[0.6, 0.4, 0.2], [0.9, 0.3, 0.6], [0.4, 0.8, 0.5]]], np.float32)
         self.densities = np.array([[0.3, 2.4, 0.4], [0.2, 0.7, 0.4], [0.1, 0.3, 1.2]], np.float32)
 
-        self.quadrature_rendering = np.array([[0.04095065, 0.15215576, 0.08457951],
-                                              [0.07130891, 0.20325199, 0.24568483],
-                                              [0.14261782, 0.19076426, 0.24895583]], np.float32)
+        self.quadrature_rendering = np.array([[0.06259394, 0.11119541, 0.1571928 ],
+                                              [0.12944466, 0.23419851, 0.13134202],
+                                              [0.2815921 , 0.20865306, 0.18783332]], np.float32)
 
 
 td = ImplicitTestData()

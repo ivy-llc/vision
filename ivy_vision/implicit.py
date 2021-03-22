@@ -65,8 +65,8 @@ def render_rays_via_quadrature_rule(radial_depths, features, densities):
     # BS x NSPR
     d = radial_depths[..., 1:] - radial_depths[..., :-1]
 
-    # BS x NSPR
-    T = ivy.exp(-ivy.cumsum(densities * d, -1))
+    # BS x NSPR x 1
+    T = ivy.expand_dims(ivy.exp(-ivy.cumsum(densities * d, -1)), -1)
 
     # BS x FD
-    return ivy.reduce_sum(T * (1-ivy.exp(-densities*d)) * features, -1)
+    return ivy.reduce_sum(T * ivy.expand_dims(1-ivy.exp(-densities*d), -1) * features, -2)
