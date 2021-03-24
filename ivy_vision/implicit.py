@@ -68,7 +68,7 @@ def stratified_sample(starts, ends, num_samples, batch_shape=None):
 
     # BS_flat x NS
     random_offsets_flat = ivy.concatenate(
-        [ivy.random_uniform(0, bin_size, shape=(1, num_samples))
+        [ivy.random_uniform(0, bin_size, shape=(1, num_samples), dev_str=ivy.dev_str(starts))
          for bin_size in ivy.unstack(bin_sizes_flat, 0)], 0)
 
     # BS x NS
@@ -97,34 +97,12 @@ def render_rays_via_termination_probabilities(radial_depths, features, densities
 
     # BS x NSPR
     d = radial_depths[..., 1:] - radial_depths[..., :-1]
-    ray_term_probs = ray_termination_probabilities(densities, d)
+    ray_term_probs = ivy.expand_dims(ray_termination_probabilities(densities, d), -1)
     rendering = ivy.reduce_sum(ray_term_probs * features, -2)
     if not render_variance:
         return rendering
-    var = ivy.reduce_sum(ray_term_probs*(rendering - features)**2, -2)
+    var = ivy.reduce_sum(ray_term_probs*(ivy.expand_dims(rendering, -2) - features)**2, -2)
     return rendering, var
-
-
-# noinspection PyUnresolvedReferences
-def render_ray_variances_via_termination_probabilities(radial_depths, features, densities):
-    """
-    Render features onto the image plane, given rays sampled at radial depths with readings of
-    feature values and densities at these sample points.
-
-    :param radial_depths: Radial depth values *[batch_shape,num_samples_per_ray+1]*
-    :type radial_depths: array
-    :param features: Feature values at the sample points *[batch_shape,num_samples_per_ray,feat_dim]*
-    :type features: array
-    :param densities: Volume density values at the sample points *[batch_shape,num_samples_per_ray]*
-    :type densities: array
-    :return: The feature renderings along the rays, computed via the termination probabilities *[batch_shape,feat_dim]*
-    """
-
-    # BS x NSPR
-    rendering = render_rays_via_termination_probabilities(radial_depths, features, densities)
-    d = radial_depths[..., 1:] - radial_depths[..., :-1]
-    ray_term_probs = ray_termination_probabilities(densities, d)
-    return ivy.reduce_sum(ray_term_probs * features, -2)
 
 
 # noinspection PyUnresolvedReferences
