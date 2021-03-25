@@ -63,16 +63,11 @@ def stratified_sample(starts, ends, num_samples, batch_shape=None):
     # BS x NS
     linspace_vals = ivy.linspace(starts, ends - bin_sizes, num_samples)
 
-    # BS_flat
-    bin_sizes_flat = ivy.reshape(bin_sizes, (-1,))
-
-    # BS_flat x NS
-    random_offsets_flat = ivy.concatenate(
-        [ivy.random_uniform(0, bin_size, shape=(1, num_samples), dev_str=ivy.dev_str(starts))
-         for bin_size in ivy.unstack(bin_sizes_flat, 0)], 0)
+    # BS x NS
+    random_uniform = ivy.random_uniform(shape=batch_shape + [num_samples], dev_str=ivy.dev_str(starts))
 
     # BS x NS
-    random_offsets = ivy.reshape(random_offsets_flat, batch_shape + [num_samples])
+    random_offsets = random_uniform * ivy.expand_dims(bin_sizes, -1)
 
     # BS x NS
     return linspace_vals + random_offsets
