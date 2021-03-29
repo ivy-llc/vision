@@ -1,4 +1,5 @@
 # global
+import ivy
 import numpy as np
 
 # local
@@ -31,16 +32,12 @@ class ImplicitTestData(TestData):
         self.ray_term_probs = np.array([[0.2591818, 0.6736127, 0.0221563],
                                         [0.09516257, 0.26720923, 0.11558241],
                                         [0.18126929, 0.21220009, 0.4238471]], np.float32)
-        # ToDo: verify the below renderings should indeed be unique, if not, find the bug.
-        self.quad_feature_rendering = np.array([[0.06259394, 0.11119541, 0.1571928],
-                                                [0.12944466, 0.23419851, 0.13134202],
-                                                [0.2815921, 0.20865306, 0.18783332]], np.float32)
-        self.term_prob_feature_rendering = np.array([[0.67582834, 0.2687447, 0.39015797],
-                                                     [0.17371163, 0.31010312, 0.1705867],
-                                                     [0.46928048, 0.47524542, 0.37549746]], np.float32)
-        self.term_prob_var_rendering = np.array([[0.19651437, 0.01714887, 0.03053752],
-                                                 [0.03059392, 0.08199483, 0.03734457],
-                                                 [0.04449904, 0.05224446, 0.02284816]], np.float32)
+        self.term_prob_feature_rendering = np.array([[0.1132895, 0.43268824, 0.17733827],
+                                                     [0.14346276, 0.5127491, 0.33358333],
+                                                     [0.3136631, 0.51936793, 0.28570426]], np.float32)
+        self.term_prob_var_rendering = np.array([[0.07818058, 0.0290091, 0.01416876],
+                                                 [0.01879034, 0.10707875, 0.05824544],
+                                                 [0.05531723, 0.03916851, 0.03104438]], np.float32)
 
         # positional encoding
         self.x = np.array([[0., 2.], [1., 3.], [2., 4.], [3., 5.]])
@@ -49,6 +46,13 @@ class ImplicitTestData(TestData):
              [1., 3., 0.84147098, 0.14112001, 0.54030231, -0.9899925, 0.90929743, -0.2794155, -0.41614684, 0.96017029],
              [2., 4., 0.90929743, -0.7568025, -0.41614684, -0.65364362, -0.7568025, 0.98935825, -0.65364362, -0.14550003],
              [3., 5., 0.14112001, -0.95892427, -0.9899925, 0.28366219, -0.2794155, -0.54402111, 0.96017029, -0.83907153]])
+
+        # render implicit features and depth
+        self.implicit_fn = lambda x, v=None: (ivy.array(self.features), ivy.array(self.densities))
+        self.rays_o = np.array([0, 0, 0], np.float32)
+        self.rays_d = np.array([[1, 2, 3], [-1, -2, -3], [1, -2, 1]], np.float32)
+        self.near = np.array([0.5, 0.7, 0.9], np.float32)
+        self.far = np.array([6, 7, 8], np.float32)
 
 
 td = ImplicitTestData()
@@ -83,15 +87,16 @@ def test_stratified_sample(dev_str, call):
 
 
 def test_render_rays_via_termination_probabilities(dev_str, call):
-    rendering, var = call(ivy_imp.render_rays_via_termination_probabilities, td.radial_depths, td.features,
-                          td.densities, render_variance=True)
+    rendering, var = call(ivy_imp.render_rays_via_termination_probabilities, td.ray_term_probs, td.features,
+                          render_variance=True)
     assert rendering.shape == td.radial_depths.shape[:-1] + (3,)
     assert var.shape == td.radial_depths.shape[:-1] + (3,)
     assert np.allclose(rendering, td.term_prob_feature_rendering)
     assert np.allclose(var, td.term_prob_var_rendering)
 
 
-def test_render_rays_via_quadrature_rule(dev_str, call):
-    res = call(ivy_imp.render_rays_via_quadrature_rule, td.radial_depths, td.features, td.densities)
-    assert res.shape == td.radial_depths.shape[:-1] + (3,)
-    assert np.allclose(res, td.quad_feature_rendering)
+def test_render_implicit_features_and_depth(dev_str, call):
+    rgb, depth = call(ivy_imp.render_implicit_features_and_depth, td.implicit_fn, td.rays_o, td.rays_d, td.near,
+                      td.far, 3)
+    assert rgb.shape == (3, 3)
+    assert depth.shape == (3, 1)

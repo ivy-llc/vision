@@ -46,8 +46,7 @@ def ray_termination_probabilities(density, inter_sample_distance):
 
     # BS x NSPR
     occ_prob = sampled_volume_density_to_occupancy_probability(density, inter_sample_distance)
-    cumprod_one_m_occ_prob = ivy.cumprod(1 - occ_prob, -1)
-    return ivy.concatenate((occ_prob[..., 0:1], occ_prob[..., 1:] * cumprod_one_m_occ_prob[..., :-1]), -1)
+    return occ_prob * ivy.cumprod(1. - occ_prob + 1e-10, -1, exclusive=True)
 
 
 # noinspection PyUnresolvedReferences
@@ -91,25 +90,21 @@ def stratified_sample(starts, ends, num_samples, batch_shape=None):
 
 
 # noinspection PyUnresolvedReferences
-def render_rays_via_termination_probabilities(radial_depths, features, densities, render_variance=False):
+def render_rays_via_termination_probabilities(ray_term_probs, features, render_variance=False):
     """
     Render features onto the image plane, given rays sampled at radial depths with readings of
     feature values and densities at these sample points.
 
-    :param radial_depths: Radial depth values *[batch_shape,num_samples_per_ray+1]*
-    :type radial_depths: array
+    :param ray_term_probs: The ray termination probabilities *[batch_shape,num_samples_per_ray]*
+    :type ray_term_probs: array
     :param features: Feature values at the sample points *[batch_shape,num_samples_per_ray,feat_dim]*
     :type features: array
-    :param densities: Volume density values at the sample points *[batch_shape,num_samples_per_ray]*
-    :type densities: array
     :param render_variance: Whether to also render the feature variance. Default is False.
     :type render_variance: bool, optional
     :return: The feature renderings along the rays, computed via the termination probabilities *[batch_shape,feat_dim]*
     """
 
     # BS x NSPR
-    d = radial_depths[..., 1:] - radial_depths[..., :-1]
-    ray_term_probs = ivy.expand_dims(ray_termination_probabilities(densities, d), -1)
     rendering = ivy.reduce_sum(ray_term_probs * features, -2)
     if not render_variance:
         return rendering
@@ -117,26 +112,44 @@ def render_rays_via_termination_probabilities(radial_depths, features, densities
     return rendering, var
 
 
-# noinspection PyUnresolvedReferences
-def render_rays_via_quadrature_rule(radial_depths, features, densities):
+def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, num_samples, render_variance=False,
+                                       v=None):
     """
-    Render features onto the image plane, given rays sampled at radial depths with readings of
-    feature values and densities at these sample points.
+    Render an rgb-d image, given an implicit rgb and density function conditioned on xyz data.
 
-    :param radial_depths: Radial depth values *[batch_shape,num_samples_per_ray+1]*
-    :type radial_depths: array
-    :param features: Feature values at the sample points *[batch_shape,num_samples_per_ray,feat_dim]*
-    :type features: array
-    :param densities: Volume density values at the sample points *[batch_shape,num_samples_per_ray]*
-    :type densities: array
-    :return: The feature renderings along the rays, computed via the quadrature rule *[batch_shape,feat_dim]*
+    :param network_fn: the implicit function.
+    :type network_fn: callable
+    :param rays_o: The camera center *[batch_shape,feat]*
+    :type rays_o: array
+    :param rays_d: The rays in world space *[batch_shape,ray_batch_shape,feat]*
+    :type rays_d: array
+    :param near: The near clipping plane values *[batch_shape,ray_batch_shape]*
+    :type near: array
+    :param far: The far clipping plane values *[batch_shape,ray_batch_shape]*
+    :type far: array
+    :param num_samples: The number of stratified samples to use along each ray
+    :type num_samples: int
+    :param render_variance: Whether to also render the feature variance. Default is False.
+    :type render_variance: bool, optional
+    :param v: The container of trainable variables for the implicit model. default is to use internal variables.
+    :type v: ivy Container of variables
+    :return: The rendered feature *[batch_shape,ray_batch_shape,feat]* and depth *[batch_shape,ray_batch_shape,1]* values
     """
 
-    # BS x NSPR
-    d = radial_depths[..., 1:] - radial_depths[..., :-1]
+    # Compute 3D query points
+    z_vals = ivy.expand_dims(stratified_sample(near, far, num_samples), -1)
+    rays_d = ivy.expand_dims(rays_d, -2)
+    rays_o = ivy.broadcast_to(rays_o, rays_d.shape)
+    pts = rays_o + rays_d * z_vals
 
-    # BS x NSPR x 1
-    T = ivy.expand_dims(ivy.exp(-ivy.cumsum(densities * d, -1)), -1)
+    # Run network
+    feat, densities = network_fn(pts, v=v)
 
-    # BS x FD
-    return ivy.reduce_sum(T * ivy.expand_dims(1-ivy.exp(-densities*d), -1) * features, -2)
+    z_vals_w_terminal = ivy.concatenate((z_vals[..., 0], ivy.ones_like(z_vals[..., -1:, 0])*1e10), -1)
+    depth_diffs = z_vals_w_terminal[..., 1:] - z_vals_w_terminal[..., :-1]
+    ray_term_probs = ivy.expand_dims(ray_termination_probabilities(densities, depth_diffs), -1)
+    feat = render_rays_via_termination_probabilities(ray_term_probs, feat, render_variance)
+    depth = render_rays_via_termination_probabilities(ray_term_probs, z_vals, render_variance)
+    if render_variance:
+        return (*feat, *depth)
+    return feat, depth
