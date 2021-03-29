@@ -36,14 +36,29 @@ class ImplicitTestData(TestData):
                                                 [0.12944466, 0.23419851, 0.13134202],
                                                 [0.2815921, 0.20865306, 0.18783332]], np.float32)
         self.term_prob_feature_rendering = np.array([[0.67582834, 0.2687447, 0.39015797],
-                                                     [0.17371163, 0.31010312, 0.1705867 ],
+                                                     [0.17371163, 0.31010312, 0.1705867],
                                                      [0.46928048, 0.47524542, 0.37549746]], np.float32)
         self.term_prob_var_rendering = np.array([[0.19651437, 0.01714887, 0.03053752],
                                                  [0.03059392, 0.08199483, 0.03734457],
                                                  [0.04449904, 0.05224446, 0.02284816]], np.float32)
 
+        # positional encoding
+        self.x = np.array([[0., 2.], [1., 3.], [2., 4.], [3., 5.]])
+        self.embedding = np.array(
+            [[0., 2., 0., 0.90929743, 1., -0.41614684, 0., -0.7568025, 1., -0.65364362],
+             [1., 3., 0.84147098, 0.14112001, 0.54030231, -0.9899925, 0.90929743, -0.2794155, -0.41614684, 0.96017029],
+             [2., 4., 0.90929743, -0.7568025, -0.41614684, -0.65364362, -0.7568025, 0.98935825, -0.65364362, -0.14550003],
+             [3., 5., 0.14112001, -0.95892427, -0.9899925, 0.28366219, -0.2794155, -0.54402111, 0.96017029, -0.83907153]])
+
 
 td = ImplicitTestData()
+
+
+def test_sinusoid_positional_encoding(dev_str, call):
+    embed_length = 2
+    embedding = call(ivy_imp.sinusoid_positional_encoding, td.x, embed_length)
+    assert embedding.shape[-1] == td.x.shape[-1] + td.x.shape[-1] * 2 * embed_length
+    assert np.allclose(embedding, td.embedding)
 
 
 def test_sampled_volume_density_to_occupancy_probability(dev_str, call):
@@ -64,7 +79,7 @@ def test_stratified_sample(dev_str, call):
     assert res.shape == (3, num)
     for i in range(3):
         for j in range(num - 1):
-            assert res[i][j] < res[i][j+1]
+            assert res[i][j] < res[i][j + 1]
 
 
 def test_render_rays_via_termination_probabilities(dev_str, call):
