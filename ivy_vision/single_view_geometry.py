@@ -532,7 +532,7 @@ def pixel_coords_to_world_ray_vectors(pixel_coords, inv_full_mat, camera_center=
     :type batch_shape: sequence of ints, optional
     :param image_dims: Image dimensions. Inferred from inputs in None.
     :type image_dims: sequence of ints, optional
-    :return: World ray vectors *[batch_shape,h,w,4]*
+    :return: World ray vectors *[batch_shape,h,w,3]*
     """
 
     if batch_shape is None:
@@ -556,6 +556,43 @@ def pixel_coords_to_world_ray_vectors(pixel_coords, inv_full_mat, camera_center=
               - camera_centers_reshaped
 
     # BS x H x W x 3
+    return vectors / (_ivy.reduce_sum(vectors ** 2, -1, keepdims=True) ** 0.5 + MIN_DENOMINATOR)
+
+
+def sphere_coords_to_world_ray_vectors(sphere_coords, inv_rotation_mat, batch_shape=None, image_dims=None):
+    """
+    Calculate world-centric ray vector image :math:`\mathbf{RV}\in\mathbb{R}^{h×w×3}` from camera-centric ego-sphere
+    polar co-ordinates image :math:`\mathbf{S}_c\in\mathbb{R}^{h×w×3}`. Each ray vector
+    :math:`\mathbf{rv}_{i,j}\in\mathbb{R}^{3}` is represented as a unit vector from the camera center
+    :math:`\overset{\sim}{\mathbf{C}}\in\mathbb{R}^{3×1}`, in the world frame. Co-ordinates
+    :math:`\mathbf{x}_{i,j}\in\mathbb{R}^{3}` along the world ray can then be parameterized as
+    :math:`\mathbf{x}_{i,j}=\overset{\sim}{\mathbf{C}} + λ\mathbf{rv}_{i,j}`, where :math:`λ` is a scalar who's
+    magnitude dictates the position of the world co-ordinate along the world ray.
+
+    :param sphere_coords: Camera-centric ego-sphere polar co-ordinates image *[batch_shape,h,w,3]*
+    :type sphere_coords: array
+    :param inv_rotation_mat: Inverse rotation matrix *[batch_shape,3,3]*
+    :type inv_rotation_mat: array
+    :param batch_shape: Shape of batch. Inferred from inputs if None.
+    :type batch_shape: sequence of ints, optional
+    :param image_dims: Image dimensions. Inferred from inputs in None.
+    :type image_dims: sequence of ints, optional
+    :return: World ray vectors *[batch_shape,h,w,3]*
+    """
+
+    if batch_shape is None:
+        batch_shape = sphere_coords.shape[:-3]
+
+    if image_dims is None:
+        image_dims = sphere_coords.shape[-3:-1]
+
+    # shapes as list
+    batch_shape = list(batch_shape)
+    image_dims = list(image_dims)
+
+    # BS x H x W x 3
+    cam_coords = sphere_to_cam_coords(sphere_coords, batch_shape, image_dims)[..., 0:3]
+    vectors = _ivy_pg.transform(cam_coords, inv_rotation_mat, batch_shape, image_dims)
     return vectors / (_ivy.reduce_sum(vectors ** 2, -1, keepdims=True) ** 0.5 + MIN_DENOMINATOR)
 
 
@@ -690,7 +727,7 @@ def angular_pixel_to_sphere_coords(angular_pixel_coords, pixels_per_degree):
     polar co-ordinates image :math:`\mathbf{S}_c\in\mathbb{R}^{h×w×3}`.\n
     `[reference] <https://en.wikipedia.org/wiki/Spherical_coordinate_system#Cartesian_coordinates>`_
 
-    :param angular_pixel_coords: Angular pixel co-ordinates image *[batch_shape,h,w,2]*
+    :param angular_pixel_coords: Angular pixel co-ordinates image *[batch_shape,h,w,3]*
     :type angular_pixel_coords: array
     :param pixels_per_degree: Number of pixels per angular degree
     :type pixels_per_degree: float
