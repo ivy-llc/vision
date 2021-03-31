@@ -136,7 +136,10 @@ class TestData:
 
         # sphere coords
         with ivy.numpy.use:
-            self.sphere_coords = ivy_mech.cartesian_to_polar_coords(self.cam_coords_not_homo)
+            cam_coords_not_homo = ivy.concatenate((self.cam_coords_not_homo[..., 2:3],
+                                                   self.cam_coords_not_homo[..., 0:1],
+                                                   self.cam_coords_not_homo[..., 1:2]), -1)
+            self.sphere_coords = ivy_mech.cartesian_to_polar_coords(cam_coords_not_homo)
 
         # radial depth
         self.radial_depth_maps = self.sphere_coords[..., -1:]
@@ -148,8 +151,8 @@ class TestData:
         sphere_angle_coords = self.sphere_coords[..., 0:2]
         sphere_radius_vals = self.sphere_coords[..., -1:]
         sphere_angle_coords_in_degs = sphere_angle_coords * 180 / np.pi
-        sphere_x_coords = (sphere_angle_coords_in_degs[..., 0:1] + 180) * self.pixels_per_degree
-        sphere_y_coords = sphere_angle_coords_in_degs[..., 1:2] * self.pixels_per_degree
+        sphere_x_coords = (180 - sphere_angle_coords_in_degs[..., 0:1] % 360) * self.pixels_per_degree
+        sphere_y_coords = (sphere_angle_coords_in_degs[..., 1:2] % 180) * self.pixels_per_degree
         self.angular_pixel_coords = np.concatenate((sphere_x_coords, sphere_y_coords, sphere_radius_vals), -1)
 
         # world coords
@@ -184,9 +187,12 @@ class TestData:
 
         # projected sphere coords
         with ivy.numpy.use:
+            proj_cam_coords = ivy.concatenate((self.proj_cam_coords[..., 2:3],
+                                               self.proj_cam_coords[..., 0:1],
+                                               self.proj_cam_coords[..., 1:2]), -1)
             self.proj_sphere_coords = \
                 np.reshape(ivy_mech.cartesian_to_polar_coords(
-                    np.reshape(self.proj_cam_coords[..., 0:3], (-1, 3))),
+                    np.reshape(proj_cam_coords, (-1, 3))),
                     (self.batch_size, self.num_cameras, self.image_dims[0], self.image_dims[1], 3))
 
         # projected pixel coords
@@ -203,8 +209,8 @@ class TestData:
         sphere_radius_vals = self.proj_sphere_coords[..., -1:]
         sphere_angle_coords = self.proj_sphere_coords[..., 0:2]
         sphere_angle_coords_in_degs = sphere_angle_coords * 180 / np.pi
-        sphere_x_coords = (sphere_angle_coords_in_degs[..., 0:1] + 180) * self.pixels_per_degree
-        sphere_y_coords = sphere_angle_coords_in_degs[..., 1:2] * self.pixels_per_degree
+        sphere_x_coords = (180 - sphere_angle_coords_in_degs[..., 0:1] % 360) * self.pixels_per_degree
+        sphere_y_coords = (sphere_angle_coords_in_degs[..., 1:2] % 360) * self.pixels_per_degree
         self.proj_angular_pixel_coords =\
             np.concatenate((sphere_x_coords, sphere_y_coords, sphere_radius_vals), -1)
 

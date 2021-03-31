@@ -591,7 +591,7 @@ def sphere_coords_to_world_ray_vectors(sphere_coords, inv_rotation_mat, batch_sh
     image_dims = list(image_dims)
 
     # BS x H x W x 3
-    cam_coords = sphere_to_cam_coords(sphere_coords, batch_shape, image_dims)[..., 0:3]
+    cam_coords = sphere_to_cam_coords(sphere_coords, batch_shape=batch_shape, image_dims=image_dims)[..., 0:3]
     vectors = _ivy_pg.transform(cam_coords, inv_rotation_mat, batch_shape, image_dims)
     return vectors / (_ivy.reduce_sum(vectors ** 2, -1, keepdims=True) ** 0.5 + MIN_DENOMINATOR)
 
@@ -672,7 +672,7 @@ def calib_and_ext_to_full_mat(calib_mat, ext_mat):
     return _ivy.matmul(calib_mat, ext_mat)
 
 
-def cam_to_sphere_coords(cam_coords):
+def cam_to_sphere_coords(cam_coords, forward_facing_z=True):
     """
     Convert camera-centric homogeneous cartesian co-ordinates image :math:`\mathbf{X}_c\in\mathbb{R}^{h×w×4}` to
     camera-centric ego-sphere polar co-ordinates image :math:`\mathbf{S}_c\in\mathbb{R}^{h×w×3}`.\n
@@ -680,11 +680,19 @@ def cam_to_sphere_coords(cam_coords):
 
     :param cam_coords: Camera-centric homogeneous cartesian co-ordinates image *[batch_shape,h,w,4]*
     :type cam_coords: array
+    :param forward_facing_z: Whether to use reference frame so z is forward facing. Default is False.
+    :type forward_facing_z: bool, optional
     :return: Camera-centric ego-sphere polar co-ordinates image *[batch_shape,h,w,3]*
     """
 
     # BS x H x W x 3
-    return _ivy_mec.cartesian_to_polar_coords(cam_coords[..., 0:3])
+    if forward_facing_z:
+        cam_coords = _ivy.concatenate((cam_coords[..., 2:3], cam_coords[..., 0:1], cam_coords[..., 1:2]), -1)
+    else:
+        cam_coords = cam_coords[..., 0:3]
+
+    # BS x H x W x 3
+    return _ivy_mec.cartesian_to_polar_coords(cam_coords)
 
 
 def pixel_to_sphere_coords(pixel_coords, inv_calib_mat, batch_shape=None, image_dims=None):
@@ -739,19 +747,18 @@ def angular_pixel_to_sphere_coords(angular_pixel_coords, pixels_per_degree):
     sphere_y_coords = angular_pixel_coords[..., 1:2]
     radius_values = angular_pixel_coords[..., 2:3]
 
-    sphere_x_angle_coords_in_degs = sphere_x_coords/(pixels_per_degree + MIN_DENOMINATOR) - 180
-    sphere_y_angle_coords_in_degs = sphere_y_coords/(pixels_per_degree + MIN_DENOMINATOR)
+    sphere_x_angle_coords_in_degs = (180 - sphere_x_coords/(pixels_per_degree + MIN_DENOMINATOR) % 360)
+    sphere_y_angle_coords_in_degs = (sphere_y_coords/(pixels_per_degree + MIN_DENOMINATOR) % 180)
 
     # BS x H x W x 2
-    sphere_angle_coords_in_degs = _ivy.concatenate((sphere_x_angle_coords_in_degs, sphere_y_angle_coords_in_degs),
-                                                   -1)
+    sphere_angle_coords_in_degs = _ivy.concatenate((sphere_x_angle_coords_in_degs, sphere_y_angle_coords_in_degs), -1)
     sphere_angle_coords = sphere_angle_coords_in_degs * np.pi / 180
 
     # BS x H x W x 3
     return _ivy.concatenate((sphere_angle_coords, radius_values), -1)
 
 
-def sphere_to_cam_coords(sphere_coords, batch_shape=None, image_dims=None, dev_str=None):
+def sphere_to_cam_coords(sphere_coords, forward_facing_z=True, batch_shape=None, image_dims=None, dev_str=None):
     """
     Convert camera-centric ego-sphere polar co-ordinates image :math:`\mathbf{S}_c\in\mathbb{R}^{h×w×3}` to
     camera-centric homogeneous cartesian co-ordinates image :math:`\mathbf{X}_c\in\mathbb{R}^{h×w×4}`.\n
@@ -759,6 +766,8 @@ def sphere_to_cam_coords(sphere_coords, batch_shape=None, image_dims=None, dev_s
 
     :param sphere_coords: Camera-centric ego-sphere polar co-ordinates image *[batch_shape,h,w,3]*
     :type sphere_coords: array
+    :param forward_facing_z: Whether to use reference frame so z is forward facing. Default is False.
+    :type forward_facing_z: bool, optional
     :param batch_shape: Shape of batch. Inferred from inputs if None.
     :type batch_shape: sequence of ints, optional
     :param image_dims: Image dimensions. Inferred from inputs in None.
@@ -782,10 +791,13 @@ def sphere_to_cam_coords(sphere_coords, batch_shape=None, image_dims=None, dev_s
     image_dims = list(image_dims)
 
     # BS x H x W x 3
-    cam_coords_not_homo = _ivy_mec.polar_to_cartesian_coords(sphere_coords)
+    cam_coords = _ivy_mec.polar_to_cartesian_coords(sphere_coords)
+    if forward_facing_z:
+        cam_coords = _ivy.concatenate(
+            (cam_coords[..., 1:2], cam_coords[..., 2:3], cam_coords[..., 0:1]), -1)
 
     # BS x H x W x 4
-    return _ivy.concatenate((cam_coords_not_homo, _ivy.ones(batch_shape + image_dims + [1], dev_str=dev_str)), -1)
+    return _ivy.concatenate((cam_coords, _ivy.ones(batch_shape + image_dims + [1], dev_str=dev_str)), -1)
 
 
 def sphere_to_pixel_coords(sphere_coords, calib_mat, batch_shape=None, image_dims=None):
@@ -816,7 +828,7 @@ def sphere_to_pixel_coords(sphere_coords, calib_mat, batch_shape=None, image_dim
     image_dims = list(image_dims)
 
     # BS x H x W x 4
-    cam_coords = sphere_to_cam_coords(sphere_coords, batch_shape, image_dims)
+    cam_coords = sphere_to_cam_coords(sphere_coords, batch_shape=batch_shape, image_dims=image_dims)
 
     # BS x H x W x 3
     return cam_to_pixel_coords(cam_coords, calib_mat, batch_shape, image_dims)
@@ -845,8 +857,8 @@ def sphere_to_angular_pixel_coords(sphere_coords, pixels_per_degree):
     sphere_angle_coords_in_degs = sphere_angle_coords * 180 / np.pi
 
     # BS x H x W x 1
-    sphere_x_coords = (sphere_angle_coords_in_degs[..., 0:1] + 180) % 360 * pixels_per_degree
-    sphere_y_coords = sphere_angle_coords_in_degs[..., 1:2] % 180 * pixels_per_degree
+    sphere_x_coords = (180 - sphere_angle_coords_in_degs[..., 0:1] % 360) * pixels_per_degree
+    sphere_y_coords = (sphere_angle_coords_in_degs[..., 1:2] % 180) * pixels_per_degree
 
     # BS x H x W x 3
     return _ivy.concatenate((sphere_x_coords, sphere_y_coords, sphere_radius_vals), -1)
