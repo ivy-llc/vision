@@ -59,7 +59,7 @@
     <option name="_new_keywords" value="&quot;&quot;" />
     <option name="_new_parameters" value="&quot;&quot;" />
     <option name="_new_additionalArguments" value="&quot;&quot;" />
-    <option name="_new_target" value="&quot;ivy_vision_tests.test_rendering&quot;" />
+    <option name="_new_target" value="&quot;ivy_vision_tests.test_quantization&quot;" />
     <option name="_new_targetType" value="&quot;PYTHON&quot;" />
     <method v="2" />
   </configuration>

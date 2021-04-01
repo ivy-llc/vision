@@ -120,11 +120,11 @@ class TestData:
                                                   for item in depth_maps_list], 1), (self.batch_size, 1, 1, 1, 1))
 
         # pixel coords
-        self.pixel_coords = self.uniform_pixel_coords * self.depth_maps
-        self.pixel_coords_normed = self.pixel_coords / self.pixel_coords[:, :, :, :, -1:]
+        self.pixel_coord_means_to_scatter = self.uniform_pixel_coords * self.depth_maps
+        self.pixel_coords_normed = self.pixel_coord_means_to_scatter / self.pixel_coord_means_to_scatter[:, :, :, :, -1:]
 
         # cam coords
-        coords_reshaped = np.reshape(np.transpose(self.pixel_coords, (0, 1, 4, 2, 3)),
+        coords_reshaped = np.reshape(np.transpose(self.pixel_coord_means_to_scatter, (0, 1, 4, 2, 3)),
                                      (self.batch_size, self.num_cameras, 3, -1))
         transformed_coords_vector = np.matmul(self.inv_calib_mats, coords_reshaped)
         transformed_coords_vector_transposed = np.transpose(transformed_coords_vector, (0, 1, 3, 2))
@@ -215,7 +215,7 @@ class TestData:
             np.concatenate((sphere_x_coords, sphere_y_coords, sphere_radius_vals), -1)
 
         # pixel correspondences
-        self.pixel_correspondences = np.concatenate((self.pixel_coords[:, 0:1], self.proj_pixel_coords_normed[:, 0:1]),
+        self.pixel_correspondences = np.concatenate((self.pixel_coord_means_to_scatter[:, 0:1], self.proj_pixel_coords_normed[:, 0:1]),
                                                     1)
 
         # optical flow

@@ -65,10 +65,10 @@ def test_rot_mats_and_cam_centers_to_ext_mats(dev_str, call):
 
 def test_depth_to_pixel_coords(dev_str, call):
     assert (np.allclose(call(ivy_svg.depth_to_pixel_coords, td.depth_maps, td.uniform_pixel_coords),
-                        td.pixel_coords, atol=1e-4))
-    assert (np.allclose(call(ivy_svg.depth_to_pixel_coords, td.depth_maps), td.pixel_coords, atol=1e-4))
+                        td.pixel_coord_means_to_scatter, atol=1e-4))
+    assert (np.allclose(call(ivy_svg.depth_to_pixel_coords, td.depth_maps), td.pixel_coord_means_to_scatter, atol=1e-4))
     assert (np.allclose(call(ivy_svg.depth_to_pixel_coords, td.depth_maps[0], td.uniform_pixel_coords[0]),
-                        td.pixel_coords[0], atol=1e-4))
+                        td.pixel_coord_means_to_scatter[0], atol=1e-4))
 
 
 def test_depth_to_radial_depth(dev_str, call):
@@ -82,15 +82,15 @@ def test_depth_to_radial_depth(dev_str, call):
 
 def test_cam_to_pixel_coords(dev_str, call):
     assert (
-        np.allclose(call(ivy_svg.cam_to_pixel_coords, td.cam_coords, td.calib_mats), td.pixel_coords, atol=1e-4))
+        np.allclose(call(ivy_svg.cam_to_pixel_coords, td.cam_coords, td.calib_mats), td.pixel_coord_means_to_scatter, atol=1e-4))
     assert (np.allclose(call(ivy_svg.cam_to_pixel_coords, td.cam_coords[0], td.calib_mats[0]),
-                        td.pixel_coords[0], atol=1e-4))
+                        td.pixel_coord_means_to_scatter[0], atol=1e-4))
 
 
 def test_pixel_to_cam_coords(dev_str, call):
-    assert np.allclose(call(ivy_svg.pixel_to_cam_coords, td.pixel_coords, td.inv_calib_mats, dev_str='cpu'),
+    assert np.allclose(call(ivy_svg.pixel_to_cam_coords, td.pixel_coord_means_to_scatter, td.inv_calib_mats, dev_str='cpu'),
                        td.cam_coords, atol=1e-6)
-    assert np.allclose(call(ivy_svg.pixel_to_cam_coords, td.pixel_coords[0], td.inv_calib_mats[0], dev_str='cpu'),
+    assert np.allclose(call(ivy_svg.pixel_to_cam_coords, td.pixel_coord_means_to_scatter[0], td.inv_calib_mats[0], dev_str='cpu'),
                        td.cam_coords[0], atol=1e-6)
 
 
@@ -109,25 +109,25 @@ def test_cam_to_world_coords(dev_str, call):
 
 
 def test_world_to_pixel_coords(dev_str, call):
-    assert np.allclose(call(ivy_svg.world_to_pixel_coords, td.world_coords, td.full_mats), td.pixel_coords,
+    assert np.allclose(call(ivy_svg.world_to_pixel_coords, td.world_coords, td.full_mats), td.pixel_coord_means_to_scatter,
                        atol=1e-4)
     assert np.allclose(call(ivy_svg.world_to_pixel_coords, td.world_coords[0], td.full_mats[0]),
-                       td.pixel_coords[0], atol=1e-4)
+                       td.pixel_coord_means_to_scatter[0], atol=1e-4)
 
 
 def test_pixel_to_world_coords(dev_str, call):
-    assert np.allclose(call(ivy_svg.pixel_to_world_coords, td.pixel_coords, td.inv_full_mats, dev_str='cpu'),
+    assert np.allclose(call(ivy_svg.pixel_to_world_coords, td.pixel_coord_means_to_scatter, td.inv_full_mats, dev_str='cpu'),
                        td.world_coords, atol=1e-6)
-    assert np.allclose(call(ivy_svg.pixel_to_world_coords, td.pixel_coords[0], td.inv_full_mats[0], dev_str='cpu'),
+    assert np.allclose(call(ivy_svg.pixel_to_world_coords, td.pixel_coord_means_to_scatter[0], td.inv_full_mats[0], dev_str='cpu'),
                        td.world_coords[0], atol=1e-6)
 
 
 def test_pixel_coords_to_world_rays(dev_str, call):
     assert np.allclose(
-        call(ivy_svg.pixel_coords_to_world_ray_vectors, td.pixel_coords, td.inv_full_mats),
+        call(ivy_svg.pixel_coords_to_world_ray_vectors, td.pixel_coord_means_to_scatter, td.inv_full_mats),
         td.world_rays, atol=1e-6)
     assert np.allclose(
-        call(ivy_svg.pixel_coords_to_world_ray_vectors, td.pixel_coords[0], td.inv_full_mats[0]),
+        call(ivy_svg.pixel_coords_to_world_ray_vectors, td.pixel_coord_means_to_scatter[0], td.inv_full_mats[0]),
         td.world_rays[0], atol=1e-6)
 
 
@@ -166,9 +166,9 @@ def test_cam_to_sphere_coords(dev_str, call):
 
 
 def test_pixel_to_sphere_coords(dev_str, call):
-    assert np.allclose(call(ivy_svg.pixel_to_sphere_coords, td.pixel_coords, td.inv_calib_mats),
+    assert np.allclose(call(ivy_svg.pixel_to_sphere_coords, td.pixel_coord_means_to_scatter, td.inv_calib_mats),
                        td.sphere_coords, atol=1e-4)
-    assert np.allclose(call(ivy_svg.pixel_to_sphere_coords, td.pixel_coords[0], td.inv_calib_mats[0]),
+    assert np.allclose(call(ivy_svg.pixel_to_sphere_coords, td.pixel_coord_means_to_scatter[0], td.inv_calib_mats[0]),
                        td.sphere_coords[0], atol=1e-4)
 
 
@@ -187,9 +187,9 @@ def test_sphere_to_cam_coords(dev_str, call):
 
 def test_sphere_to_pixel_coords(dev_str, call):
     assert np.allclose(call(ivy_svg.sphere_to_pixel_coords, td.sphere_coords, td.calib_mats),
-                       td.pixel_coords, atol=1e-3)
+                       td.pixel_coord_means_to_scatter, atol=1e-3)
     assert np.allclose(call(ivy_svg.sphere_to_pixel_coords, td.sphere_coords[0], td.calib_mats[0]),
-                       td.pixel_coords[0], atol=1e-3)
+                       td.pixel_coord_means_to_scatter[0], atol=1e-3)
 
 
 def test_sphere_to_angular_pixel_coords(dev_str, call):

@@ -6,8 +6,8 @@ from . import optical_flow
 from .optical_flow import *
 from . import projective_geometry
 from .projective_geometry import *
-from . import rendering
-from .rendering import *
+from . import quantization
+from .quantization import *
 from . import sdf
 from .sdf import *
 from . import single_view_geometry
