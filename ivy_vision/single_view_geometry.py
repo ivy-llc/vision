@@ -857,7 +857,7 @@ def sphere_to_angular_pixel_coords(sphere_coords, pixels_per_degree):
     sphere_angle_coords_in_degs = sphere_angle_coords * 180 / np.pi
 
     # BS x H x W x 1
-    sphere_x_coords = (180 - sphere_angle_coords_in_degs[..., 0:1] % 360) * pixels_per_degree
+    sphere_x_coords = ((180 - sphere_angle_coords_in_degs[..., 0:1]) % 360) * pixels_per_degree
     sphere_y_coords = (sphere_angle_coords_in_degs[..., 1:2] % 180) * pixels_per_degree
 
     # BS x H x W x 3
