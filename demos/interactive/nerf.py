@@ -91,7 +91,7 @@ class NerfDemo:
 
     def _get_rays(self, cam_geom):
         pix_coords = ivy_vision.create_uniform_pixel_coords_image(self._img_dims)
-        rays_d = ivy_vision.pixel_coords_to_world_ray_vectors(
+        rays_d = ivy_vision.ds_pixel_coords_to_world_ray_vectors(
             pix_coords, cam_geom.inv_full_mats_homo[..., 0:3, :], cam_geom.extrinsics.cam_centers)
         rays_o = ivy.expand_dims(ivy.expand_dims(cam_geom.extrinsics.cam_centers[..., 0], 0), 0)
         return rays_o, rays_d

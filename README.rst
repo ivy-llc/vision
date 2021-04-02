@@ -147,7 +147,7 @@ All of these matrices are contained within the Ivy camera geometry class.
 
     # intrinsics
 
-    # shared intrinsic params
+    # common intrinsic params
     img_dims = [512, 512]
     pp_offsets = ivy.array([dim / 2 - 0.5 for dim in img_dims], 'float32')
     cam_persp_angles = ivy.array([60 * np.pi / 180] * 2, 'float32')
@@ -210,7 +210,7 @@ This representation simplifies projections between frames.
 
 .. code-block:: python
 
-    # loading
+    # load images
 
     # h x w x 3
     color1 = ivy.array(cv2.imread(data_dir + '/rgb1.png').astype(np.float32) / 255)
@@ -222,12 +222,12 @@ This representation simplifies projections between frames.
     depth2 = ivy.array(np.reshape(np.frombuffer(cv2.imread(
         data_dir + '/depth2.png', -1).tobytes(), np.float32), img_dims + [1]))
 
-    # pixel coords
+    # depth scaled pixel coords
 
     # h x w x 3
-    u_pix_coords = ivy_vision.create_uniform_pixel_coords_image(img_dims, f=f)
-    pixel_coords1 = u_pix_coords * depth1
-    pixel_coords2 = u_pix_coords * depth2
+    u_pix_coords = ivy_vision.create_uniform_pixel_coords_image(img_dims)
+    ds_pixel_coords1 = u_pix_coords * depth1
+    ds_pixel_coords2 = u_pix_coords * depth2
 
 The rgb and depth images are presented below.
 
@@ -249,11 +249,11 @@ We start with some optical flow and depth triangulation functions.
     cam1to2_full_mat_homo = ivy.matmul(cam2_geom.full_mats_homo, cam1_geom.inv_full_mats_homo)
     cam1to2_full_mat = cam1to2_full_mat_homo[..., 0:3, :]
     full_mats_homo = ivy.concatenate((ivy.expand_dims(cam1_geom.full_mats_homo, 0),
-                                    ivy.expand_dims(cam2_geom.full_mats_homo, 0)), 0)
+                                      ivy.expand_dims(cam2_geom.full_mats_homo, 0)), 0)
     full_mats = full_mats_homo[..., 0:3, :]
 
     # flow
-    flow1to2 = ivy_vision.flow_from_depth_and_cam_mats(pixel_coords1, cam1to2_full_mat)
+    flow1to2 = ivy_vision.flow_from_depth_and_cam_mats(ds_pixel_coords1, cam1to2_full_mat)
 
     # depth again
     depth1_from_flow = ivy_vision.depth_from_flow_and_cam_mats(flow1to2, full_mats)
@@ -291,11 +291,11 @@ to inverse warp the color data from frame 2 to frame 1, as shown below.
     warp = u_pix_coords[..., 0:2] + flow1to2
     color2_warp_to_f1 = ivy.bilinear_resample(color2, warp)
 
-    # projected pixel coords 2
-    pixel_coords1_wrt_f2 = ivy_vision.pixel_to_pixel_coords(pixel_coords1, cam1to2_full_mat)
+    # projected depth scaled pixel coords 2
+    ds_pixel_coords1_wrt_f2 = ivy_vision.ds_pixel_to_ds_pixel_coords(ds_pixel_coords1, cam1to2_full_mat)
 
     # projected depth 2
-    depth1_wrt_f2 = pixel_coords1_wrt_f2[..., -1:]
+    depth1_wrt_f2 = ds_pixel_coords1_wrt_f2[..., -1:]
 
     # inverse warp depth
     depth2_warp_to_f1 = ivy.bilinear_resample(depth2, warp)
@@ -335,19 +335,21 @@ and again render the new color image in target frame 1.
 .. code-block:: python
 
     # forward warp rendering
-    pixel_coords1_proj = ivy_vision.pixel_to_pixel_coords(pixel_coords2,
-                                                          ivy.inv(cam1to2_full_mat_homo)[..., 0:3, :])
-    pix_coords_w_color_in_f1 = ivy.concatenate((pixel_coords1_proj, color2), -1)
+    ds_pixel_coords1_proj = ivy_vision.ds_pixel_to_ds_pixel_coords(
+        ds_pixel_coords2, ivy.inv(cam1to2_full_mat_homo)[..., 0:3, :])
+    depth1_proj = ds_pixel_coords1_proj[..., -1:]
+    ds_pixel_coords1_proj = ds_pixel_coords1_proj[..., 0:2] / depth1_proj
+    features_to_render = ivy.concatenate((depth1_proj, color2), -1)
 
     # without depth buffer
-    f1_forward_warp_no_db, _, _ = ivy_vision.render_pixel_coords(
-        ivy.reshape(pix_coords_w_color_in_f1, (-1, 6)), ivy.zeros_like(pix_coords_w_color_in_f1[..., 2:]),
-        img_dims, with_db=False)
+    f1_forward_warp_no_db, _, _ = ivy_vision.quantize_to_image(
+        ivy.reshape(ds_pixel_coords1_proj, (-1, 2)), img_dims, ivy.reshape(features_to_render, (-1, 4)),
+        ivy.zeros_like(features_to_render), with_db=False)
 
     # with depth buffer
-    f1_forward_warp_w_db, _, _ = ivy_vision.render_pixel_coords(
-        ivy.reshape(pix_coords_w_color_in_f1, (-1, 6)), ivy.zeros_like(pix_coords_w_color_in_f1[..., 2:]),
-        img_dims, with_db=False if f is ivy.mxnd else True)
+    f1_forward_warp_w_db, _, _ = ivy_vision.quantize_to_image(
+        ivy.reshape(ds_pixel_coords1_proj, (-1, 2)), img_dims, ivy.reshape(features_to_render, (-1, 4)),
+        ivy.zeros_like(features_to_render), with_db=False if ivy.get_framework() == 'mxnd' else True)
 
 Again, visualizations of these images are given below.
 The images show the forward warping of both depth and color from frame 2 to frame 1,

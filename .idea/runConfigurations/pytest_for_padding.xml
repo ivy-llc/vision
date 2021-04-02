@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="pytest for rendering" type="tests" factoryName="py.test">
+  <configuration default="false" name="pytest for padding" type="tests" factoryName="py.test">
     <module name="ivy_vision" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
@@ -59,7 +59,7 @@
     <option name="_new_keywords" value="&quot;&quot;" />
     <option name="_new_parameters" value="&quot;&quot;" />
     <option name="_new_additionalArguments" value="&quot;&quot;" />
-    <option name="_new_target" value="&quot;ivy_vision_tests.test_quantization&quot;" />
+    <option name="_new_target" value="&quot;ivy_vision_tests.test_padding&quot;" />
     <option name="_new_targetType" value="&quot;PYTHON&quot;" />
     <method v="2" />
   </configuration>

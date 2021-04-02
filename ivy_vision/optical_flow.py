@@ -106,8 +106,8 @@ def flow_from_depth_and_cam_mats(pixel_coords1, cam1to2_full_mat, batch_shape=No
     image_dims = list(image_dims)
 
     # BS x H x W x 3
-    projected_pixel_coords = _ivy_tvg.pixel_to_pixel_coords(pixel_coords1, cam1to2_full_mat, batch_shape,
-                                                            image_dims)
+    projected_pixel_coords = _ivy_tvg.ds_pixel_to_ds_pixel_coords(pixel_coords1, cam1to2_full_mat, batch_shape,
+                                                                  image_dims)
     projected_pixel_coords_normalized = projected_pixel_coords / (projected_pixel_coords[..., -1:] + MIN_DENOMINATOR)
 
     # BS x H x W x 3
@@ -517,8 +517,8 @@ def flow_from_cam_coords_id_image_and_object_trans(cam_coords_f1, id_image, obj_
     # co-ordinates to pixel co-ordinates
 
     # BS x H x W x 3
-    pixel_coords_f1 = _ivy_svg.cam_to_pixel_coords(cam_coords_f1, calib_mat, batch_shape, image_dims)
-    pixel_coords_trans_f2 = _ivy_svg.cam_to_pixel_coords(cam_coords_trans_f2, calib_mat, batch_shape, image_dims)
+    pixel_coords_f1 = _ivy_svg.cam_to_ds_pixel_coords(cam_coords_f1, calib_mat, batch_shape, image_dims)
+    pixel_coords_trans_f2 = _ivy_svg.cam_to_ds_pixel_coords(cam_coords_trans_f2, calib_mat, batch_shape, image_dims)
 
     # unscaled pixel coords
     unscaled_pixel_coords_f1 = pixel_coords_f1[..., 0:2] / (pixel_coords_f1[..., -1:] + MIN_DENOMINATOR)

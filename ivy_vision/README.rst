@@ -1,4 +1,0 @@
-Ivy Vision
-==========
-
-Ivy Vision.

@@ -29,7 +29,7 @@ class TwoViewGeometryTestData(TestData):
         self.tvg_world_rays = np.concatenate((self.world_rays[:, 0:1], self.proj_world_rays[:, 1:2]), 1)
 
         # triangulation
-        self.tvg_pixel_coords = np.concatenate((self.pixel_coord_means_to_scatter[:, 0:1], self.proj_pixel_coords[:, 1:2]), 1)
+        self.tvg_pixel_coords = np.concatenate((self.pixel_coords_to_scatter[:, 0:1], self.proj_pixel_coords[:, 1:2]), 1)
 
         # pixel cost volume
         self.cv_image1 = np.reshape(np.arange(9, dtype=np.float32), (1, 1, 3, 3, 1))
@@ -57,9 +57,9 @@ def test_depth_from_flow_and_cam_poses(dev_str, call):
 
 
 def test_flow_from_depth_and_cam_poses(dev_str, call):
-    assert np.allclose(call(ivy_flow.flow_from_depth_and_cam_mats, td.pixel_coord_means_to_scatter[:, 0:1],
+    assert np.allclose(call(ivy_flow.flow_from_depth_and_cam_mats, td.pixel_coords_to_scatter[:, 0:1],
                             td.cam2cam_full_mats[:, 0:1]), td.optical_flow, atol=1e-3)
-    assert np.allclose(call(ivy_flow.flow_from_depth_and_cam_mats, td.pixel_coord_means_to_scatter[0, 0:1],
+    assert np.allclose(call(ivy_flow.flow_from_depth_and_cam_mats, td.pixel_coords_to_scatter[0, 0:1],
                             td.cam2cam_full_mats[0, 0:1]), td.optical_flow[0], atol=1e-3)
 
 

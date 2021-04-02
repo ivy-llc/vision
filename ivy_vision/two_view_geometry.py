@@ -13,7 +13,7 @@ from ivy_vision import single_view_geometry as _ivy_svg
 MIN_DENOMINATOR = 1e-12
 
 
-def pixel_to_pixel_coords(pixel_coords1, cam1to2_full_mat, batch_shape=None, image_dims=None, dev_str=None):
+def ds_pixel_to_ds_pixel_coords(ds_pixel_coords1, cam1to2_full_mat, batch_shape=None, image_dims=None, dev_str=None):
     """
     Transform depth scaled homogeneous pixel co-ordinates image in first camera frame
     :math:`\mathbf{X}_{p1}\in\mathbb{R}^{h×w×3}` to depth scaled homogeneous pixel co-ordinates image in second camera
@@ -21,8 +21,8 @@ def pixel_to_pixel_coords(pixel_coords1, cam1to2_full_mat, batch_shape=None, ima
     :math:`\mathbf{P}_{1→2}\in\mathbb{R}^{3×4}`.\n
     `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=174>`_
 
-    :param pixel_coords1: Depth scaled homogeneous pixel co-ordinates image in frame 1 *[batch_shape,h,w,3]*
-    :type pixel_coords1: array
+    :param ds_pixel_coords1: Depth scaled homogeneous pixel co-ordinates image in frame 1 *[batch_shape,h,w,3]*
+    :type ds_pixel_coords1: array
     :param cam1to2_full_mat: Camera1-to-camera2 full projection matrix *[batch_shape,3,4]*
     :type cam1to2_full_mat: array
     :param batch_shape: Shape of batch. Inferred from inputs if None.
@@ -35,20 +35,20 @@ def pixel_to_pixel_coords(pixel_coords1, cam1to2_full_mat, batch_shape=None, ima
     """
 
     if batch_shape is None:
-        batch_shape = pixel_coords1.shape[:-3]
+        batch_shape = ds_pixel_coords1.shape[:-3]
 
     if image_dims is None:
-        image_dims = pixel_coords1.shape[-3:-1]
+        image_dims = ds_pixel_coords1.shape[-3:-1]
 
     if dev_str is None:
-        dev_str = _ivy.dev_str(pixel_coords1)
+        dev_str = _ivy.dev_str(ds_pixel_coords1)
 
     # shapes as list
     batch_shape = list(batch_shape)
     image_dims = list(image_dims)
 
     # BS x H x W x 4
-    pixel_coords_homo = _ivy.concatenate((pixel_coords1,
+    pixel_coords_homo = _ivy.concatenate((ds_pixel_coords1,
                                           _ivy.ones(batch_shape + image_dims + [1], dev_str=dev_str)), -1)
 
     # BS x H x W x 3
@@ -295,15 +295,15 @@ def closest_mutual_points_along_two_skew_rays(camera_centers, world_ray_vectors,
     return _ivy.concatenate((world_coords, _ivy.ones(batch_shape + [2] + image_dims + [1], dev_str=dev_str)), -1)
 
 
-def _triangulate_depth_by_closest_mutual_points(pixel_coords, full_mats, inv_full_mats, camera_centers, batch_shape,
+def _triangulate_depth_by_closest_mutual_points(ds_pixel_coords, full_mats, inv_full_mats, camera_centers, batch_shape,
                                                 image_dims):
 
     # single view geom batch shape
     svg_batch_shape = batch_shape + [2]
 
     # BS x 2 x H x W x 3
-    world_rays_flat = _ivy_svg.pixel_coords_to_world_ray_vectors(pixel_coords, inv_full_mats, camera_centers,
-                                                                 svg_batch_shape, image_dims)
+    world_rays_flat = _ivy_svg.ds_pixel_coords_to_world_ray_vectors(ds_pixel_coords, inv_full_mats, camera_centers,
+                                                                    svg_batch_shape, image_dims)
 
     # BS x 2 x H x W x 3
     world_rays = _ivy.reshape(world_rays_flat, svg_batch_shape + image_dims + [3])
@@ -312,17 +312,17 @@ def _triangulate_depth_by_closest_mutual_points(pixel_coords, full_mats, inv_ful
     world_points = closest_mutual_points_along_two_skew_rays(camera_centers, world_rays, batch_shape, image_dims)
 
     # BS x H x W x 3
-    return _ivy_svg.world_to_pixel_coords(world_points[..., 0, :, :, :], full_mats[..., 0, :, :],
-                                          batch_shape, image_dims)
+    return _ivy_svg.world_to_ds_pixel_coords(world_points[..., 0, :, :, :], full_mats[..., 0, :, :],
+                                             batch_shape, image_dims)
 
 
-def _triangulate_depth_by_homogeneous_dlt(pixel_coords, full_mats, _, _1, batch_shape, image_dims):
+def _triangulate_depth_by_homogeneous_dlt(ds_pixel_coords, full_mats, _, _1, batch_shape, image_dims):
 
     # num batch dims
     num_batch_dims = len(batch_shape)
 
     # BS x 2 x H x W x 3
-    pixel_coords_normalized = pixel_coords / (pixel_coords[..., -1:] + MIN_DENOMINATOR)
+    pixel_coords_normalized = ds_pixel_coords / (ds_pixel_coords[..., -1:] + MIN_DENOMINATOR)
 
     # BS x 3 x 4
     P = full_mats[..., 0, :, :]
@@ -360,21 +360,21 @@ def _triangulate_depth_by_homogeneous_dlt(pixel_coords, full_mats, _, _1, batch_
     coords_wrt_world = coords_wrt_world_homo_unscaled / (coords_wrt_world_homo_unscaled[..., -1:] + MIN_DENOMINATOR)
 
     # BS x W x H x 3
-    return _ivy_svg.world_to_pixel_coords(coords_wrt_world, full_mats[..., 0, :, :], batch_shape, image_dims)
+    return _ivy_svg.world_to_ds_pixel_coords(coords_wrt_world, full_mats[..., 0, :, :], batch_shape, image_dims)
 
 
 TRI_METHODS = {'cmp': _triangulate_depth_by_closest_mutual_points,
                'dlt': _triangulate_depth_by_homogeneous_dlt}
 
 
-def triangulate_depth(pixel_coords, full_mats, inv_full_mats=None, camera_centers=None, method='cmp', batch_shape=None,
+def triangulate_depth(ds_pixel_coords, full_mats, inv_full_mats=None, camera_centers=None, method='cmp', batch_shape=None,
                       image_dims=None):
     """
     Triangulate depth in frame 1, returning depth scaled homogeneous pixel co-ordinate image
     :math:`\mathbf{X}\in\mathbb{R}^{h×w×3}` in frame 1.\n
 
-    :param pixel_coords: Homogeneous pixel co-ordinate images: *[batch_shape,h,w,3]*
-    :type pixel_coords: array
+    :param ds_pixel_coords: Homogeneous pixel co-ordinate images: *[batch_shape,h,w,3]*
+    :type ds_pixel_coords: array
     :param full_mats: Full projection matrices *[batch_shape,2,3,4]*
     :type full_mats: array
     :param inv_full_mats: Inverse full projection matrices, required for closest_mutual_points method *[batch_shape,2,3,4]*
@@ -391,10 +391,10 @@ def triangulate_depth(pixel_coords, full_mats, inv_full_mats=None, camera_center
     """
 
     if batch_shape is None:
-        batch_shape = pixel_coords.shape[:-4]
+        batch_shape = ds_pixel_coords.shape[:-4]
 
     if image_dims is None:
-        image_dims = pixel_coords.shape[-3:-1]
+        image_dims = ds_pixel_coords.shape[-3:-1]
 
     # shapes as list
     batch_shape = list(batch_shape)
@@ -410,6 +410,6 @@ def triangulate_depth(pixel_coords, full_mats, inv_full_mats=None, camera_center
             camera_centers = _ivy_svg.inv_ext_mat_to_camera_center(inv_full_mats)
 
     try:
-        return TRI_METHODS[method](pixel_coords, full_mats, inv_full_mats, camera_centers, batch_shape, image_dims)
+        return TRI_METHODS[method](ds_pixel_coords, full_mats, inv_full_mats, camera_centers, batch_shape, image_dims)
     except KeyError:
         raise Exception('Triangulation method must be one of [cmp|dlt], but found {}'.format(method))

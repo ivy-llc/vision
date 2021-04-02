@@ -175,14 +175,16 @@ def main(interactive=True, try_use_sim=True, f=None):
         rgb = ivy.reshape(ivy.concatenate(rgbs, 1), (-1, 3))
         cam_coords = ivy_vision.world_to_cam_coords(ivy_mech.make_coordinates_homogeneous(ivy.expand_dims(xyz, 1)),
                                                     sim.target_cam.get_ext_mat())
-        pix_coords = ivy_vision.cam_to_pixel_coords(cam_coords, sim.target_cam.calib_mat)
-        total_pix_coords = ivy.concatenate((pix_coords[:, 0], rgb), -1)
+        ds_pix_coords = ivy_vision.cam_to_ds_pixel_coords(cam_coords, sim.target_cam.calib_mat)
+        depth = ds_pix_coords[..., -1]
+        pix_coords = ds_pix_coords[..., 0, 0:2] / depth
         final_image_dims = [512]*2
-        rendered_img_no_db, _, _ = ivy_vision.quantize_pixel_coords(
-            total_pix_coords, ivy.zeros(final_image_dims + [4]), final_image_dims, with_db=False)
+        feat = ivy.concatenate((depth, rgb), -1)
+        rendered_img_no_db, _, _ = ivy_vision.quantize_to_image(
+            pix_coords, final_image_dims, feat, ivy.zeros(final_image_dims + [4]), with_db=False)
         with_db = not with_mxnd
-        rendered_img_with_db, _, _ = ivy_vision.quantize_pixel_coords(
-            total_pix_coords, ivy.zeros(final_image_dims + [4]), final_image_dims, with_db=with_db)
+        rendered_img_with_db, _, _ = ivy_vision.quantize_to_image(
+            pix_coords, final_image_dims, feat, ivy.zeros(final_image_dims + [4]), with_db=with_db)
 
         a_img = cv2.resize(ivy.to_numpy(rgbs[0]), (256, 256))
         a_img[0:50, 0:50] = np.zeros_like(a_img[0:50, 0:50])

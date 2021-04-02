@@ -2,8 +2,12 @@ from . import containers
 from .containers import *
 from . import implicit
 from .implicit import *
+from . import mesh
+from .mesh import *
 from . import optical_flow
 from .optical_flow import *
+from . import padding
+from .padding import *
 from . import projective_geometry
 from .projective_geometry import *
 from . import quantization
@@ -12,6 +16,8 @@ from . import sdf
 from .sdf import *
 from . import single_view_geometry
 from .single_view_geometry import *
+from . import smoothing
+from .smoothing import *
 from . import two_view_geometry
 from .two_view_geometry import *
 from . import voxel_grids
