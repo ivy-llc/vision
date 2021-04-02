@@ -86,7 +86,8 @@ def quantize_to_image(pixel_coords, final_image_dims, feat=None, feat_prior=None
     # uniform pixel coords
     if uniform_pixel_coords is None:
         uniform_pixel_coords =\
-            _ivy_svg.create_uniform_pixel_coords_image(final_image_dims, batch_shape, dev_str=dev_str)[..., 0:2]
+            _ivy_svg.create_uniform_pixel_coords_image(final_image_dims, batch_shape, dev_str=dev_str)
+    uniform_pixel_coords = uniform_pixel_coords[..., 0:2]
 
     # Extract Values #
 
@@ -258,6 +259,17 @@ def quantize_to_image(pixel_coords, final_image_dims, feat=None, feat_prior=None
 
         # BS x H x W x 1
         quantized_depth_mean = quantized_mean_scaled[..., 2:3]
+
+        # BS x 1 x 1 x 1
+        mean_depth_min = _ivy.expand_dims(mean_depth_min, -2)
+        mean_depth_range = _ivy.expand_dims(mean_depth_range, -2)
+
+        # BS x 1 x 1 x (1+D)
+        pc_n_feat_wo_depth_min = _ivy.expand_dims(pc_n_feat_wo_depth_min, -2)
+        pc_n_feat_wo_depth_range = _ivy.expand_dims(pc_n_feat_wo_depth_range, -2)
+
+        # BS x 1 x 1 x (2+D) x 2
+        var_threshold = _ivy.expand_dims(var_threshold, -3)
 
         # BS x H x W x (1+D)
         quantized_mean_wo_depth_scaled = _ivy.concatenate((quantized_mean_scaled[..., 0:2],
