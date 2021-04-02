@@ -209,7 +209,7 @@ class TestData:
         sphere_radius_vals = self.proj_sphere_coords[..., -1:]
         sphere_angle_coords = self.proj_sphere_coords[..., 0:2]
         sphere_angle_coords_in_degs = sphere_angle_coords * 180 / np.pi
-        sphere_x_coords = (180 - sphere_angle_coords_in_degs[..., 0:1] % 360) * self.pixels_per_degree
+        sphere_x_coords = ((180 - sphere_angle_coords_in_degs[..., 0:1]) % 360) * self.pixels_per_degree
         sphere_y_coords = (sphere_angle_coords_in_degs[..., 1:2] % 360) * self.pixels_per_degree
         self.proj_angular_pixel_coords =\
             np.concatenate((sphere_x_coords, sphere_y_coords, sphere_radius_vals), -1)
