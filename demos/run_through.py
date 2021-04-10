@@ -391,7 +391,7 @@ def main(interactive=True, f=None):
 
     # inverse warp rendering
     warp = u_pix_coords[..., 0:2] + flow1to2
-    color2_warp_to_f1 = ivy.bilinear_resample(color2, warp)
+    color2_warp_to_f1 = ivy.reshape(ivy.bilinear_resample(color2, warp), color1.shape)
 
     # projected depth scaled pixel coords 2
     ds_pixel_coords1_wrt_f2 = ivy_vision.ds_pixel_to_ds_pixel_coords(ds_pixel_coords1, cam1to2_full_mat)
@@ -400,7 +400,7 @@ def main(interactive=True, f=None):
     depth1_wrt_f2 = ds_pixel_coords1_wrt_f2[..., -1:]
 
     # inverse warp depth
-    depth2_warp_to_f1 = ivy.bilinear_resample(depth2, warp)
+    depth2_warp_to_f1 = ivy.reshape(ivy.bilinear_resample(depth2, warp), depth1.shape)
 
     # depth validity
     depth_validity = ivy.abs(depth1_wrt_f2 - depth2_warp_to_f1) < 0.01

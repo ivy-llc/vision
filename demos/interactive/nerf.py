@@ -22,7 +22,7 @@ class Model(ivy.Module):
         self._fc_layers.append(ivy.Linear(layer_dim, 4))
         super(Model, self).__init__(dev_str)
 
-    def _forward(self, x):
+    def _forward(self, x, feat=None):
         embedding = ivy_vision.sinusoid_positional_encoding(x, self._embedding_length)
         x = ivy.relu(self._fc_layers[0](embedding))
         for i in range(1, self._num_layers-1):
@@ -99,7 +99,7 @@ class NerfDemo:
     def _loss_fn(self, model, rays_o, rays_d, target, v=None):
         rgb, depth = ivy_vision.render_implicit_features_and_depth(
             model, rays_o, rays_d, near=ivy.ones(self._img_dims) * 2, far=ivy.ones(self._img_dims) * 6,
-            num_samples=self._num_samples, v=v)
+            samples_per_ray=self._num_samples, v=v)
         return ivy.reduce_mean((rgb - target) ** 2)[0]
 
     # Public #
@@ -128,7 +128,7 @@ class NerfDemo:
                 rays_o, rays_d = self._get_rays(self._test_cam_geom)
                 rgb, depth = ivy_vision.render_implicit_features_and_depth(
                     self._model, rays_o, rays_d, near=ivy.ones(self._img_dims) * 2, far=ivy.ones(self._img_dims)*6,
-                    num_samples=self._num_samples)
+                    samples_per_ray=self._num_samples)
                 plt.imsave(os.path.join(self._vis_log_dir, 'img_{}.png'.format(str(i).zfill(3))), ivy.to_numpy(rgb))
 
         print('Done')

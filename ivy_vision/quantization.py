@@ -68,7 +68,7 @@ def quantize_to_image(pixel_coords, final_image_dims, feat=None, feat_prior=None
         d = 0
     else:
         d = feat.shape[-1]
-    min_depth_diff = _ivy.array([MIN_DEPTH_DIFF])
+    min_depth_diff = _ivy.array([MIN_DEPTH_DIFF], dev_str=dev_str)
     red = 'min' if with_db else 'sum'
 
     # shapes as list
