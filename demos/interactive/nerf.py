@@ -6,7 +6,7 @@ import argparse
 import ivy_vision
 import numpy as np
 import matplotlib.pyplot as plt
-from ivy_demo_utils.framework_utils import choose_random_framework
+from ivy_demo_utils.framework_utils import choose_random_framework, get_framework_from_str
 
 
 class Model(ivy.Module):
