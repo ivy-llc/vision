@@ -17,11 +17,20 @@ from distutils.core import setup
 import setuptools
 
 setup(name='ivy-vision',
-      version='1.1.3',
-      description='3D Vision functions with end-to-end support for deep learning developers, written in Ivy.\n'
-      'Tested with Ivy 1.1.3',
+      version='1.1.4',
       author='Ivy Team',
       author_email='ivydl.team@gmail.com',
+      description='3D Vision functions with end-to-end support for deep learning developers, written in Ivy.',
+      long_description="""# What is Ivy Vision?\n\nIvy vision focuses predominantly on 3D vision, with functions for
+      camera geometry, image projections, co-ordinate frame transformations, forward warping, inverse warping, optical flow,
+      depth triangulation, voxel grids, point clouds, signed distance functions, and others.
+      Ivy currently supports Jax, TensorFlow, PyTorch, MXNet and Numpy. Check out the [docs](https://ivy-dl.org/vision) for more info!""",
+      long_description_content_type='text/markdown',
+      url='https://ivy-dl.org/vision',
+      project_urls={
+            'Docs': 'https://ivy-dl.org/vision/',
+            'Source': 'https://github.com/ivy-dl/vision',
+      },
       packages=setuptools.find_packages(),
       install_requires=['opencv-python', 'ivy-core', 'ivy-mech'],
       classifiers=['License :: OSI Approved :: Apache Software License'],

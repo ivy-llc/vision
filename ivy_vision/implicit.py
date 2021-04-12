@@ -205,6 +205,6 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, sa
     depth = render_rays_via_termination_probabilities(ray_term_probs, z_vals, render_variance)
     if render_variance:
         # BS x OF, BS x OF, BS x 1, BS x 1
-        return feat[0], feat[1], depth_in + depth[0], depth[1]
+        return feat[0], feat[1], depth[0], depth[1]
     # BS x OF, BS x 1
     return feat, depth

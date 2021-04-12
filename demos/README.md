@@ -52,6 +52,23 @@ To run the script using a specific backend, tensorflow for example, then run lik
 python3 run_through.py --framework tensorflow
 ```
 
+### Neural Rendering
+
+The first demo uses methods ``ivy_vision.sinusoid_positional_encoding``, and ``ivy_vision.render_implicit_features_and_depth``
+to train a Neural Radiance Field (NeRF) model to encode a lego digger. The NeRF model can then be queried at new camera
+poses to render new images from poses unseen during training.
+
+```bash
+cd ~/ivy_vision/demos/interactive
+python3 nerf.py
+```
+
+At the end of the demo, a video nerf_video.mp4 is created of renderings from unseen camera poses around a sphere.
+
+<p align="center">
+    <img width="75%" style="display: block;" src='https://github.com/ivy-dl/ivy-dl.github.io/blob/master/img/externally_linked/ivy_vision/nerf_demo.gif?raw=true'>
+</p>
+
 ### Co-ordinates to Voxel Grid
 
 In this demo, a goup of 6 projective cameras are dragged around the scene,
@@ -66,23 +83,23 @@ python3 coords_to_voxel_grid.py
 Example output from the simulator, and Open3D renderings, are given below:
 
 <p align="center">
-    <img width="75%" style="display: block;" src='https://github.com/ivy-dl/ivy-dl.github.io/blob/master/img/externally_linked/ivy_vision/demo_a.gif?raw=true'>
+    <img width="75%" style="display: block;" src='https://github.com/ivy-dl/ivy-dl.github.io/blob/master/img/externally_linked/ivy_vision/voxel_grid_demo.gif?raw=true'>
 </p>
 
-### Image Rendering
+### Point Rendering
 
 In this demo, a goup of 3 projective cameras which capture color and depth are fixed in place,
-and a target camera frame is dragged around the scene. Renderings are then dynamically generated in the target frame,
-using method ivy_vision.render_pixel_coords, both with and without the use of depth buffer.
+and a target camera frame is dragged around the scene. Point renderings are then dynamically generated in the target frame,
+using method ivy_vision.quantize_to_image, both with and without the use of depth buffer.
 
 ```bash
 cd ~/ivy_vision/demos/interactive
 python3 render_image.py
 ```
-Example output from the simulator, and the forward warp renderings, are given below:
+Example output from the simulator, and the forward warp point renderings, are given below:
 
 <p align="center">
-    <img width="75%" style="display: block;" src='https://github.com/ivy-dl/ivy-dl.github.io/blob/master/img/externally_linked/ivy_vision/demo_b.gif?raw=true'>
+    <img width="75%" style="display: block;" src='https://github.com/ivy-dl/ivy-dl.github.io/blob/master/img/externally_linked/ivy_vision/point_render_demo.gif?raw=true'>
 </p>
 
 ## Get Involved

@@ -6,6 +6,7 @@ import argparse
 import ivy_vision
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm import tqdm_notebook as tqdm
 from ivy_demo_utils.framework_utils import choose_random_framework, get_framework_from_str
 
 
@@ -57,15 +58,15 @@ class NerfDemo:
 
         # train data
         self._images = images[:100, ..., :3]
-        intrinsics = ivy_vision.focal_lengths_and_pp_offsets_to_intrinsics_object(
+        self._intrinsics = ivy_vision.focal_lengths_and_pp_offsets_to_intrinsics_object(
             focal_lengths, pp_offsets, self._img_dims)
         self._cam_geoms = ivy_vision.inv_ext_mat_and_intrinsics_to_cam_geometry_object(
-            inv_ext_mats[:100, 0:3], intrinsics)
+            inv_ext_mats[:100, 0:3], self._intrinsics)
 
         # test data
         self._test_img = images[101]
         self._test_cam_geom = ivy_vision.inv_ext_mat_and_intrinsics_to_cam_geometry_object(
-            inv_ext_mats[101, 0:3], intrinsics.slice(0))
+            inv_ext_mats[101, 0:3], self._intrinsics.slice(0))
 
         # train config
         if compile_flag:
@@ -76,8 +77,9 @@ class NerfDemo:
         self._num_iters = num_iters
 
         # log config
+        self._interactive = interactive
         self._log_freq = 1
-        self._vis_freq = 25 if interactive else -1
+        self._vis_freq = 25 if self._interactive else -1
         self._vis_log_dir = 'nerf_renderings'
         if os.path.exists(self._vis_log_dir):
             shutil.rmtree(self._vis_log_dir)
@@ -105,7 +107,7 @@ class NerfDemo:
     # Public #
     # -------#
 
-    def run(self):
+    def train(self):
         optimizer = ivy.Adam(self._lr)
 
         for i in range(self._num_iters + 1):
@@ -131,12 +133,64 @@ class NerfDemo:
                     samples_per_ray=self._num_samples)
                 plt.imsave(os.path.join(self._vis_log_dir, 'img_{}.png'.format(str(i).zfill(3))), ivy.to_numpy(rgb))
 
-        print('Done')
+        print('Completed Training')
+
+    def save_video(self):
+        if not self._interactive:
+            return
+        trans_t = lambda t: ivy.array([
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, t],
+            [0, 0, 0, 1],
+        ], 'float32')
+
+        rot_phi = lambda phi: ivy.array([
+            [1, 0, 0, 0],
+            [0, ivy.cos(phi), -ivy.sin(phi), 0],
+            [0, ivy.sin(phi), ivy.cos(phi), 0],
+            [0, 0, 0, 1],
+        ], 'float32')
+
+        rot_theta = lambda th_: ivy.array([
+            [ivy.cos(th_), 0, -ivy.sin(th_), 0],
+            [0, 1, 0, 0],
+            [ivy.sin(th_), 0, ivy.cos(th_), 0],
+            [0, 0, 0, 1],
+        ], 'float32')
+
+        def pose_spherical(theta, phi, radius):
+            c2w_ = trans_t(radius)
+            c2w_ = rot_phi(phi / 180. * np.pi) @ c2w_
+            c2w_ = rot_theta(theta / 180. * np.pi) @ c2w_
+            c2w_ = np.array([[-1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]) @ c2w_
+            c2w_ = c2w_ @ np.array([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
+            return c2w_
+
+        frames = []
+        for th in tqdm(np.linspace(0., 360., 120, endpoint=False)):
+            c2w = pose_spherical(th, -30., 4.)
+            # rot_mat1 = ivy_mech.rot_vec_to_rot_mat(ivy.array([0., np.pi, 0.]))
+            # rot_mat2 = ivy_mech.rot_vec_to_rot_mat(ivy.array([0., 0., np.pi]))
+            # rot_mat = ivy.matmul(rot_mat2, rot_mat1)
+            # rot_mat_homo = ivy_mech.make_transformation_homogeneous(ivy.concatenate((rot_mat, ivy.zeros((3, 1))), -1))
+            # c2w = ivy.matmul(c2w_orig, rot_mat_homo)
+            cam_geom = ivy_vision.inv_ext_mat_and_intrinsics_to_cam_geometry_object(
+                c2w[0:3], self._intrinsics.slice(0))
+            rays_o, rays_d = self._get_rays(cam_geom)
+            rgb, depth = ivy_vision.render_implicit_features_and_depth(
+                self._model, rays_o, rays_d, near=ivy.ones(self._img_dims) * 2, far=ivy.ones(self._img_dims) * 6,
+                samples_per_ray=self._num_samples)
+            frames.append((255 * np.clip(rgb, 0, 1)).astype(np.uint8))
+        import imageio
+        vid_filename = 'nerf_video.mp4'
+        imageio.mimwrite(vid_filename, frames, fps=30, quality=7)
 
 
 def main(num_iters, compile_flag, interactive=True, f=None):
     nerf_demo = NerfDemo(num_iters, compile_flag, interactive, f)
-    nerf_demo.run()
+    nerf_demo.train()
+    nerf_demo.save_video()
 
 
 if __name__ == '__main__':

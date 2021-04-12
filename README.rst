@@ -367,9 +367,21 @@ which are more visual and interactive, and are each built around a particular fu
 Rather than presenting the code here, we show visualizations of the demos.
 The scripts for these demos can be found in the interactive_ demos folder.
 
+**Neural Rendering**
+
+The first demo uses methods ``ivy_vision.sinusoid_positional_encoding``, and ``ivy_vision.render_implicit_features_and_depth``
+to train a Neural Radiance Field (NeRF) model to encode a lego digger. The NeRF model can then be queried at new camera
+poses to render new images from poses unseen during training.
+
+.. raw:: html
+
+    <p align="center">
+        <img width="75%" style="display: block;" src='https://github.com/ivy-dl/ivy-dl.github.io/blob/master/img/externally_linked/ivy_vision/nerf_demo.gif?raw=true'>
+    </p>
+
 **Co-ordinates to Voxel Grid**
 
-The first demo captures depth and color images from a set of cameras,
+The second demo captures depth and color images from a set of cameras,
 converts the depth to world-centric co-ordinartes,
 and uses the method ``ivy_vision.coords_to_voxel_grid`` to
 voxelize the depth and color values into a grid, as shown below:
@@ -377,20 +389,20 @@ voxelize the depth and color values into a grid, as shown below:
 .. raw:: html
 
     <p align="center">
-        <img width="75%" style="display: block;" src='https://github.com/ivy-dl/ivy-dl.github.io/blob/master/img/externally_linked/ivy_vision/demo_a.gif?raw=true'>
+        <img width="75%" style="display: block;" src='https://github.com/ivy-dl/ivy-dl.github.io/blob/master/img/externally_linked/ivy_vision/voxel_grid_demo.gif?raw=true'>
     </p>
 
-**Image Rendering**
+**Point Rendering**
 
-The second demo again captures depth and color images from a set of cameras,
-but this time uses the method ``ivy_vision.render_pixel_coords`` to
-dynamically forward warp and render the images into a new target frame, as shown below.
-The acquiring cameras all remain static, while the target frame for rendering moves freely.
+The final demo again captures depth and color images from a set of cameras,
+but this time uses the method ``ivy_vision.quantize_to_image`` to
+dynamically forward warp and point render the images into a new target frame, as shown below.
+The acquiring cameras all remain static, while the target frame for point rendering moves freely.
 
 .. raw:: html
 
     <p align="center">
-        <img width="75%" style="display: block;" src='https://github.com/ivy-dl/ivy-dl.github.io/blob/master/img/externally_linked/ivy_vision/demo_b.gif?raw=true'>
+        <img width="75%" style="display: block;" src='https://github.com/ivy-dl/ivy-dl.github.io/blob/master/img/externally_linked/ivy_vision/point_render_demo.gif?raw=true'>
     </p>
 
 Get Involed
