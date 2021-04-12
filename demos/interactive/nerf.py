@@ -170,11 +170,6 @@ class NerfDemo:
         frames = []
         for th in tqdm(np.linspace(0., 360., 120, endpoint=False)):
             c2w = pose_spherical(th, -30., 4.)
-            # rot_mat1 = ivy_mech.rot_vec_to_rot_mat(ivy.array([0., np.pi, 0.]))
-            # rot_mat2 = ivy_mech.rot_vec_to_rot_mat(ivy.array([0., 0., np.pi]))
-            # rot_mat = ivy.matmul(rot_mat2, rot_mat1)
-            # rot_mat_homo = ivy_mech.make_transformation_homogeneous(ivy.concatenate((rot_mat, ivy.zeros((3, 1))), -1))
-            # c2w = ivy.matmul(c2w_orig, rot_mat_homo)
             cam_geom = ivy_vision.inv_ext_mat_and_intrinsics_to_cam_geometry_object(
                 c2w[0:3], self._intrinsics.slice(0))
             rays_o, rays_d = self._get_rays(cam_geom)
