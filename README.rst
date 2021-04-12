@@ -376,7 +376,7 @@ poses to render new images from poses unseen during training.
 .. raw:: html
 
     <p align="center">
-        <img width="75%" style="display: block;" src='https://github.com/ivy-dl/ivy-dl.github.io/blob/master/img/externally_linked/ivy_vision/nerf_demo.gif?raw=true'>
+        <img width="50%" style="display: block;" src='https://github.com/ivy-dl/ivy-dl.github.io/blob/master/img/externally_linked/ivy_vision/nerf_demo.gif?raw=true'>
     </p>
 
 **Co-ordinates to Voxel Grid**
