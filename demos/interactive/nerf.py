@@ -17,10 +17,10 @@ class Model(ivy.Module):
         self._layer_dim = layer_dim
         self._embedding_length = embedding_length
         embedding_size = 3 + 3 * 2 * embedding_length
-        self._fc_layers = [ivy.Linear(embedding_size, layer_dim)]
-        self._fc_layers += [ivy.Linear(layer_dim + (embedding_size if i % 4 == 0 and i > 0 else 0), layer_dim)
+        self._fc_layers = [ivy.Linear(embedding_size, layer_dim, dev_str)]
+        self._fc_layers += [ivy.Linear(layer_dim + (embedding_size if i % 4 == 0 and i > 0 else 0), layer_dim, dev_str)
                             for i in range(num_layers-2)]
-        self._fc_layers.append(ivy.Linear(layer_dim, 4))
+        self._fc_layers.append(ivy.Linear(layer_dim, 4, dev_str))
         super(Model, self).__init__(dev_str)
 
     def _forward(self, x, feat=None):
@@ -38,23 +38,28 @@ class Model(ivy.Module):
 
 class NerfDemo:
 
-    def __init__(self, num_iters, compile_flag, interactive, f):
+    def __init__(self, num_iters, compile_flag, interactive, dev_str, f):
 
         # ivy
         f = choose_random_framework() if f is None else f
         ivy.set_framework(f)
         ivy.seed(0)
 
+        # device
+        if dev_str is None:
+            dev_str = 'gpu:0' if ivy.gpu_is_available() else 'cpu'
+        self._dev_str = dev_str
+
         # Load input images and poses
         this_dir = os.path.dirname(os.path.realpath(__file__))
         data = np.load(os.path.join(this_dir, 'nerf_data/tiny_nerf_data.npz'))
-        images = ivy.array(data['images'], 'float32')
-        inv_ext_mats = ivy.array(data['poses'], 'float32')
+        images = ivy.array(data['images'], 'float32', dev_str)
+        inv_ext_mats = ivy.array(data['poses'], 'float32', dev_str)
 
         # intrinsics
-        focal_lengths = ivy.array(np.tile(np.reshape(data['focal'], (1, 1)), [100, 2]), 'float32')
+        focal_lengths = ivy.array(np.tile(np.reshape(data['focal'], (1, 1)), [100, 2]), 'float32', dev_str)
         self._img_dims = images.shape[1:3]
-        pp_offsets = ivy.tile(ivy.array([[dim/2 - 0.5 for dim in self._img_dims]]), [100, 1])
+        pp_offsets = ivy.tile(ivy.array([[dim/2 - 0.5 for dim in self._img_dims]], dev_str=dev_str), [100, 1])
 
         # train data
         self._images = images[:100, ..., :3]
@@ -86,13 +91,13 @@ class NerfDemo:
         os.makedirs(self._vis_log_dir)
 
         # model
-        self._model = Model(4, 256, self._embed_length)
+        self._model = Model(4, 256, self._embed_length, dev_str)
 
     # Private #
     # --------#
 
     def _get_rays(self, cam_geom):
-        pix_coords = ivy_vision.create_uniform_pixel_coords_image(self._img_dims)
+        pix_coords = ivy_vision.create_uniform_pixel_coords_image(self._img_dims, dev_str=self._dev_str)
         rays_d = ivy_vision.ds_pixel_coords_to_world_ray_vectors(
             pix_coords, cam_geom.inv_full_mats_homo[..., 0:3, :], cam_geom.extrinsics.cam_centers)
         rays_o = ivy.expand_dims(ivy.expand_dims(cam_geom.extrinsics.cam_centers[..., 0], 0), 0)
@@ -100,15 +105,15 @@ class NerfDemo:
 
     def _loss_fn(self, model, rays_o, rays_d, target, v=None):
         rgb, depth = ivy_vision.render_implicit_features_and_depth(
-            model, rays_o, rays_d, near=ivy.ones(self._img_dims) * 2, far=ivy.ones(self._img_dims) * 6,
-            samples_per_ray=self._num_samples, v=v)
+            model, rays_o, rays_d, near=ivy.ones(self._img_dims, dev_str=self._dev_str) * 2,
+            far=ivy.ones(self._img_dims, dev_str=self._dev_str) * 6, samples_per_ray=self._num_samples, v=v)
         return ivy.reduce_mean((rgb - target) ** 2)[0]
 
     # Public #
     # -------#
 
     def train(self):
-        optimizer = ivy.Adam(self._lr)
+        optimizer = ivy.Adam(self._lr, dev_str=self._dev_str)
 
         for i in range(self._num_iters + 1):
 
@@ -129,8 +134,8 @@ class NerfDemo:
                 # Render the holdout view for logging
                 rays_o, rays_d = self._get_rays(self._test_cam_geom)
                 rgb, depth = ivy_vision.render_implicit_features_and_depth(
-                    self._model, rays_o, rays_d, near=ivy.ones(self._img_dims) * 2, far=ivy.ones(self._img_dims)*6,
-                    samples_per_ray=self._num_samples)
+                    self._model, rays_o, rays_d, near=ivy.ones(self._img_dims, dev_str=self._dev_str) * 2,
+                    far=ivy.ones(self._img_dims, dev_str=self._dev_str)*6, samples_per_ray=self._num_samples)
                 plt.imsave(os.path.join(self._vis_log_dir, 'img_{}.png'.format(str(i).zfill(3))), ivy.to_numpy(rgb))
 
         print('Completed Training')
@@ -147,15 +152,15 @@ class NerfDemo:
 
         rot_phi = lambda phi: ivy.array([
             [1, 0, 0, 0],
-            [0, ivy.cos(phi), -ivy.sin(phi), 0],
-            [0, ivy.sin(phi), ivy.cos(phi), 0],
+            [0, np.cos(phi), -np.sin(phi), 0],
+            [0, np.sin(phi), np.cos(phi), 0],
             [0, 0, 0, 1],
         ], 'float32')
 
         rot_theta = lambda th_: ivy.array([
-            [ivy.cos(th_), 0, -ivy.sin(th_), 0],
+            [np.cos(th_), 0, -np.sin(th_), 0],
             [0, 1, 0, 0],
-            [ivy.sin(th_), 0, ivy.cos(th_), 0],
+            [np.sin(th_), 0, np.cos(th_), 0],
             [0, 0, 0, 1],
         ], 'float32')
 
@@ -163,27 +168,27 @@ class NerfDemo:
             c2w_ = trans_t(radius)
             c2w_ = rot_phi(phi / 180. * np.pi) @ c2w_
             c2w_ = rot_theta(theta / 180. * np.pi) @ c2w_
-            c2w_ = np.array([[-1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]) @ c2w_
-            c2w_ = c2w_ @ np.array([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
+            c2w_ = ivy.array([[-1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]], 'float32') @ c2w_
+            c2w_ = c2w_ @ ivy.array([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]], 'float32')
             return c2w_
 
         frames = []
         for th in tqdm(np.linspace(0., 360., 120, endpoint=False)):
-            c2w = pose_spherical(th, -30., 4.)
+            c2w = ivy.to_dev(pose_spherical(th, -30., 4.), self._dev_str)
             cam_geom = ivy_vision.inv_ext_mat_and_intrinsics_to_cam_geometry_object(
                 c2w[0:3], self._intrinsics.slice(0))
             rays_o, rays_d = self._get_rays(cam_geom)
             rgb, depth = ivy_vision.render_implicit_features_and_depth(
-                self._model, rays_o, rays_d, near=ivy.ones(self._img_dims) * 2, far=ivy.ones(self._img_dims) * 6,
-                samples_per_ray=self._num_samples)
-            frames.append((255 * np.clip(rgb, 0, 1)).astype(np.uint8))
+                self._model, rays_o, rays_d, near=ivy.ones(self._img_dims, dev_str=self._dev_str) * 2,
+                far=ivy.ones(self._img_dims, dev_str=self._dev_str) * 6, samples_per_ray=self._num_samples)
+            frames.append((255 * np.clip(ivy.to_numpy(rgb), 0, 1)).astype(np.uint8))
         import imageio
         vid_filename = 'nerf_video.mp4'
         imageio.mimwrite(vid_filename, frames, fps=30, quality=7)
 
 
-def main(num_iters, compile_flag, interactive=True, f=None):
-    nerf_demo = NerfDemo(num_iters, compile_flag, interactive, f)
+def main(num_iters, compile_flag, interactive=True, dev_str=None, f=None):
+    nerf_demo = NerfDemo(num_iters, compile_flag, interactive, dev_str, f)
     nerf_demo.train()
     nerf_demo.save_video()
 
@@ -196,8 +201,10 @@ if __name__ == '__main__':
                         help='Whether or not to compile the loss function.')
     parser.add_argument('--non_interactive', action='store_true',
                         help='whether to run the demo in non-interactive mode.')
+    parser.add_argument('--device', type=str, default=None,
+                        help='The device to run the demo with, as a string. Either gpu:idx or cpu.')
     parser.add_argument('--framework', type=str, default=None,
                         help='which framework to use. Chooses a random framework if unspecified.')
     parsed_args = parser.parse_args()
     framework = None if parsed_args.framework is None else get_framework_from_str(parsed_args.framework)
-    main(parsed_args.iterations, parsed_args.compile, not parsed_args.non_interactive, framework)
+    main(parsed_args.iterations, parsed_args.compile, not parsed_args.non_interactive, parsed_args.device, framework)
