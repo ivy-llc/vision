@@ -48,7 +48,7 @@ class ImplicitTestData(TestData):
              [3., 5., 0.14112001, -0.95892427, -0.9899925, 0.28366219, -0.2794155, -0.54402111, 0.96017029, -0.83907153]])
 
         # render implicit features and depth
-        self.implicit_fn = lambda x, v=None: (ivy.array(self.features), ivy.array(self.densities))
+        self.implicit_fn = lambda pts, feat, v=None: (ivy.array(self.features), ivy.array(self.densities))
         self.rays_o = np.array([0, 0, 0], np.float32)
         self.rays_d = np.array([[1, 2, 3], [-1, -2, -3], [1, -2, 1]], np.float32)
         self.near = np.array([0.5, 0.7, 0.9], np.float32)
