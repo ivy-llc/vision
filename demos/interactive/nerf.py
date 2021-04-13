@@ -74,8 +74,6 @@ class NerfDemo:
             inv_ext_mats[101, 0:3], self._intrinsics.slice(0))
 
         # train config
-        if compile_flag:
-            self._loss_fn = ivy.compile_fn(self._loss_fn)
         self._embed_length = 6
         self._lr = 5e-4
         self._num_samples = 64
@@ -92,6 +90,13 @@ class NerfDemo:
 
         # model
         self._model = Model(4, 256, self._embed_length, dev_str)
+
+        # compile
+        if compile_flag:
+            rays_o, rays_d = self._get_rays(self._cam_geoms.slice(0))
+            target = self._images[0]
+            self._loss_fn = ivy.compile_fn(self._loss_fn, False,
+                                           example_inputs=[self._model, rays_o, rays_d, target, self._model.v])
 
     # Private #
     # --------#
