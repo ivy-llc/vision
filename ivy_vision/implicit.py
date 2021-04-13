@@ -181,7 +181,7 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, sa
     # Run network
 
     # num_sections size list of tuple of (BSPQ x OF, BSPQ)
-    feats_n_densities = [network_fn(pt, f) for pt, f in zip(pts_split, feats_split)]
+    feats_n_densities = [network_fn(pt, f, v=v) for pt, f in zip(pts_split, feats_split)]
 
     # BS x SPR x OF
     feat = ivy.reshape(ivy.concatenate([item[0] for item in feats_n_densities], 0),
