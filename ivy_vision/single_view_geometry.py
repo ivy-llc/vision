@@ -942,6 +942,43 @@ def focal_lengths_and_pp_offsets_to_intrinsics_object(focal_lengths, pp_offsets,
     return intrinsics
 
 
+def calib_mat_to_intrinsics_object(calib_mat, image_dims, batch_shape=None):
+    """
+    Create camera intrinsics object from calibration matrix.
+
+    :param calib_mat: Calibration matrices *[batch_shape,3,3]*
+    :type calib_mat: array
+    :param image_dims: Image dimensions. Inferred from inputs in None.
+    :type image_dims: sequence of ints
+    :param batch_shape: Shape of batch. Inferred from inputs if None.
+    :type batch_shape: sequence of ints, optional
+    :return: Camera intrinsics object
+    """
+
+    if batch_shape is None:
+        batch_shape = calib_mat.shape[:-2]
+
+    # shapes as list
+    batch_shape = list(batch_shape)
+    image_dims = list(image_dims)
+
+    # BS x 2
+    focal_lengths = _ivy.concatenate((calib_mat[..., 0, 0:1], calib_mat[..., 1, 1:2]), -1)
+
+    # BS x 2
+    persp_angles = focal_lengths_to_persp_angles(focal_lengths, image_dims)
+
+    # BS x 2
+    pp_offsets = _ivy.concatenate((calib_mat[..., 0, -1:], calib_mat[..., 1, -1:]), -1)
+
+    # BS x 3 x 3
+    inv_calib_mat = _ivy.inv(calib_mat)
+
+    # intrinsics object
+    intrinsics = _Intrinsics(focal_lengths, persp_angles, pp_offsets, calib_mat, inv_calib_mat)
+    return intrinsics
+
+
 def ext_mat_and_intrinsics_to_cam_geometry_object(ext_mat, intrinsics, batch_shape=None, dev_str=None):
     """
     Create camera geometry object from extrinsic matrix :math:`\mathbf{E}\in\mathbb{R}^{3×4}`, and camera intrinsics
