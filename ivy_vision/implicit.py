@@ -154,7 +154,7 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, sa
 
     # BS x 1 x 3
     rays_d = ivy.expand_dims(rays_d, -2)
-    rays_o = ivy.broadcast_to(rays_o, rays_d.shape)
+    rays_o = ivy.broadcast_to(ivy.expand_dims(rays_o, -2), rays_d.shape)
 
     # BS x SPR x 3
     pts = rays_o + rays_d * z_vals
