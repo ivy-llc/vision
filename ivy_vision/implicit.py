@@ -11,7 +11,7 @@ MIN_DENOMINATOR = 1e-12
 
 
 def create_sampled_pixel_coords_image(image_dims, samples_per_dim, batch_shape=None, normalized=False, randomize=True,
-                                      dev_str=None):
+                                      dev_str='cpu'):
     """
     Create image of randomly sampled homogeneous integer :math:`xy` pixel co-ordinates :math:`\mathbf{X}\in\mathbb{Z}^{h×w×3}`,
     stored as floating point values. The origin is at the top-left corner of the image, with :math:`+x` rightwards, and
@@ -38,17 +38,20 @@ def create_sampled_pixel_coords_image(image_dims, samples_per_dim, batch_shape=N
     """
     low_res_pix_coords = _ivy_svg.create_uniform_pixel_coords_image(
         samples_per_dim, batch_shape, dev_str=dev_str)[..., 0:2]
-    window_size = ivy.array([img_dim/sam_per_dim for img_dim, sam_per_dim in zip(image_dims, samples_per_dim)])
-    downsam_pix_coords = ivy.round(low_res_pix_coords * window_size + window_size/2)
+    window_size = ivy.array([img_dim/sam_per_dim for img_dim, sam_per_dim in zip(image_dims, samples_per_dim)],
+                            dev_str=dev_str)
+    downsam_pix_coords = low_res_pix_coords * window_size + window_size/2 - 0.5
     if randomize:
-        rand_x = ivy.round(ivy.random_uniform(
-            -window_size[0]/2, window_size[0]/2, list(downsam_pix_coords.shape[:-1]) + [1]))
-        rand_y = ivy.round(ivy.random_uniform(
-            -window_size[1]/2, window_size[1]/2, list(downsam_pix_coords.shape[:-1]) + [1]))
-        rand_offsets = ivy.concatenate((rand_x, rand_y), -1)
-        randomize += rand_offsets
+        rand_0 = ivy.random_uniform(
+            -window_size[0]/2, window_size[0]/2, list(downsam_pix_coords.shape[:-1]) + [1], dev_str=dev_str)
+        rand_1 = ivy.random_uniform(
+            -window_size[1]/2, window_size[1]/2, list(downsam_pix_coords.shape[:-1]) + [1], dev_str=dev_str)
+        rand_offsets = ivy.concatenate((rand_0, rand_1), -1)
+        downsam_pix_coords += rand_offsets
+    downsam_pix_coords = ivy.round(downsam_pix_coords)
     if normalized:
-        return downsam_pix_coords / (ivy.array([image_dims[1], image_dims[0]], dtype_str='float32') + MIN_DENOMINATOR)
+        return downsam_pix_coords /\
+               (ivy.array([image_dims[1], image_dims[0]], dtype_str='float32', dev_str=dev_str) + MIN_DENOMINATOR)
     return downsam_pix_coords
 
 

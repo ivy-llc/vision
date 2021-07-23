@@ -64,7 +64,7 @@ td = ImplicitTestData()
 def test_create_sampled_pixel_coords_image(dev_str, call):
     sampled_img = call(ivy_imp.create_sampled_pixel_coords_image, td.image_dims, td.samples_per_dim,
                        (td.batch_size, td.num_cameras), normalized=False, randomize=False)
-    assert np.min(sampled_img).item() == 27
+    assert np.min(sampled_img).item() == 26
     assert np.max(sampled_img).item() == 613
     sampled_img = call(ivy_imp.create_sampled_pixel_coords_image, td.image_dims, td.samples_per_dim,
                        (td.batch_size, td.num_cameras), normalized=False, randomize=True)
@@ -72,7 +72,7 @@ def test_create_sampled_pixel_coords_image(dev_str, call):
     assert np.max(sampled_img).item() < max(td.image_dims)
     sampled_img = call(ivy_imp.create_sampled_pixel_coords_image, td.image_dims, td.samples_per_dim,
                        (td.batch_size, td.num_cameras), normalized=True, randomize=False)
-    assert np.allclose(np.min(sampled_img).item(), 0.0421875)
+    assert np.allclose(np.min(sampled_img).item(), 0.040625)
     assert np.allclose(np.max(sampled_img).item(), 0.9578125)
     sampled_img = call(ivy_imp.create_sampled_pixel_coords_image, td.image_dims, td.samples_per_dim,
                        (td.batch_size, td.num_cameras), normalized=True, randomize=True)
