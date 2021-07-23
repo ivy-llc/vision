@@ -514,16 +514,16 @@ def ds_pixel_to_world_coords(ds_pixel_coords, inv_full_mat, batch_shape=None, im
     return _ivy_mec.make_coordinates_homogeneous(world_coords, batch_shape + image_shape)
 
 
-def ds_pixel_coords_to_world_ray_vectors(ds_pixel_coords, inv_full_mat, camera_center=None, batch_shape=None, image_dims=None):
+def ds_pixel_coords_to_world_ray_vectors(ds_pixel_coords, inv_full_mat, camera_center=None, batch_shape=None, image_shape=None):
     """
-    Calculate world-centric ray vector image :math:`\mathbf{RV}\in\mathbb{R}^{h×w×3}` from homogeneous pixel co-ordinate
-    image :math:`\mathbf{X}_p\in\mathbb{R}^{h×w×3}`. Each ray vector :math:`\mathbf{rv}_{i,j}\in\mathbb{R}^{3}` is
+    Calculate world-centric ray vector image :math:`\mathbf{RV}\in\mathbb{R}^{is×3}` from homogeneous pixel co-ordinate
+    image :math:`\mathbf{X}_p\in\mathbb{R}^{is×3}`. Each ray vector :math:`\mathbf{rv}_{i,j}\in\mathbb{R}^{3}` is
     represented as a unit vector from the camera center :math:`\overset{\sim}{\mathbf{C}}\in\mathbb{R}^{3×1}`, in the
     world frame. Co-ordinates :math:`\mathbf{x}_{i,j}\in\mathbb{R}^{3}` along the world ray can then be parameterized as
     :math:`\mathbf{x}_{i,j}=\overset{\sim}{\mathbf{C}} + λ\mathbf{rv}_{i,j}`, where :math:`λ` is a scalar who's
     magnitude dictates the position of the world co-ordinate along the world ray.
 
-    :param ds_pixel_coords: Homogeneous pixel co-ordinates image *[batch_shape,h,w,3]*
+    :param ds_pixel_coords: Homogeneous pixel co-ordinates image *[batch_shape,image_shape,3]*
     :type ds_pixel_coords: array
     :param inv_full_mat: Inverse full projection matrix *[batch_shape,3,4]*
     :type inv_full_mat: array
@@ -531,20 +531,21 @@ def ds_pixel_coords_to_world_ray_vectors(ds_pixel_coords, inv_full_mat, camera_c
     :type camera_center: array, optional
     :param batch_shape: Shape of batch. Inferred from inputs if None.
     :type batch_shape: sequence of ints, optional
-    :param image_dims: Image dimensions. Inferred from inputs in None.
-    :type image_dims: sequence of ints, optional
-    :return: World ray vectors *[batch_shape,h,w,3]*
+    :param image_shape: Image shape. Inferred from inputs in None.
+    :type image_shape: sequence of ints, optional
+    :return: World ray vectors *[batch_shape,image_shape,3]*
     """
 
     if batch_shape is None:
-        batch_shape = ds_pixel_coords.shape[:-3]
+        batch_shape = inv_full_mat.shape[:-2]
+    num_batch_dims = len(batch_shape)
 
-    if image_dims is None:
-        image_dims = ds_pixel_coords.shape[-3:-1]
+    if image_shape is None:
+        image_shape = ds_pixel_coords.shape[num_batch_dims:-1]
 
     # shapes as list
     batch_shape = list(batch_shape)
-    image_dims = list(image_dims)
+    image_shape = list(image_shape)
 
     if camera_center is None:
         camera_center = inv_ext_mat_to_camera_center(inv_full_mat)
@@ -553,7 +554,7 @@ def ds_pixel_coords_to_world_ray_vectors(ds_pixel_coords, inv_full_mat, camera_c
     camera_centers_reshaped = _ivy.reshape(camera_center, batch_shape + [1, 1, 3])
 
     # BS x H x W x 3
-    vectors = ds_pixel_to_world_coords(ds_pixel_coords, inv_full_mat, batch_shape, image_dims)[..., 0:3] \
+    vectors = ds_pixel_to_world_coords(ds_pixel_coords, inv_full_mat, batch_shape, image_shape)[..., 0:3] \
               - camera_centers_reshaped
 
     # BS x H x W x 3
