@@ -82,9 +82,9 @@ def create_sampled_pixel_coords_image(image_dims, samples_per_dim, batch_shape=N
 
         # BS x DH x DW x 1
         rand_x = ivy.random_uniform(
-            -window_size[1]/2, window_size[1]/2, list(downsam_pix_coords.shape[:-1]) + [1], dev_str=dev_str)
-        rand_y = ivy.random_uniform(
             -window_size[0]/2, window_size[0]/2, list(downsam_pix_coords.shape[:-1]) + [1], dev_str=dev_str)
+        rand_y = ivy.random_uniform(
+            -window_size[1]/2, window_size[1]/2, list(downsam_pix_coords.shape[:-1]) + [1], dev_str=dev_str)
 
         # BS x DH x DW x 2
         rand_offsets = ivy.concatenate((rand_x, rand_y), -1)
