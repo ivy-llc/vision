@@ -12,6 +12,9 @@ class ImplicitTestData(TestData):
     def __init__(self):
         super().__init__()
 
+        # sampled pixel coords
+        self.samples_per_dim = [9, 12]
+
         # stratified sampling
         self.start_vals = np.array([0, 1, 2], np.float32)
         self.end_vals = np.array([10, 21, 7], np.float32)
@@ -56,6 +59,25 @@ class ImplicitTestData(TestData):
 
 
 td = ImplicitTestData()
+
+
+def test_create_sampled_pixel_coords_image(dev_str, call):
+    sampled_img = call(ivy_imp.create_sampled_pixel_coords_image, td.image_dims, td.samples_per_dim,
+                       (td.batch_size, td.num_cameras), normalized=False, randomize=False)
+    assert np.min(sampled_img).item() == 27
+    assert np.max(sampled_img).item() == 613
+    sampled_img = call(ivy_imp.create_sampled_pixel_coords_image, td.image_dims, td.samples_per_dim,
+                       (td.batch_size, td.num_cameras), normalized=False, randomize=True)
+    assert np.min(sampled_img).item() >= 0
+    assert np.max(sampled_img).item() < max(td.image_dims)
+    sampled_img = call(ivy_imp.create_sampled_pixel_coords_image, td.image_dims, td.samples_per_dim,
+                       (td.batch_size, td.num_cameras), normalized=True, randomize=False)
+    assert np.allclose(np.min(sampled_img).item(), 0.0421875)
+    assert np.allclose(np.max(sampled_img).item(), 0.9578125)
+    sampled_img = call(ivy_imp.create_sampled_pixel_coords_image, td.image_dims, td.samples_per_dim,
+                       (td.batch_size, td.num_cameras), normalized=True, randomize=True)
+    assert np.min(sampled_img).item() >= 0
+    assert np.max(sampled_img).item() < 1
 
 
 def test_sinusoid_positional_encoding(dev_str, call):

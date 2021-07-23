@@ -3,6 +3,54 @@ import ivy
 import math
 import numpy as np
 
+# local
+from ivy_vision import single_view_geometry as _ivy_svg
+
+
+MIN_DENOMINATOR = 1e-12
+
+
+def create_sampled_pixel_coords_image(image_dims, samples_per_dim, batch_shape=None, normalized=False, randomize=True,
+                                      dev_str=None):
+    """
+    Create image of randomly sampled homogeneous integer :math:`xy` pixel co-ordinates :math:`\mathbf{X}\in\mathbb{Z}^{h×w×3}`,
+    stored as floating point values. The origin is at the top-left corner of the image, with :math:`+x` rightwards, and
+    :math:`+y` downwards. The final homogeneous dimension are all ones. In subsequent use of this image, the depth of
+    each pixel can be represented using this same homogeneous representation, by simply scaling each 3-vector by the
+    depth value. The final dimension therefore always holds the depth value, while the former two dimensions hold depth
+    scaled pixel co-ordinates.\n
+    `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=172>`_
+    deduction from top of page 154, section 6.1, equation 6.1
+
+    :param image_dims: Image dimensions.
+    :type image_dims: sequence of ints.
+    :param samples_per_dim: The number of samples to perform per image dimension.
+    :type samples_per_dim: sequence of ints.
+    :param batch_shape: Shape of batch. Assumed no batch dimensions if None.
+    :type batch_shape: sequence of ints, optional
+    :param normalized: Whether to normalize x-y pixel co-ordinates to the range 0-1. Default is False.
+    :type normalized: bool, optional
+    :param randomize: Whether to randomize the sampled co-ordiantes within their window. Default is True.
+    :type randomize: bool, optional
+    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
+    :type dev_str: str, optional
+    :return: Image of homogeneous pixel co-ordinates *[batch_shape,height,width,3]*
+    """
+    low_res_pix_coords = _ivy_svg.create_uniform_pixel_coords_image(
+        samples_per_dim, batch_shape, dev_str=dev_str)[..., 0:2]
+    window_size = ivy.array([img_dim/sam_per_dim for img_dim, sam_per_dim in zip(image_dims, samples_per_dim)])
+    downsam_pix_coords = ivy.round(low_res_pix_coords * window_size + window_size/2)
+    if randomize:
+        rand_x = ivy.round(ivy.random_uniform(
+            -window_size[0]/2, window_size[0]/2, list(downsam_pix_coords.shape[:-1]) + [1]))
+        rand_y = ivy.round(ivy.random_uniform(
+            -window_size[1]/2, window_size[1]/2, list(downsam_pix_coords.shape[:-1]) + [1]))
+        rand_offsets = ivy.concatenate((rand_x, rand_y), -1)
+        randomize += rand_offsets
+    if normalized:
+        return downsam_pix_coords / (ivy.array([image_dims[1], image_dims[0]], dtype_str='float32') + MIN_DENOMINATOR)
+    return downsam_pix_coords
+
 
 def sinusoid_positional_encoding(x, embedding_length=10):
     """

@@ -27,7 +27,7 @@ class SingleViewGeometryTestData(TestData):
 td = SingleViewGeometryTestData()
 
 
-def test_get_uniform_pixel_coords_image(dev_str, call):
+def test_create_uniform_pixel_coords_image(dev_str, call):
     assert np.array_equal(
         call(ivy_svg.create_uniform_pixel_coords_image, td.image_dims, (td.batch_size, td.num_cameras)),
         td.uniform_pixel_coords)

@@ -34,8 +34,8 @@ def create_uniform_pixel_coords_image(image_dims, batch_shape=None, normalized=F
     :type image_dims: sequence of ints.
     :param batch_shape: Shape of batch. Assumed no batch dimensions if None.
     :type batch_shape: sequence of ints, optional
-    :param normalized: Whether to normalize x-y pixel co-ordinates to the range 0-1.
-    :type normalized: bool
+    :param normalized: Whether to normalize x-y pixel co-ordinates to the range 0-1. Default is False.
+    :type normalized: bool, optional
     :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
     :type dev_str: str, optional
     :return: Image of homogeneous pixel co-ordinates *[batch_shape,height,width,3]*
