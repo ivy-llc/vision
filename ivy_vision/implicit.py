@@ -304,7 +304,7 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, sa
     :type inter_feat_fn: callable, optional
     :param v: The container of trainable variables for the implicit model. default is to use internal variables.
     :type v: ivy Container of variables
-    :return: The rendered feature *[batch_shape,ray_batch_shape,feat]* and depth *[batch_shape,ray_batch_shape,1]* values
+    :return: The rendered feature *[batch_shape,ray_batch_shape,feat]* and radial depth *[batch_shape,ray_batch_shape,1]*
     """
 
     # shapes
@@ -367,9 +367,9 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, sa
     feat = ivy.clip(render_rays_via_termination_probabilities(ray_term_probs, feat, render_variance), 0., 1.)
 
     # BS x 1
-    depth = render_rays_via_termination_probabilities(ray_term_probs, z_vals, render_variance)
+    radial_depth = render_rays_via_termination_probabilities(ray_term_probs, z_vals, render_variance)
     if render_variance:
         # BS x OF, BS x OF, BS x 1, BS x 1
-        return feat[0], feat[1], depth[0], depth[1]
+        return feat[0], feat[1], radial_depth[0], radial_depth[1]
     # BS x OF, BS x 1
-    return feat, depth
+    return feat, radial_depth
