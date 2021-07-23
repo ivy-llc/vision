@@ -470,7 +470,7 @@ def world_to_ds_pixel_coords(coords_wrt_world, full_mat, batch_shape=None, image
     return _ivy_pg.transform(coords_wrt_world, full_mat, batch_shape, image_dims)
 
 
-def ds_pixel_to_world_coords(ds_pixel_coords, inv_full_mat, batch_shape=None, image_shape=None, dev_str='cpu'):
+def ds_pixel_to_world_coords(ds_pixel_coords, inv_full_mat, batch_shape=None, image_shape=None):
     """
     Get world-centric homogeneous co-ordinates image :math:`\mathbf{X}_w\in\mathbb{R}^{is×4}` from depth scaled
     homogeneous pixel co-ordinates image :math:`\mathbf{X}_p\in\mathbb{R}^{is×3}`.\n
@@ -485,8 +485,6 @@ def ds_pixel_to_world_coords(ds_pixel_coords, inv_full_mat, batch_shape=None, im
     :type batch_shape: sequence of ints, optional
     :param image_shape: Image shape. Inferred from inputs in None.
     :type image_shape: sequence of ints, optional
-    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev_str: str, optional
     :return: World-centric homogeneous co-ordinates image *[batch_shape,image_shape,4]*
     """
 
@@ -496,9 +494,6 @@ def ds_pixel_to_world_coords(ds_pixel_coords, inv_full_mat, batch_shape=None, im
 
     if image_shape is None:
         image_shape = ds_pixel_coords.shape[num_batch_dims:-1]
-
-    if dev_str is None:
-        dev_str = _ivy.dev_str(ds_pixel_coords)
 
     # shapes as list
     batch_shape = list(batch_shape)
@@ -511,7 +506,7 @@ def ds_pixel_to_world_coords(ds_pixel_coords, inv_full_mat, batch_shape=None, im
     world_coords = _ivy_pg.transform(ds_pixel_coords, inv_full_mat, batch_shape, image_shape)
 
     # BS x IS x 4
-    return _ivy.concatenate((world_coords, _ivy.ones(batch_shape + image_shape + [1], dev_str=dev_str)), -1)
+    return _ivy_mec.make_coordinates_homogeneous(world_coords, batch_shape + image_shape)
 
 
 def ds_pixel_coords_to_world_ray_vectors(ds_pixel_coords, inv_full_mat, camera_center=None, batch_shape=None, image_dims=None):
