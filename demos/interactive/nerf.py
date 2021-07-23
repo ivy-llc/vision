@@ -111,7 +111,7 @@ class NerfDemo:
 
     def _loss_fn(self, model, rays_o, rays_d, target, v=None):
         rgb, depth = ivy_vision.render_implicit_features_and_depth(
-            model, rays_o, rays_d, near=ivy.ones(self._img_dims, dev_str=self._dev_str) * 2,
+            model, rays_o[0, 0], rays_d, near=ivy.ones(self._img_dims, dev_str=self._dev_str) * 2,
             far=ivy.ones(self._img_dims, dev_str=self._dev_str) * 6, samples_per_ray=self._num_samples, v=v)
         return ivy.reduce_mean((rgb - target) ** 2)[0]
 
