@@ -17,10 +17,11 @@ class Model(ivy.Module):
         self._layer_dim = layer_dim
         self._embedding_length = embedding_length
         embedding_size = 3 + 3 * 2 * embedding_length
-        self._fc_layers = [ivy.Linear(embedding_size, layer_dim, dev_str)]
-        self._fc_layers += [ivy.Linear(layer_dim + (embedding_size if i % 4 == 0 and i > 0 else 0), layer_dim, dev_str)
+        self._fc_layers = [ivy.Linear(embedding_size, layer_dim, dev_str=dev_str)]
+        self._fc_layers += [ivy.Linear(layer_dim + (embedding_size if i % 4 == 0 and i > 0 else 0), layer_dim,
+                                       dev_str=dev_str)
                             for i in range(num_layers-2)]
-        self._fc_layers.append(ivy.Linear(layer_dim, 4, dev_str))
+        self._fc_layers.append(ivy.Linear(layer_dim, 4, dev_str=dev_str))
         super(Model, self).__init__(dev_str)
 
     def _forward(self, x, feat=None):

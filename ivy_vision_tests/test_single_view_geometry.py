@@ -118,15 +118,15 @@ def test_world_to_ds_pixel_coords(dev_str, call):
 
 def test_ds_pixel_to_world_coords(dev_str, call):
     # with 2D image dimensions
-    assert np.allclose(call(ivy_svg.ds_pixel_to_world_coords, td.pixel_coords_to_scatter, td.inv_full_mats, dev_str='cpu'),
+    assert np.allclose(call(ivy_svg.ds_pixel_to_world_coords, td.pixel_coords_to_scatter, td.inv_full_mats),
                        td.world_coords, atol=1e-6)
-    assert np.allclose(call(ivy_svg.ds_pixel_to_world_coords, td.pixel_coords_to_scatter[0], td.inv_full_mats[0], dev_str='cpu'),
+    assert np.allclose(call(ivy_svg.ds_pixel_to_world_coords, td.pixel_coords_to_scatter[0], td.inv_full_mats[0]),
                        td.world_coords[0], atol=1e-6)
     # with flat image dimensions
     batch_shape = list(td.inv_full_mats.shape[:-2])
     assert np.allclose(call(ivy_svg.ds_pixel_to_world_coords,
-                            np.reshape(td.pixel_coords_to_scatter, batch_shape + [-1, 3]), td.inv_full_mats,
-                            dev_str='cpu'), np.reshape(td.world_coords, batch_shape + [-1, 4]), atol=1e-6)
+                            np.reshape(td.pixel_coords_to_scatter, batch_shape + [-1, 3]), td.inv_full_mats),
+                       np.reshape(td.world_coords, batch_shape + [-1, 4]), atol=1e-6)
 
 
 def test_ds_pixel_coords_to_world_rays(dev_str, call):
