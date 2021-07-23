@@ -1,6 +1,8 @@
 # global
 import ivy
+import pytest
 import numpy as np
+from ivy_tests import helpers
 
 # local
 from ivy_vision import implicit as ivy_imp
@@ -61,6 +63,18 @@ class ImplicitTestData(TestData):
 td = ImplicitTestData()
 
 
+def test_downsampled_image_dims_from_desired_num_pixels(dev_str, call):
+    new_img_dims, num_pixels = call(ivy_imp.downsampled_image_dims_from_desired_num_pixels, [32, 32], 256)
+    assert new_img_dims == [16, 16]
+    assert num_pixels == 256
+    new_img_dims, num_pixels = call(ivy_imp.downsampled_image_dims_from_desired_num_pixels, [14, 18], 125)
+    assert new_img_dims == [10, 13]
+    assert num_pixels == 130
+    new_img_dims, num_pixels = call(ivy_imp.downsampled_image_dims_from_desired_num_pixels, [14, 18], 125, maximum=True)
+    assert new_img_dims == [9, 12]
+    assert num_pixels == 108
+
+
 def test_create_sampled_pixel_coords_image(dev_str, call):
     sampled_img = call(ivy_imp.create_sampled_pixel_coords_image, td.image_dims, td.samples_per_dim,
                        (td.batch_size, td.num_cameras), normalized=False, randomize=False)
@@ -78,6 +92,16 @@ def test_create_sampled_pixel_coords_image(dev_str, call):
                        (td.batch_size, td.num_cameras), normalized=True, randomize=True)
     assert np.min(sampled_img).item() >= 0
     assert np.max(sampled_img).item() < 1
+
+
+def test_sample_images(dev_str, call):
+    if call is helpers.mx_call:
+        # MXNet does not support splitting based on section sizes,only number of sections as integer input is supported.
+        pytest.skip()
+    img0, img1 = call(ivy_imp.sample_images, [td.pixel_coords_to_scatter]*2, 32,
+                      (td.batch_size, td.num_cameras), td.image_dims)
+    assert list(img0.shape) == [td.batch_size, td.num_cameras, 35, 3]
+    assert list(img1.shape) == [td.batch_size, td.num_cameras, 35, 3]
 
 
 def test_sinusoid_positional_encoding(dev_str, call):

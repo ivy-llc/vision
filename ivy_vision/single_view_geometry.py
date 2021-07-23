@@ -19,7 +19,7 @@ from ivy_vision.containers import CameraGeometry as _CameraGeometry
 MIN_DENOMINATOR = 1e-12
 
 
-def create_uniform_pixel_coords_image(image_dims, batch_shape=None, normalized=False, dev_str='cpu'):
+def create_uniform_pixel_coords_image(image_dims, batch_shape=None, normalized=False, homogeneous=True, dev_str='cpu'):
     """
     Create image of homogeneous integer :math:`xy` pixel co-ordinates :math:`\mathbf{X}\in\mathbb{Z}^{h×w×3}`, stored
     as floating point values. The origin is at the top-left corner of the image, with :math:`+x` rightwards, and
@@ -36,6 +36,8 @@ def create_uniform_pixel_coords_image(image_dims, batch_shape=None, normalized=F
     :type batch_shape: sequence of ints, optional
     :param normalized: Whether to normalize x-y pixel co-ordinates to the range 0-1. Default is False.
     :type normalized: bool, optional
+    :param homogeneous: Whether the pixel co-ordinates should be 3D homogeneous or just 2D. Default is True.
+    :type: homogeneous: bool, optional
     :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
     :type dev_str: str, optional
     :return: Image of homogeneous pixel co-ordinates *[batch_shape,height,width,3]*
@@ -48,7 +50,7 @@ def create_uniform_pixel_coords_image(image_dims, batch_shape=None, normalized=F
 
     # other shape specs
     num_batch_dims = len(batch_shape)
-    flat_shape = [1] * num_batch_dims + image_dims + [3]
+    flat_shape = [1] * num_batch_dims + image_dims + [2]
     tile_shape = batch_shape + [1] * 3
 
     # H x W x 1
@@ -66,12 +68,15 @@ def create_uniform_pixel_coords_image(image_dims, batch_shape=None, normalized=F
     if normalized:
         pixel_y_coords = pixel_y_coords / (float(image_dims[0]) + MIN_DENOMINATOR)
 
-    # H x W x 1
-    ones = _ivy.ones_like(pixel_x_coords, dev_str=dev_str)
+    # BS x H x W x 2
+    pix_coords = _ivy.tile(_ivy.reshape(_ivy.concatenate((pixel_x_coords, pixel_y_coords), -1), flat_shape), tile_shape)
 
-    # BS x H x W x 3
-    return _ivy.tile(_ivy.reshape(_ivy.concatenate((pixel_x_coords, pixel_y_coords, ones), -1),
-                                  flat_shape), tile_shape)
+    if homogeneous:
+        # BS x H x W x 3
+        pix_coords = _ivy_mec.make_coordinates_homogeneous(pix_coords)
+
+    # BS x H x W x 2or3
+    return pix_coords
 
 
 def persp_angles_to_focal_lengths(persp_angles, image_dims, dev_str='cpu'):

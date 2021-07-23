@@ -1,7 +1,10 @@
 # global
 import ivy
 import math
+import ivy_mech
 import numpy as np
+from operator import mul
+from functools import reduce
 
 # local
 from ivy_vision import single_view_geometry as _ivy_svg
@@ -10,8 +13,32 @@ from ivy_vision import single_view_geometry as _ivy_svg
 MIN_DENOMINATOR = 1e-12
 
 
+def downsampled_image_dims_from_desired_num_pixels(image_dims, num_pixels, maximum=False):
+    """
+    Compute the best downsampled image dimensions, given original image dimensions and the ideal total number of
+    pixels for the downsampled image. The final number of pixels in the downsampled image dimensions may not be exact,
+    but will best balance aspect ratio preservation and total number of pixels.  
+    
+    :param image_dims: The image dimensions of the original image.
+    :type image_dims: sequence of ints.
+    :param num_pixels: The ideal numbr of pixels in the downsampled image.
+    :type num_pixels: int
+    :param maximum: Whether the number of pixels is a hard maximum. Default is False.
+    :type maximum: bool, optional
+    :return: The image dimensions for a new downsampled image.
+    """
+    int_method = math.floor if maximum else round
+    ratio = image_dims[1] / image_dims[0]
+    new_dim_0 = (num_pixels / ratio) ** 0.5
+    new_dim_1 = int_method(new_dim_0 * ratio)
+    new_dim_0 = int_method(new_dim_0)
+    new_img_dims = [new_dim_0, new_dim_1]
+    num_pixels = new_dim_0 * new_dim_1
+    return new_img_dims, num_pixels
+
+
 def create_sampled_pixel_coords_image(image_dims, samples_per_dim, batch_shape=None, normalized=False, randomize=True,
-                                      dev_str='cpu'):
+                                      homogeneous=False, dev_str='cpu'):
     """
     Create image of randomly sampled homogeneous integer :math:`xy` pixel co-ordinates :math:`\mathbf{X}\in\mathbb{Z}^{h×w×3}`,
     stored as floating point values. The origin is at the top-left corner of the image, with :math:`+x` rightwards, and
@@ -32,27 +59,114 @@ def create_sampled_pixel_coords_image(image_dims, samples_per_dim, batch_shape=N
     :type normalized: bool, optional
     :param randomize: Whether to randomize the sampled co-ordiantes within their window. Default is True.
     :type randomize: bool, optional
+    :param homogeneous: Whether the pixel co-ordinates should be 3D homogeneous or just 2D. Default is True.
+    :type: homogeneous: bool, optional
     :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
     :type dev_str: str, optional
     :return: Image of homogeneous pixel co-ordinates *[batch_shape,height,width,3]*
     """
+
+    # BS x DH x DW x 2
     low_res_pix_coords = _ivy_svg.create_uniform_pixel_coords_image(
-        samples_per_dim, batch_shape, dev_str=dev_str)[..., 0:2]
-    window_size = ivy.array([img_dim/sam_per_dim for img_dim, sam_per_dim in zip(image_dims, samples_per_dim)],
-                            dev_str=dev_str)
+        samples_per_dim, batch_shape, homogeneous=False, dev_str=dev_str)
+
+    # 2
+    window_size =\
+        ivy.array(list(reversed([img_dim/sam_per_dim for img_dim, sam_per_dim in zip(image_dims, samples_per_dim)])),
+                  dev_str=dev_str)
+
+    # BS x DH x DW x 2
     downsam_pix_coords = low_res_pix_coords * window_size + window_size/2 - 0.5
+
     if randomize:
-        rand_0 = ivy.random_uniform(
-            -window_size[0]/2, window_size[0]/2, list(downsam_pix_coords.shape[:-1]) + [1], dev_str=dev_str)
-        rand_1 = ivy.random_uniform(
+
+        # BS x DH x DW x 1
+        rand_x = ivy.random_uniform(
             -window_size[1]/2, window_size[1]/2, list(downsam_pix_coords.shape[:-1]) + [1], dev_str=dev_str)
-        rand_offsets = ivy.concatenate((rand_0, rand_1), -1)
+        rand_y = ivy.random_uniform(
+            -window_size[0]/2, window_size[0]/2, list(downsam_pix_coords.shape[:-1]) + [1], dev_str=dev_str)
+
+        # BS x DH x DW x 2
+        rand_offsets = ivy.concatenate((rand_x, rand_y), -1)
         downsam_pix_coords += rand_offsets
     downsam_pix_coords = ivy.round(downsam_pix_coords)
+
     if normalized:
-        return downsam_pix_coords /\
-               (ivy.array([image_dims[1], image_dims[0]], dtype_str='float32', dev_str=dev_str) + MIN_DENOMINATOR)
+        downsam_pix_coords /=\
+            ivy.array([image_dims[1], image_dims[0]], dtype_str='float32', dev_str=dev_str) + MIN_DENOMINATOR
+
+    if homogeneous:
+        # BS x DH x DW x 3
+        downsam_pix_coords = ivy_mech.make_coordinates_homogeneous(downsam_pix_coords, batch_shape + samples_per_dim)
+
+    # BS x DH x DW x 2or3
     return downsam_pix_coords
+
+
+def sample_images(list_of_images, num_pixels, batch_shape, image_dims, dev_str='cpu'):
+    """
+    Samples each image in a list of aligned images at num_pixels random pixel co-ordinates, within a unifrom grid
+    over the image.
+
+    :param list_of_images: List of images to sample from.
+    :type list_of_images: sequence of arrays.
+    :param num_pixels: The number of pixels to sample from each image.
+    :type num_pixels: int
+    :param batch_shape: Shape of batch. Inferred from inputs if None.
+    :type batch_shape: sequence of ints, optional
+    :param image_dims: Image dimensions. Inferred from inputs in None.
+    :type image_dims: sequence of ints, optional
+    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as images if None.
+    :type dev_str: str, optional
+    :return:
+    """
+
+    if batch_shape is None:
+        batch_shape = list_of_images[0].shape[:-3]
+
+    if image_dims is None:
+        image_dims = list_of_images[0].shape[-3:-1]
+
+    if dev_str is None:
+        dev_str = ivy.dev_str(list_of_images[0])
+
+    image_channels = [img.shape[-1] for img in list_of_images]
+
+    # shapes as list
+    batch_shape = list(batch_shape)
+    image_dims = list(image_dims)
+    flat_batch_size = reduce(mul, batch_shape)
+
+    new_img_dims, num_pixels_to_use = downsampled_image_dims_from_desired_num_pixels(
+        image_dims, num_pixels)
+
+    # BS x DH x DW x 2
+    sampled_pix_coords = ivy.cast(create_sampled_pixel_coords_image(
+        image_dims, new_img_dims, batch_shape, homogeneous=False, dev_str=dev_str), 'int32')
+
+    # FBS x DH x DW x 2
+    sampled_pix_coords_flat = ivy.reshape(sampled_pix_coords, [flat_batch_size] + new_img_dims + [2])
+
+    # FBS x DH x DW x 1
+    batch_idxs = ivy.expand_dims(ivy.transpose(ivy.cast(ivy.linspace(
+        ivy.zeros(new_img_dims, dev_str=dev_str),
+        ivy.ones(new_img_dims, dev_str=dev_str) * (flat_batch_size - 1), flat_batch_size, -1),
+        'int32'), (2, 0, 1)), -1)
+
+    # FBS x DH x DW x 3
+    total_idxs = ivy.concatenate((batch_idxs, ivy.flip(sampled_pix_coords_flat, -1)), -1)
+
+    # list of FBS x H x W x D
+    flat_batch_images = [ivy.reshape(img, [flat_batch_size] + image_dims + [-1]) for img in list_of_images]
+
+    # FBS x H x W x sum(D)
+    combined_img = ivy.concatenate(flat_batch_images, -1)
+
+    # BS x FID x sum(D)
+    combined_img_sampled = ivy.reshape(ivy.gather_nd(combined_img, total_idxs), batch_shape + [num_pixels_to_use, -1])
+
+    # list of BS x FID x D
+    return ivy.split(combined_img_sampled, image_channels, -1)
 
 
 def sinusoid_positional_encoding(x, embedding_length=10):
