@@ -308,37 +308,41 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, sa
     """
 
     # shapes
-    batch_shape = list(near.shape)
-    flat_batch_size = np.prod(batch_shape)
-    num_sections = math.ceil(flat_batch_size*samples_per_ray/batch_size_per_query)
+    batch_shape = list(rays_o.shape[:-1])
+    num_batch_dims = len(batch_shape)
+    ray_batch_shape = list(rays_d.shape[num_batch_dims:-1])
+    num_ray_batch_dims = len(ray_batch_shape)
+    total_batch_shape = batch_shape + ray_batch_shape
+    flat_total_batch_size = np.prod(total_batch_shape)
+    num_sections = math.ceil(flat_total_batch_size*samples_per_ray/batch_size_per_query)
 
     # Compute 3D query points
 
-    # BS x SPR x 1
+    # BS x RBS x SPR x 1
     z_vals = ivy.expand_dims(stratified_sample(near, far, samples_per_ray), -1)
 
-    # BS x 1 x 3
+    # BS x RBS x 1 x 3
     rays_d = ivy.expand_dims(rays_d, -2)
-    rays_o = ivy.broadcast_to(ivy.expand_dims(rays_o, -2), rays_d.shape)
+    rays_o = ivy.broadcast_to(ivy.reshape(rays_o, batch_shape + [1]*(num_ray_batch_dims+1) + [3]), rays_d.shape)
 
-    # BS x SPR x 3
+    # BS x RBS x SPR x 3
     pts = rays_o + rays_d * z_vals
 
-    # (BSxSPR) x 3
-    pts_flat = ivy.reshape(pts, (flat_batch_size*samples_per_ray, 3))
+    # (BSxRBSxSPR) x 3
+    pts_flat = ivy.reshape(pts, (flat_total_batch_size*samples_per_ray, 3))
 
     # batch
     # ToDo: use a more general batchify function, from ivy core
 
     # num_sections size list of BSPQ x 3
-    pts_split = [pts_flat[i*batch_size_per_query:min((i+1)*batch_size_per_query, flat_batch_size*samples_per_ray)]
+    pts_split = [pts_flat[i*batch_size_per_query:min((i+1)*batch_size_per_query, flat_total_batch_size*samples_per_ray)]
                  for i in range(num_sections)]
     if inter_feat_fn is not None:
-        # (BSxSPR) x IF
-        features = ivy.reshape(inter_feat_fn(pts), (flat_batch_size*samples_per_ray, -1))
+        # (BSxRBSxSPR) x IF
+        features = ivy.reshape(inter_feat_fn(pts), (flat_total_batch_size*samples_per_ray, -1))
         # num_sections size list of BSPQ x IF
         feats_split =\
-            [features[i * batch_size_per_query:min((i + 1) * batch_size_per_query, flat_batch_size*samples_per_ray)]
+            [features[i * batch_size_per_query:min((i + 1) * batch_size_per_query, flat_total_batch_size*samples_per_ray)]
              for i in range(num_sections)]
     else:
         feats_split = [None]*num_sections
@@ -348,28 +352,28 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, sa
     # num_sections size list of tuple of (BSPQ x OF, BSPQ)
     feats_n_densities = [network_fn(pt, f, v=v) for pt, f in zip(pts_split, feats_split)]
 
-    # BS x SPR x OF
+    # BS x RBS x SPR x OF
     feat = ivy.reshape(ivy.concatenate([item[0] for item in feats_n_densities], 0),
-                       batch_shape + [samples_per_ray, -1])
+                       total_batch_shape + [samples_per_ray, -1])
 
-    # FBS x SPR
+    # BS x RBS x SPR
     densities = ivy.reshape(ivy.concatenate([item[1] for item in feats_n_densities], 0),
-                            batch_shape + [samples_per_ray])
+                            total_batch_shape + [samples_per_ray])
 
-    # BS x (SPR+1)
+    # BS x RBS x (SPR+1)
     z_vals_w_terminal = ivy.concatenate((z_vals[..., 0], ivy.ones_like(z_vals[..., -1:, 0])*1e10), -1)
 
-    # BS x SPR
+    # BS x RBS x SPR
     depth_diffs = z_vals_w_terminal[..., 1:] - z_vals_w_terminal[..., :-1]
     ray_term_probs = ray_termination_probabilities(densities, depth_diffs)
 
-    # BS x OF
+    # BS x RBS x OF
     feat = ivy.clip(render_rays_via_termination_probabilities(ray_term_probs, feat, render_variance), 0., 1.)
 
-    # BS x 1
+    # BS x RBS x 1
     radial_depth = render_rays_via_termination_probabilities(ray_term_probs, z_vals, render_variance)
     if render_variance:
-        # BS x OF, BS x OF, BS x 1, BS x 1
+        # BS x RBS x OF, BS x RBS x OF, BS x RBS x 1, BS x RBS x 1
         return feat[0], feat[1], radial_depth[0], radial_depth[1]
-    # BS x OF, BS x 1
+    # BS x RBS x OF, BS x RBS x 1
     return feat, radial_depth
