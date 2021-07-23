@@ -4,9 +4,11 @@ Collection of General Projective-Geometry Functions
 
 # global
 import ivy as _ivy
+from operator import mul as _mul
+from functools import reduce as _reduce
 
 
-def transform(coords, trans, batch_shape=None, image_dims=None):
+def transform(coords, trans, batch_shape=None, image_shape=None):
     """
     Transform image of :math:`n`-dimensional co-ordinates :math:`\mathbf{x}\in\mathbb{R}^{h×w×n}` by
     transformation matrix :math:`\mathbf{f}\in\mathbb{R}^{m×n}`, to produce image of transformed co-ordinates
@@ -19,39 +21,37 @@ def transform(coords, trans, batch_shape=None, image_dims=None):
     :type trans: array
     :param batch_shape: Shape of batch. Inferred from inputs if None.
     :type batch_shape: sequence of ints, optional
-    :param image_dims: Image dimensions. Inferred from inputs if None.
-    :type image_dims: sequence of ints
+    :param image_shape: Image shape. Inferred from inputs if None.
+    :type image_shape: sequence of ints
     :return: Transformed co-ordinate image *[batch_shape,height,width,m]*
     """
 
     if batch_shape is None:
-        batch_shape = coords.shape[:-3]
+        batch_shape = trans.shape[:-2]
+    num_batch_dims = len(batch_shape)
 
-    if image_dims is None:
-        image_dims = coords.shape[-3:-1]
+    if image_shape is None:
+        image_shape = coords.shape[num_batch_dims:-1]
+    image_shape_flat = _reduce(_mul, image_shape)
 
     # shapes as list
     batch_shape = list(batch_shape)
-    image_dims = list(image_dims)
+    image_shape = list(image_shape)
 
-    # transpose idxs
-    num_batch_dims = len(batch_shape)
-    transpose_idxs = list(range(num_batch_dims)) + [num_batch_dims + 1, num_batch_dims]
+    # BS x ISF x N
+    coords_flattened = _ivy.reshape(coords, batch_shape + [image_shape_flat, -1])
 
-    # BS x (HxW) x N
-    coords_flattened = _ivy.reshape(coords, batch_shape + [image_dims[0] * image_dims[1], -1])
+    # BS x N x ISF
+    coords_reshaped = _ivy.swapaxes(coords_flattened, -1, -2)
 
-    # BS x N x (HxW)
-    coords_reshaped = _ivy.transpose(coords_flattened, transpose_idxs)
-
-    # BS x M x (HxW)
+    # BS x M x ISF
     transformed_coords_vector = _ivy.matmul(trans, coords_reshaped)
 
-    # BS x (HxW) x M
-    transformed_coords_vector_transposed = _ivy.transpose(transformed_coords_vector, transpose_idxs)
+    # BS x ISF x M
+    transformed_coords_vector_transposed = _ivy.swapaxes(transformed_coords_vector, -1, -2)
 
-    # BS x H x W x M
-    return _ivy.reshape(transformed_coords_vector_transposed, batch_shape + image_dims + [-1])
+    # BS x IS x M
+    return _ivy.reshape(transformed_coords_vector_transposed, batch_shape + image_shape + [-1])
 
 
 def projection_matrix_pseudo_inverse(proj_mat, batch_shape=None):

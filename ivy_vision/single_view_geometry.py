@@ -470,47 +470,48 @@ def world_to_ds_pixel_coords(coords_wrt_world, full_mat, batch_shape=None, image
     return _ivy_pg.transform(coords_wrt_world, full_mat, batch_shape, image_dims)
 
 
-def ds_pixel_to_world_coords(ds_pixel_coords, inv_full_mat, batch_shape=None, image_dims=None, dev_str='cpu'):
+def ds_pixel_to_world_coords(ds_pixel_coords, inv_full_mat, batch_shape=None, image_shape=None, dev_str='cpu'):
     """
-    Get world-centric homogeneous co-ordinates image :math:`\mathbf{X}_w\in\mathbb{R}^{h×w×4}` from depth scaled
-    homogeneous pixel co-ordinates image :math:`\mathbf{X}_p\in\mathbb{R}^{h×w×3}`.\n
+    Get world-centric homogeneous co-ordinates image :math:`\mathbf{X}_w\in\mathbb{R}^{is×4}` from depth scaled
+    homogeneous pixel co-ordinates image :math:`\mathbf{X}_p\in\mathbb{R}^{is×3}`.\n
     `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=173>`_
     combination of page 155, matrix inverse of equation 6.3, and matrix inverse of page 156, equation 6.6
 
-    :param ds_pixel_coords: Depth scaled homogeneous pixel co-ordinates image: *[batch_shape,h,w,3]*
+    :param ds_pixel_coords: Depth scaled homogeneous pixel co-ordinates image: *[batch_shape,image_shape,3]*
     :type ds_pixel_coords: array
     :param inv_full_mat: Inverse full projection matrix *[batch_shape,3,4]*
     :type inv_full_mat: array
     :param batch_shape: Shape of batch. Inferred from inputs if None.
     :type batch_shape: sequence of ints, optional
-    :param image_dims: Image dimensions. Inferred from inputs in None.
-    :type image_dims: sequence of ints, optional
+    :param image_shape: Image shape. Inferred from inputs in None.
+    :type image_shape: sequence of ints, optional
     :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
     :type dev_str: str, optional
-    :return: World-centric homogeneous co-ordinates image *[batch_shape,h,w,4]*
+    :return: World-centric homogeneous co-ordinates image *[batch_shape,image_shape,4]*
     """
 
     if batch_shape is None:
-        batch_shape = ds_pixel_coords.shape[:-3]
+        batch_shape = inv_full_mat.shape[:-2]
+    num_batch_dims = len(batch_shape)
 
-    if image_dims is None:
-        image_dims = ds_pixel_coords.shape[-3:-1]
+    if image_shape is None:
+        image_shape = ds_pixel_coords.shape[num_batch_dims:-1]
 
     if dev_str is None:
         dev_str = _ivy.dev_str(ds_pixel_coords)
 
     # shapes as list
     batch_shape = list(batch_shape)
-    image_dims = list(image_dims)
+    image_shape = list(image_shape)
 
-    # BS x H x W x 4
-    ds_pixel_coords = _ivy.concatenate((ds_pixel_coords, _ivy.ones(batch_shape + image_dims + [1], dev_str=dev_str)), -1)
+    # BS x IS x 4
+    ds_pixel_coords = _ivy_mec.make_coordinates_homogeneous(ds_pixel_coords, batch_shape)
 
-    # BS x H x W x 3
-    world_coords = _ivy_pg.transform(ds_pixel_coords, inv_full_mat, batch_shape, image_dims)
+    # BS x IS x 3
+    world_coords = _ivy_pg.transform(ds_pixel_coords, inv_full_mat, batch_shape, image_shape)
 
-    # BS x H x W x 4
-    return _ivy.concatenate((world_coords, _ivy.ones(batch_shape + image_dims + [1], dev_str=dev_str)), -1)
+    # BS x IS x 4
+    return _ivy.concatenate((world_coords, _ivy.ones(batch_shape + image_shape + [1], dev_str=dev_str)), -1)
 
 
 def ds_pixel_coords_to_world_ray_vectors(ds_pixel_coords, inv_full_mat, camera_center=None, batch_shape=None, image_dims=None):
