@@ -330,32 +330,30 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, sa
 
     # (BSxRBSxSPR) x 3
     pts_flat = ivy.reshape(pts, (flat_total_batch_size*samples_per_ray, 3))
+    network_inputs = [pts_flat]
 
     # batch
-    # ToDo: use a more general batchify function, from ivy core
 
     # num_sections size list of BSPQ x 3
-    pts_split = ivy.split(pts_flat, batch_size_per_query, 0, True)
+    # pts_split = ivy.split(pts_flat, batch_size_per_query, 0, True)
     if inter_feat_fn is not None:
         # (BSxRBSxSPR) x IF
         features = ivy.reshape(inter_feat_fn(pts), (flat_total_batch_size*samples_per_ray, -1))
-        # num_sections size list of BSPQ x IF
-        feats_split = ivy.split(features, batch_size_per_query, 0, True)
+        network_inputs.append(features)
+        func = lambda pt, f: network_fn(pt, f, v=v)
     else:
-        feats_split = [None]*num_sections
+        func = lambda pt: network_fn(pt, None, v=v)
 
     # Run network
 
-    # num_sections size list of tuple of (BSPQ x OF, BSPQ)
-    feats_n_densities = [network_fn(pt, f, v=v) for pt, f in zip(pts_split, feats_split)]
+    # BSPQ x OF,    BSPQ
+    feat, densities = ivy.split_func_call(func, network_inputs, batch_size_per_query, 0)
 
     # BS x RBS x SPR x OF
-    feat = ivy.reshape(ivy.concatenate([item[0] for item in feats_n_densities], 0),
-                       total_batch_shape + [samples_per_ray, -1])
+    feat = ivy.reshape(feat, total_batch_shape + [samples_per_ray, -1])
 
     # BS x RBS x SPR
-    densities = ivy.reshape(ivy.concatenate([item[1] for item in feats_n_densities], 0),
-                            total_batch_shape + [samples_per_ray])
+    densities = ivy.reshape(densities, total_batch_shape + [samples_per_ray])
 
     # BS x RBS x (SPR+1)
     z_vals_w_terminal = ivy.concatenate((z_vals[..., 0], ivy.ones_like(z_vals[..., -1:, 0])*1e10), -1)
