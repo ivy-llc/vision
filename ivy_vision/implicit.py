@@ -279,8 +279,9 @@ def render_rays_via_termination_probabilities(ray_term_probs, features, render_v
     return rendering, var
 
 
-def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, samples_per_ray, render_variance=False,
-                                       batch_size_per_query=512*64, inter_feat_fn=None, v=None):
+def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, samples_per_ray, render_depth=True,
+                                       render_feats=True, render_variance=False, batch_size_per_query=512 * 64,
+                                       inter_feat_fn=None, v=None):
     """
     Render an rgb-d image, given an implicit rgb and density function conditioned on xyz data.
 
@@ -296,6 +297,10 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, sa
     :type far: array
     :param samples_per_ray: The number of stratified samples to use along each ray
     :type samples_per_ray: int
+    :param render_depth: Whether to render the depth. Default is True.
+    :type render_depth: bool, optional
+    :param render_feats: Whether to render the features. Default is True.
+    :type render_feats: bool, optional
     :param render_variance: Whether to also render the feature variance. Default is False.
     :type render_variance: bool, optional
     :param batch_size_per_query: The maximum batch size for querying the implicit network. Default is 1024.
@@ -349,9 +354,6 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, sa
     # BSPQ x OF,    BSPQ
     feat, densities = ivy.split_func_call(func, network_inputs, batch_size_per_query, 0)
 
-    # BS x RBS x SPR x OF
-    feat = ivy.reshape(feat, total_batch_shape + [samples_per_ray, -1])
-
     # BS x RBS x SPR
     densities = ivy.reshape(densities, total_batch_shape + [samples_per_ray])
 
@@ -362,13 +364,29 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, sa
     depth_diffs = z_vals_w_terminal[..., 1:] - z_vals_w_terminal[..., :-1]
     ray_term_probs = ray_termination_probabilities(densities, depth_diffs)
 
-    # BS x RBS x OF
-    feat = ivy.clip(render_rays_via_termination_probabilities(ray_term_probs, feat, render_variance), 0., 1.)
+    # return values
+    ret_vals = list()
 
-    # BS x RBS x 1
-    radial_depth = render_rays_via_termination_probabilities(ray_term_probs, z_vals, render_variance)
-    if render_variance:
-        # BS x RBS x OF, BS x RBS x OF, BS x RBS x 1, BS x RBS x 1
-        return feat[0], feat[1], radial_depth[0], radial_depth[1]
-    # BS x RBS x OF, BS x RBS x 1
-    return feat, radial_depth
+    if render_feats:
+
+        # BS x RBS x SPR x OF
+        feat = ivy.reshape(feat, total_batch_shape + [samples_per_ray, -1])
+
+        # BS x RBS x OF
+        feat = ivy.clip(render_rays_via_termination_probabilities(ray_term_probs, feat, render_variance), 0., 1.)
+        if render_variance:
+            ret_vals += feat
+        else:
+            ret_vals.append(feat)
+
+    if render_depth:
+
+        # BS x RBS x 1
+        radial_depth = render_rays_via_termination_probabilities(ray_term_probs, z_vals, render_variance)
+        if render_variance:
+            ret_vals += radial_depth
+        else:
+            ret_vals.append(radial_depth)
+
+    # up to BS x RBS x OF, BS x RBS x OF, BS x RBS x 1, BS x RBS x 1
+    return ret_vals
