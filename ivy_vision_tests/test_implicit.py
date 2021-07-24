@@ -142,6 +142,9 @@ def test_render_rays_via_termination_probabilities(dev_str, call):
 
 
 def test_render_implicit_features_and_depth(dev_str, call):
+    if call is helpers.mx_call:
+        # MXNet does not support splitting with remainder
+        pytest.skip()
     rgb, depth = call(ivy_imp.render_implicit_features_and_depth, td.implicit_fn, td.rays_o, td.rays_d, td.near,
                       td.far, 3)
     assert rgb.shape == (3, 3)

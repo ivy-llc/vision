@@ -335,15 +335,12 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, sa
     # ToDo: use a more general batchify function, from ivy core
 
     # num_sections size list of BSPQ x 3
-    pts_split = [pts_flat[i*batch_size_per_query:min((i+1)*batch_size_per_query, flat_total_batch_size*samples_per_ray)]
-                 for i in range(num_sections)]
+    pts_split = ivy.split(pts_flat, batch_size_per_query, 0, True)
     if inter_feat_fn is not None:
         # (BSxRBSxSPR) x IF
         features = ivy.reshape(inter_feat_fn(pts), (flat_total_batch_size*samples_per_ray, -1))
         # num_sections size list of BSPQ x IF
-        feats_split =\
-            [features[i * batch_size_per_query:min((i + 1) * batch_size_per_query, flat_total_batch_size*samples_per_ray)]
-             for i in range(num_sections)]
+        feats_split = ivy.split(features, batch_size_per_query, 0, True)
     else:
         feats_split = [None]*num_sections
 
