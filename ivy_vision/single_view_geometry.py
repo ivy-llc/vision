@@ -246,6 +246,44 @@ def depth_to_ds_pixel_coords(depth, uniform_pixel_coords=None, batch_shape=None,
     return uniform_pixel_coords * depth
 
 
+def depth_to_radial_depth(depth, inv_calib_mat, uniform_pix_coords=None, batch_shape=None, image_dims=None):
+    """
+    Get radial depth image :math:`\mathbf{X}_{rd}\in\mathbb{R}^{hxw×1}` from depth image
+    :math:`\mathbf{X}_d\in\mathbb{R}^{hxw×1}`.\n
+
+    :param depth: Depth scaled homogeneous pixel co-ordinates image *[batch_shape,image_dims,1]*
+    :type depth: array
+    :param inv_calib_mat: Inverse calibration matrix *[batch_shape,3,3]*
+    :type inv_calib_mat: array
+    :param uniform_pix_coords: Uniform homogeneous pixel co-ordinates, constructed if None. *[batch_shape,image_dims,3]*
+    :type uniform_pix_coords: array, optional
+    :param batch_shape: Shape of batch. Inferred from inputs if None.
+    :type batch_shape: sequence of ints, optional
+    :param image_dims: Image shape. Inferred from inputs in None.
+    :type image_dims: sequence of ints, optional
+    :return: Radial depth image *[batch_shape,image_dims,1]*
+    """
+
+    if batch_shape is None:
+        batch_shape = inv_calib_mat.shape[:-2]
+    num_batch_dims = len(batch_shape)
+
+    if image_dims is None:
+        image_dims = depth.shape[num_batch_dims:-1]
+
+    # shapes as list
+    batch_shape = list(batch_shape)
+    image_dims = list(image_dims)
+
+    # BS x H x W x 3
+    if uniform_pix_coords is None:
+        uniform_pix_coords = create_uniform_pixel_coords_image(image_dims, batch_shape, dev_str=_ivy.dev_str(depth))
+    ds_pixel_coords = uniform_pix_coords * depth
+
+    # BS x H x W x 1
+    return ds_pixel_coords_to_radial_depth(ds_pixel_coords, inv_calib_mat, batch_shape, image_dims)
+
+
 def ds_pixel_coords_to_radial_depth(ds_pixel_coords, inv_calib_mat, batch_shape=None, image_shape=None):
     """
     Get radial depth image :math:`\mathbf{X}_{rd}\in\mathbb{R}^{img_shape×1}` from depth scaled homogeneous pixel
