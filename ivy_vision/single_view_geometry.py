@@ -573,6 +573,9 @@ def pixel_coords_to_world_ray_vectors(inv_full_mat, pixel_coords=None, camera_ce
     num_batch_dims = len(batch_shape)
 
     if image_shape is None:
+        if pixel_coords is None:
+            raise Exception('if pixel_coords is not specified, image_shape must be specified when calling'
+                            'pixel_coords_to_world_ray_vectors')
         image_shape = pixel_coords.shape[num_batch_dims:-1]
     num_image_dims = len(image_shape)
 
@@ -584,7 +587,7 @@ def pixel_coords_to_world_ray_vectors(inv_full_mat, pixel_coords=None, camera_ce
         camera_center = inv_ext_mat_to_camera_center(inv_full_mat)
 
     if pixel_coords is None:
-        pixel_coords = create_uniform_pixel_coords_image(image_dims, batch_shape)
+        pixel_coords = create_uniform_pixel_coords_image(image_shape, batch_shape, dev_str=_ivy.dev_str(inv_full_mat))
 
     # BS x [1]xNID x 3
     camera_centers_reshaped = _ivy.reshape(camera_center, batch_shape + [1]*num_image_dims + [3])
