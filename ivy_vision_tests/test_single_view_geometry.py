@@ -138,12 +138,12 @@ def test_ds_pixel_to_world_coords(dev_str, call):
                        np.reshape(td.world_coords, batch_shape + [-1, 4]), atol=1e-6)
 
 
-def test_ds_pixel_coords_to_world_rays(dev_str, call):
+def test_pixel_coords_to_world_rays(dev_str, call):
     assert np.allclose(
-        call(ivy_svg.ds_pixel_coords_to_world_ray_vectors, td.pixel_coords_to_scatter, td.inv_full_mats),
+        call(ivy_svg.pixel_coords_to_world_ray_vectors, td.inv_full_mats, td.pixel_coords_to_scatter),
         td.world_rays, atol=1e-6)
     assert np.allclose(
-        call(ivy_svg.ds_pixel_coords_to_world_ray_vectors, td.pixel_coords_to_scatter[0], td.inv_full_mats[0]),
+        call(ivy_svg.pixel_coords_to_world_ray_vectors, td.inv_full_mats[0], td.pixel_coords_to_scatter[0]),
         td.world_rays[0], atol=1e-6)
 
 

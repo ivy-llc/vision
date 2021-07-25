@@ -302,8 +302,8 @@ def _triangulate_depth_by_closest_mutual_points(ds_pixel_coords, full_mats, inv_
     svg_batch_shape = batch_shape + [2]
 
     # BS x 2 x H x W x 3
-    world_rays_flat = _ivy_svg.ds_pixel_coords_to_world_ray_vectors(ds_pixel_coords, inv_full_mats, camera_centers,
-                                                                    svg_batch_shape, image_dims)
+    world_rays_flat = _ivy_svg.pixel_coords_to_world_ray_vectors(inv_full_mats, ds_pixel_coords, camera_centers,
+                                                                 svg_batch_shape, image_dims)
 
     # BS x 2 x H x W x 3
     world_rays = _ivy.reshape(world_rays_flat, svg_batch_shape + image_dims + [3])
