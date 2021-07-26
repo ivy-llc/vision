@@ -838,7 +838,7 @@ def sphere_to_cam_coords(sphere_coords, forward_facing_z=True, batch_shape=None,
             (cam_coords[..., 1:2], cam_coords[..., 2:3], cam_coords[..., 0:1]), -1)
 
     # BS x H x W x 4
-    return _ivy.concatenate((cam_coords, _ivy.ones(batch_shape + image_dims + [1], dev_str=dev_str)), -1)
+    return _ivy_mec.make_coordinates_homogeneous(cam_coords, batch_shape + image_dims)
 
 
 def sphere_to_ds_pixel_coords(sphere_coords, calib_mat, batch_shape=None, image_dims=None):
