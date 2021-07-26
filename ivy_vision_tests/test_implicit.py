@@ -14,6 +14,9 @@ class ImplicitTestData(TestData):
     def __init__(self):
         super().__init__()
 
+        # set framework
+        ivy.set_framework('numpy')
+
         # sampled pixel coords
         self.samples_per_dim = [9, 12]
 
@@ -53,11 +56,27 @@ class ImplicitTestData(TestData):
              [3., 5., 0.14112001, -0.95892427, -0.9899925, 0.28366219, -0.2794155, -0.54402111, 0.96017029, -0.83907153]])
 
         # render implicit features and depth
-        self.implicit_fn = lambda pts, feat, v=None: (ivy.array(self.features), ivy.array(self.densities))
+        self.implicit_fn = lambda pts, feat, with_grads=True, v=None:\
+            (ivy.array(self.features), ivy.array(self.densities))
         self.rays_o = np.array([0, 0, 0], np.float32)
         self.rays_d = np.array([[1, 2, 3], [-1, -2, -3], [1, -2, 1]], np.float32)
         self.near = np.array([0.5, 0.7, 0.9], np.float32)
         self.far = np.array([6, 7, 8], np.float32)
+        self.samples_per_ray = 3
+
+        # render implicit features and depth from net inputs
+        batch_shape = list(self.rays_o.shape[:-1])
+        num_batch_dims = len(batch_shape)
+        ray_batch_shape = list(self.rays_d.shape[num_batch_dims:-1])
+        num_ray_batch_dims = len(ray_batch_shape)
+        self.z_vals = ivy.expand_dims(ivy_imp.stratified_sample(self.near, self.far, 3), -1)
+        rays_d = ivy.expand_dims(self.rays_d, -2)
+        rays_o = ivy.broadcast_to(ivy.reshape(self.rays_o, batch_shape + [1] * (num_ray_batch_dims + 1) + [3]),
+                                  rays_d.shape)
+        self.query_points = rays_o + rays_d * self.z_vals
+
+        # unset framework
+        ivy.unset_framework()
 
 
 td = ImplicitTestData()
@@ -141,11 +160,21 @@ def test_render_rays_via_termination_probabilities(dev_str, call):
     assert np.allclose(var, td.term_prob_var_rendering)
 
 
+def test_render_implicit_features_and_depth_from_net_inputs(dev_str, call):
+    if call is helpers.mx_call:
+        # MXNet does not support splitting with remainder
+        pytest.skip()
+    rgb, depth = call(ivy_imp.render_implicit_features_and_depth_from_net_inputs,
+                      td.implicit_fn, td.query_points, td.samples_per_ray, td.z_vals)
+    assert rgb.shape == (3, 3)
+    assert depth.shape == (3, 1)
+
+
 def test_render_implicit_features_and_depth(dev_str, call):
     if call is helpers.mx_call:
         # MXNet does not support splitting with remainder
         pytest.skip()
     rgb, depth = call(ivy_imp.render_implicit_features_and_depth, td.implicit_fn, td.rays_o, td.rays_d, td.near,
-                      td.far, 3)
+                      td.far, td.samples_per_ray)
     assert rgb.shape == (3, 3)
     assert depth.shape == (3, 1)
