@@ -455,5 +455,11 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, sa
 
     # batched render
 
+    # up to BS x FRBS x OF, BS x FRBS x OF, BS x FRBS x 1, BS x FRBS x 1
+    rets_flat = ivy.split_func_call(func, network_inputs, batch_size_per_query, -3, -2)
+
+    if num_ray_batch_dims > 1:
+        # up to BS x RBS x OF, BS x RBS x OF, BS x RBS x 1, BS x RBS x 1
+        return [ivy.reshape(ret, batch_shape + ray_batch_shape + [-1]) for ret in rets_flat]
     # up to BS x RBS x OF, BS x RBS x OF, BS x RBS x 1, BS x RBS x 1
-    return ivy.split_func_call(func, network_inputs, batch_size_per_query, -3, -2)
+    return rets_flat
