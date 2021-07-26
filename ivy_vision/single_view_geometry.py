@@ -79,7 +79,7 @@ def create_uniform_pixel_coords_image(image_dims, batch_shape=None, normalized=F
     return pix_coords
 
 
-def persp_angles_to_focal_lengths(persp_angles, image_dims, dev_str='cpu'):
+def persp_angles_to_focal_lengths(persp_angles, image_dims, dev_str=None):
     """
     Compute focal lengths :math:`f_x, f_y` from perspective angles :math:`θ_x, θ_y`.\n
     `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=172>`_
@@ -105,7 +105,7 @@ def persp_angles_to_focal_lengths(persp_angles, image_dims, dev_str='cpu'):
            (2 * _ivy.tan(persp_angles / 2) + MIN_DENOMINATOR)
 
 
-def focal_lengths_to_persp_angles(focal_lengths, image_dims, dev_str='cpu'):
+def focal_lengths_to_persp_angles(focal_lengths, image_dims, dev_str=None):
     """
     Compute perspective angles :math:`θ_x, θ_y` from focal lengths :math:`f_x, f_y`.\n
     `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=172>`_
@@ -131,7 +131,7 @@ def focal_lengths_to_persp_angles(focal_lengths, image_dims, dev_str='cpu'):
                                               'float32'), -1) / (2 * focal_lengths + MIN_DENOMINATOR))
 
 
-def focal_lengths_and_pp_offsets_to_calib_mat(focal_lengths, pp_offsets, batch_shape=None, dev_str='cpu'):
+def focal_lengths_and_pp_offsets_to_calib_mat(focal_lengths, pp_offsets, batch_shape=None, dev_str=None):
     """
     Compute calibration matrix :math:`\mathbf{K}\in\mathbb{R}^{3×3}` from focal lengths :math:`f_x, f_y` and
     principal-point offsets :math:`p_x, p_y`.\n
@@ -353,7 +353,7 @@ def cam_to_ds_pixel_coords(coords_wrt_cam, calib_mat, batch_shape=None, image_di
     return _ivy_pg.transform(coords_wrt_cam, calib_mat, batch_shape, image_dims)
 
 
-def ds_pixel_to_cam_coords(ds_pixel_coords, inv_calib_mat, batch_shape=None, image_shape=None, dev_str='cpu'):
+def ds_pixel_to_cam_coords(ds_pixel_coords, inv_calib_mat, batch_shape=None, image_shape=None, dev_str=None):
     """
     Get camera-centric homogeneous co-ordinates image :math:`\mathbf{X}_c\in\mathbb{R}^{img_shape×4}` from
     depth scaled homogeneous pixel co-ordinates image :math:`\mathbf{X}_p\in\mathbb{R}^{img_shape×3}`.\n
@@ -394,7 +394,7 @@ def ds_pixel_to_cam_coords(ds_pixel_coords, inv_calib_mat, batch_shape=None, ima
     return _ivy_mec.make_coordinates_homogeneous(cam_coords, batch_shape + image_shape)
 
 
-def world_to_cam_coords(coords_wrt_world, ext_mat, batch_shape=None, image_dims=None, dev_str='cpu'):
+def world_to_cam_coords(coords_wrt_world, ext_mat, batch_shape=None, image_dims=None, dev_str=None):
     """
     Get camera-centric homogeneous co-ordinates image :math:`\mathbf{X}_c\in\mathbb{R}^{h×w×4}` from world-centric
     homogeneous co-ordinates image :math:`\mathbf{X}_w\in\mathbb{R}^{h×w×4}`.\n
@@ -434,7 +434,7 @@ def world_to_cam_coords(coords_wrt_world, ext_mat, batch_shape=None, image_dims=
     return _ivy.concatenate((cam_coords, _ivy.ones(batch_shape + image_dims + [1], dev_str=dev_str)), -1)
 
 
-def cam_to_world_coords(coords_wrt_cam, inv_ext_mat, batch_shape=None, image_dims=None, dev_str='cpu'):
+def cam_to_world_coords(coords_wrt_cam, inv_ext_mat, batch_shape=None, image_dims=None, dev_str=None):
     """
     Get world-centric homogeneous co-ordinates image :math:`\mathbf{X}_w\in\mathbb{R}^{h×w×4}` from camera-centric
     homogeneous co-ordinates image :math:`\mathbf{X}_c\in\mathbb{R}^{h×w×4}`.\n
@@ -799,7 +799,7 @@ def angular_pixel_to_sphere_coords(angular_pixel_coords, pixels_per_degree):
     return _ivy.concatenate((sphere_angle_coords, radius_values), -1)
 
 
-def sphere_to_cam_coords(sphere_coords, forward_facing_z=True, batch_shape=None, image_dims=None, dev_str='cpu'):
+def sphere_to_cam_coords(sphere_coords, forward_facing_z=True, batch_shape=None, image_dims=None, dev_str=None):
     """
     Convert camera-centric ego-sphere polar co-ordinates image :math:`\mathbf{S}_c\in\mathbb{R}^{h×w×3}` to
     camera-centric homogeneous cartesian co-ordinates image :math:`\mathbf{X}_c\in\mathbb{R}^{h×w×4}`.\n
@@ -1020,7 +1020,7 @@ def calib_mat_to_intrinsics_object(calib_mat, image_dims, batch_shape=None):
     return intrinsics
 
 
-def ext_mat_and_intrinsics_to_cam_geometry_object(ext_mat, intrinsics, batch_shape=None, dev_str='cpu'):
+def ext_mat_and_intrinsics_to_cam_geometry_object(ext_mat, intrinsics, batch_shape=None, dev_str=None):
     """
     Create camera geometry object from extrinsic matrix :math:`\mathbf{E}\in\mathbb{R}^{3×4}`, and camera intrinsics
     object.
@@ -1091,7 +1091,7 @@ def ext_mat_and_intrinsics_to_cam_geometry_object(ext_mat, intrinsics, batch_sha
     return cam_geometry
 
 
-def inv_ext_mat_and_intrinsics_to_cam_geometry_object(inv_ext_mat, intrinsics, batch_shape=None, dev_str='cpu'):
+def inv_ext_mat_and_intrinsics_to_cam_geometry_object(inv_ext_mat, intrinsics, batch_shape=None, dev_str=None):
     """
     Create camera geometry object from inverse extrinsic matrix :math:`\mathbf{E}^{-1}\in\mathbb{R}^{3×4}`, and camera
     intrinsics object.
