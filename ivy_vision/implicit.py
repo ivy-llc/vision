@@ -281,7 +281,7 @@ def render_rays_via_termination_probabilities(ray_term_probs, features, render_v
 
 def render_implicit_features_and_depth_from_net_inputs(
         network_fn, query_points, samples_per_ray, z_vals, input_features=None, render_depth=True, render_feats=True,
-        render_variance=False, v=None):
+        render_variance=False, with_grads=True, v=None):
     """
     Render an rgb-d image, given an implicit rgb and density function conditioned on xyz data.
 
@@ -301,6 +301,8 @@ def render_implicit_features_and_depth_from_net_inputs(
     :type render_feats: bool, optional
     :param render_variance: Whether to also render the feature variance. Default is False.
     :type render_variance: bool, optional
+    :param with_grads: Whether to track gradients during the network forward pass. Defualt is True.
+    :type with_grads: bool, optional
     :param v: The container of trainable variables for the implicit model. default is to use internal variables.
     :type v: ivy Container of variables
     :return: The rendered feature *[batch_shape,ray_batch_shape,feat]* and radial depth *[batch_shape,ray_batch_shape,1]*
@@ -326,7 +328,7 @@ def render_implicit_features_and_depth_from_net_inputs(
     # Run network
 
     # BSPQ x OF,    BSPQ
-    feat, densities = network_fn(query_points, input_features)
+    feat, densities = network_fn(query_points, input_features, with_grads=with_grads, v=v)
 
     # BS x RBS x SPR
     densities = ivy.reshape(densities, total_batch_shape + [samples_per_ray])
@@ -367,8 +369,8 @@ def render_implicit_features_and_depth_from_net_inputs(
 
 
 def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, samples_per_ray, render_depth=True,
-                                       render_feats=True, render_variance=False, batch_size_per_query=512 * 64,
-                                       inter_feat_fn=None, v=None):
+                                       render_feats=True, render_variance=False, batch_size_per_query=512 * 16,
+                                       inter_feat_fn=None, with_grads=True, v=None):
     """
     Render an rgb-d image, given an implicit rgb and density function conditioned on xyz data.
 
@@ -394,6 +396,8 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, sa
     :type batch_size_per_query: int, optional
     :param inter_feat_fn: Function to extract interpolated features from world-coords *[batch_shape,ray_batch_shape,3]*
     :type inter_feat_fn: callable, optional
+    :param with_grads: Whether to track gradients during the network forward pass. Defualt is True.
+    :type with_grads: bool, optional
     :param v: The container of trainable variables for the implicit model. default is to use internal variables.
     :type v: ivy Container of variables
     :return: The rendered feature *[batch_shape,ray_batch_shape,feat]* and radial depth *[batch_shape,ray_batch_shape,1]*
@@ -403,6 +407,7 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, sa
     batch_shape = list(rays_o.shape[:-1])
     num_batch_dims = len(batch_shape)
     ray_batch_shape = list(rays_d.shape[num_batch_dims:-1])
+    flat_ray_batch_size = np.prod(ray_batch_shape)
     num_ray_batch_dims = len(ray_batch_shape)
     total_batch_shape = batch_shape + ray_batch_shape
     flat_total_batch_size = np.prod(total_batch_shape)
@@ -420,18 +425,33 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, sa
     # BS x RBS x SPR x 3
     pts = rays_o + rays_d * z_vals
 
+    # flatten
+
+    # BS x FRBS x SPR x 1
+    z_vals_flat = ivy.reshape(z_vals, batch_shape + [flat_ray_batch_size, samples_per_ray, 1])
+
+    # BS x FRBS x SPR x 3
+    pts_flat = ivy.reshape(pts, batch_shape + [flat_ray_batch_size, samples_per_ray, 3])
+
     # prepare for batched render
 
-    network_inputs = [z_vals, pts]
+    network_inputs = [z_vals_flat, pts_flat]
     if inter_feat_fn is not None:
+
+        # BS x RBS x SPR x F
         features = inter_feat_fn(pts)
-        network_inputs.append(features)
+
+        # BS x FRBS x SPR x F
+        features_flat = ivy.reshape(features, batch_shape + [flat_ray_batch_size, samples_per_ray, -1])
+
+        network_inputs.append(features_flat)
         func = lambda z, pt, f: render_implicit_features_and_depth_from_net_inputs(
-            network_fn, pt, samples_per_ray, z, f, render_depth, render_feats, render_variance, v=v)
+            network_fn, pt, samples_per_ray, z, f, render_depth, render_feats, render_variance,
+            with_grads=with_grads, v=v)
     else:
         func = lambda z, pt: render_implicit_features_and_depth_from_net_inputs(
             network_fn, pt, samples_per_ray, z, render_depth=render_depth, render_feats=render_feats,
-            render_variance=render_variance, v=v)
+            render_variance=render_variance, with_grads=with_grads, v=v)
 
     # batched render
 
