@@ -369,7 +369,7 @@ def render_implicit_features_and_depth_from_net_inputs(
 
 
 def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, samples_per_ray, render_depth=True,
-                                       render_feats=True, render_variance=False, batch_size_per_query=512 * 16,
+                                       render_feats=True, render_variance=False, batch_size_per_query=512 * 64,
                                        inter_feat_fn=None, with_grads=True, v=None):
     """
     Render an rgb-d image, given an implicit rgb and density function conditioned on xyz data.
@@ -405,6 +405,7 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, sa
 
     # shapes
     batch_shape = list(rays_o.shape[:-1])
+    flat_batch_size = np.prod(batch_shape)
     num_batch_dims = len(batch_shape)
     ray_batch_shape = list(rays_d.shape[num_batch_dims:-1])
     flat_ray_batch_size = np.prod(ray_batch_shape)
@@ -456,7 +457,7 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, sa
     # batched render
 
     # up to BS x FRBS x OF, BS x FRBS x OF, BS x FRBS x 1, BS x FRBS x 1
-    rets_flat = ivy.split_func_call(func, network_inputs, batch_size_per_query, -3, -2)
+    rets_flat = ivy.split_func_call(func, network_inputs, int(round(batch_size_per_query / flat_batch_size)), -3, -2)
 
     if num_ray_batch_dims > 1:
         # up to BS x RBS x OF, BS x RBS x OF, BS x RBS x 1, BS x RBS x 1
