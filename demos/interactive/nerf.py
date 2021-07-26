@@ -72,7 +72,7 @@ class NerfDemo:
         # test data
         self._test_img = images[101]
         self._test_cam_geom = ivy_vision.inv_ext_mat_and_intrinsics_to_cam_geometry_object(
-            inv_ext_mats[101, 0:3], self._intrinsics.slice(0))
+            inv_ext_mats[101, 0:3], self._intrinsics[0])
 
         # train config
         self._embed_length = 6
@@ -94,7 +94,7 @@ class NerfDemo:
 
         # compile
         if compile_flag:
-            rays_o, rays_d = self._get_rays(self._cam_geoms.slice(0))
+            rays_o, rays_d = self._get_rays(self._cam_geoms[0])
             target = self._images[0]
             self._loss_fn = ivy.compile_fn(self._loss_fn, False,
                                            example_inputs=[self._model, rays_o, rays_d, target, self._model.v])
@@ -125,7 +125,7 @@ class NerfDemo:
 
             img_i = np.random.randint(self._images.shape[0])
             target = self._images[img_i]
-            cam_geom = self._cam_geoms.slice(img_i)
+            cam_geom = self._cam_geoms[img_i]
             rays_o, rays_d = self._get_rays(cam_geom)
 
             loss, grads = ivy.execute_with_gradients(
@@ -182,7 +182,7 @@ class NerfDemo:
         for th in tqdm(np.linspace(0., 360., 120, endpoint=False)):
             c2w = ivy.to_dev(pose_spherical(th, -30., 4.), self._dev_str)
             cam_geom = ivy_vision.inv_ext_mat_and_intrinsics_to_cam_geometry_object(
-                c2w[0:3], self._intrinsics.slice(0))
+                c2w[0:3], self._intrinsics[0])
             rays_o, rays_d = self._get_rays(cam_geom)
             rgb, depth = ivy_vision.render_implicit_features_and_depth(
                 self._model, rays_o, rays_d, near=ivy.ones(self._img_dims, dev_str=self._dev_str) * 2,
