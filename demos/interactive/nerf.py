@@ -24,7 +24,7 @@ class Model(ivy.Module):
         self._fc_layers.append(ivy.Linear(layer_dim, 4, dev_str=dev_str))
         super(Model, self).__init__(dev_str)
 
-    def _forward(self, x, feat=None):
+    def _forward(self, x, feat=None, timestamps=None):
         embedding = ivy_vision.sinusoid_positional_encoding(x, self._embedding_length)
         x = ivy.relu(self._fc_layers[0](embedding))
         for i in range(1, self._num_layers-1):
