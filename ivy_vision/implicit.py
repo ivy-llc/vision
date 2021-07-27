@@ -281,7 +281,7 @@ def render_rays_via_termination_probabilities(ray_term_probs, features, render_v
 
 
 def _render_implicit_features_and_depth_single_split(
-        network_fn, rays_o, rays_d, near, far, samples_per_ray, render_depth=True, render_feats=True,
+        network_fn, rays_o, rays_d, near, far, samples_per_ray, timestamps=None, render_depth=True, render_feats=True,
         render_variance=False, inter_feat_fn=None, with_grads=True, v=None):
 
     # shapes
@@ -312,7 +312,7 @@ def _render_implicit_features_and_depth_single_split(
     # BS x FRBS x SPR x 3
     pts_flat = ivy.reshape(pts, batch_shape + [flat_ray_batch_size, samples_per_ray, 3])
 
-    # prepare for batched render
+    # input features
 
     if inter_feat_fn is not None:
 
@@ -328,7 +328,7 @@ def _render_implicit_features_and_depth_single_split(
     # Run network
 
     # BSPQ x OF,    BSPQ
-    feat, densities = network_fn(pts_flat, features_flat, with_grads=with_grads, v=v)
+    feat, densities = network_fn(pts_flat, features_flat, timestamps, with_grads=with_grads, v=v)
 
     # BS x RBS x SPR
     densities = ivy.reshape(densities, total_batch_shape + [samples_per_ray])
@@ -368,8 +368,8 @@ def _render_implicit_features_and_depth_single_split(
     return ret_vals
 
 
-def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, samples_per_ray, render_depth=True,
-                                       render_feats=True, render_variance=False, chunk_size_scale=1.,
+def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, samples_per_ray, timestamps=None,
+                                       render_depth=True, render_feats=True, render_variance=False, chunk_size_scale=1.,
                                        inter_feat_fn=None, with_grads=True, v=None):
     """
     Render an rgb-d image, given an implicit rgb and density function conditioned on xyz data.
@@ -386,6 +386,8 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, sa
     :type far: array
     :param samples_per_ray: The number of stratified samples to use along each ray
     :type samples_per_ray: int
+    :param timestamps: The timestamps associated with each image. Default is None. *[batch_shape,1]*
+    :type timestamps: array, optional
     :param render_depth: Whether to render the depth. Default is True.
     :type render_depth: bool, optional
     :param render_feats: Whether to render the features. Default is True.
@@ -428,8 +430,8 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, sa
 
     # run split call
     rets = ivy.split_func_call(lambda rd, n, f: _render_implicit_features_and_depth_single_split(
-        network_fn, rays_o, rd, n, f, samples_per_ray, render_depth, render_feats, render_variance, inter_feat_fn,
-        with_grads, v), [rays_d, near, far], chunk_size, [-2, -1, -1], -2)
+        network_fn, rays_o, rd, n, f, samples_per_ray, timestamps, render_depth, render_feats, render_variance,
+        inter_feat_fn, with_grads, v), [rays_d, near, far], chunk_size, [-2, -1, -1], -2)
 
     # return un-flattened
     return [ivy.reshape(ret, batch_shape + ray_batch_shape + [-1]) for ret in rets]
