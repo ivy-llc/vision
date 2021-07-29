@@ -97,6 +97,9 @@ def test_downsampled_image_dims_from_desired_num_pixels(dev_str, call):
 
 
 def test_create_sampled_pixel_coords_image(dev_str, call):
+    if call is helpers.mx_call:
+        # MXNet does not support clipping based on min or max specified as arrays
+        pytest.skip()
     sampled_img = call(ivy_imp.create_sampled_pixel_coords_image, td.image_dims, td.samples_per_dim,
                        (td.batch_size, td.num_cameras), normalized=False, randomize=False)
     assert np.min(sampled_img).item() == 26

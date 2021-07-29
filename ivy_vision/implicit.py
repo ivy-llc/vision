@@ -90,7 +90,8 @@ def create_sampled_pixel_coords_image(image_dims, samples_per_dim, batch_shape=N
         # BS x DH x DW x 2
         rand_offsets = ivy.concatenate((rand_x, rand_y), -1)
         downsam_pix_coords += rand_offsets
-    downsam_pix_coords = ivy.round(downsam_pix_coords)
+    downsam_pix_coords = ivy.clip(ivy.round(downsam_pix_coords), ivy.array([0.]*2, dev_str=dev_str),
+                                  ivy.array(list(reversed(image_dims)), dtype_str='float32', dev_str=dev_str)-1)
 
     if normalized:
         downsam_pix_coords /=\
