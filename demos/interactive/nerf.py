@@ -39,7 +39,7 @@ class Model(ivy.Module):
 
 class NerfDemo:
 
-    def __init__(self, num_iters, compile_flag, interactive, dev_str, f):
+    def __init__(self, num_iters, samples_per_ray, num_layers, layer_dim, compile_flag, interactive, dev_str, f):
 
         # ivy
         f = choose_random_framework() if f is None else f
@@ -77,7 +77,7 @@ class NerfDemo:
         # train config
         self._embed_length = 6
         self._lr = 5e-4
-        self._num_samples = 64
+        self._samples_per_ray = samples_per_ray
         self._num_iters = num_iters
 
         # log config
@@ -90,7 +90,7 @@ class NerfDemo:
         os.makedirs(self._vis_log_dir)
 
         # model
-        self._model = Model(4, 256, self._embed_length, dev_str)
+        self._model = Model(num_layers, layer_dim, self._embed_length, dev_str)
 
         # compile
         if compile_flag:
@@ -112,7 +112,7 @@ class NerfDemo:
     def _loss_fn(self, model, rays_o, rays_d, target, v=None):
         rgb, depth = ivy_vision.render_implicit_features_and_depth(
             model, rays_o[0, 0], rays_d, near=ivy.ones(self._img_dims, dev_str=self._dev_str) * 2,
-            far=ivy.ones(self._img_dims, dev_str=self._dev_str) * 6, samples_per_ray=self._num_samples, v=v)
+            far=ivy.ones(self._img_dims, dev_str=self._dev_str) * 6, samples_per_ray=self._samples_per_ray, v=v)
         return ivy.reduce_mean((rgb - target) ** 2)[0]
 
     # Public #
@@ -141,7 +141,7 @@ class NerfDemo:
                 rays_o, rays_d = self._get_rays(self._test_cam_geom)
                 rgb, depth = ivy_vision.render_implicit_features_and_depth(
                     self._model, rays_o, rays_d, near=ivy.ones(self._img_dims, dev_str=self._dev_str) * 2,
-                    far=ivy.ones(self._img_dims, dev_str=self._dev_str)*6, samples_per_ray=self._num_samples)
+                    far=ivy.ones(self._img_dims, dev_str=self._dev_str)*6, samples_per_ray=self._samples_per_ray)
                 plt.imsave(os.path.join(self._vis_log_dir, 'img_{}.png'.format(str(i).zfill(3))), ivy.to_numpy(rgb))
 
         print('Completed Training')
@@ -186,23 +186,30 @@ class NerfDemo:
             rays_o, rays_d = self._get_rays(cam_geom)
             rgb, depth = ivy_vision.render_implicit_features_and_depth(
                 self._model, rays_o, rays_d, near=ivy.ones(self._img_dims, dev_str=self._dev_str) * 2,
-                far=ivy.ones(self._img_dims, dev_str=self._dev_str) * 6, samples_per_ray=self._num_samples)
+                far=ivy.ones(self._img_dims, dev_str=self._dev_str) * 6, samples_per_ray=self._samples_per_ray)
             frames.append((255 * np.clip(ivy.to_numpy(rgb), 0, 1)).astype(np.uint8))
         import imageio
         vid_filename = 'nerf_video.mp4'
         imageio.mimwrite(vid_filename, frames, fps=30, quality=7)
 
 
-def main(num_iters, compile_flag, interactive=True, dev_str=None, f=None):
-    nerf_demo = NerfDemo(num_iters, compile_flag, interactive, dev_str, f)
+def main(num_iters, samples_per_ray, num_layers, layer_dim, compile_flag, interactive=True, dev_str=None, f=None):
+    nerf_demo = NerfDemo(num_iters, samples_per_ray, num_layers, layer_dim, compile_flag, interactive, dev_str, f)
     nerf_demo.train()
-    nerf_demo.save_video()
+    if interactive:
+        nerf_demo.save_video()
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--iterations', type=int, default=10000,
                         help='Number of iterations to train for.')
+    parser.add_argument('--samples_per_ray', type=int, default=64,
+                        help='The number of samples to make for each ray.')
+    parser.add_argument('--num_layers', type=int, default=4,
+                        help='The number of layers in the implicit network.')
+    parser.add_argument('--layer_dim', type=int, default=256,
+                        help='The dimension of each layer in the implicit network.')
     parser.add_argument('--compile', action='store_true',
                         help='Whether or not to compile the loss function.')
     parser.add_argument('--non_interactive', action='store_true',
@@ -213,4 +220,5 @@ if __name__ == '__main__':
                         help='which framework to use. Chooses a random framework if unspecified.')
     parsed_args = parser.parse_args()
     framework = None if parsed_args.framework is None else get_framework_from_str(parsed_args.framework)
-    main(parsed_args.iterations, parsed_args.compile, not parsed_args.non_interactive, parsed_args.device, framework)
+    main(parsed_args.iterations, parsed_args.samples_per_ray, parsed_args.num_layers, parsed_args.layer_dim,
+         parsed_args.compile, not parsed_args.non_interactive, parsed_args.device, framework)
