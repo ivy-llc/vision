@@ -14,7 +14,7 @@ from ivy_vision_tests.data import TestData
 from ivy_vision import optical_flow as ivy_flow
 
 
-class TwoViewGeometryTestData(TestData):
+class OpticalFlowTestData(TestData):
 
     def __init__(self):
         super().__init__()
@@ -45,7 +45,7 @@ class TwoViewGeometryTestData(TestData):
                                [32., 24., 0., 8., 0., 0., 0., 0., 0.]]]]], dtype=np.float32)
 
 
-td = TwoViewGeometryTestData()
+td = OpticalFlowTestData()
 
 
 def test_depth_from_flow_and_cam_poses(dev_str, call):
