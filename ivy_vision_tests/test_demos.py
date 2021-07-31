@@ -31,6 +31,7 @@ def test_demo_render_image(dev_str, f, call):
     main(False, False, f=f)
 
 
+'''
 def test_demo_nerf(dev_str, f, call):
     from demos.interactive.nerf import main
     if call in [helpers.np_call, helpers.tf_graph_call, helpers.mx_call]:
@@ -39,3 +40,4 @@ def test_demo_nerf(dev_str, f, call):
         # MXNet does not support splitting along an axis with a remainder after division.
         pytest.skip()
     main(1, False, False, f=f)
+'''
