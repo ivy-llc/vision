@@ -150,7 +150,7 @@ def show_rgb_and_depth_images(col1, col2, dep1, dep2, dep_lims):
     final_img[:, 2*s+bo2:2*s+3*bo2] = 0.
     final_img[:, 3*s+bo2:3*s+3*bo2] = 0.
 
-    plt.imshow(final_img)
+    plt.imshow(np.clip(final_img, 0, 1))
     plt.show()
 
 
@@ -179,7 +179,7 @@ def show_flow_and_depth_images(dep1, f1to2, dep1_from_flow, dep_lims):
     final_img[:, s+bo2:s+3*bo2] = 0.
     final_img[:, 2*s+bo2:2*s+3*bo2] = 0.
 
-    plt.imshow(final_img)
+    plt.imshow(np.clip(final_img, 0, 1))
     plt.show()
 
 
@@ -223,7 +223,7 @@ def show_inverse_warped_images(dep1_wrt_f2, dep2_warp_to_f1, dep_val,
     final_img[:, 3*s+bo2:3*s+3*bo2] = 0.
     final_img[s+bo2:s+3*bo2] = 0.
 
-    plt.imshow(final_img)
+    plt.imshow(np.clip(final_img, 0, 1))
     plt.show()
 
 
@@ -270,7 +270,7 @@ def show_forward_warped_images(dep1, col1, f1_f_warp_no_db, f1_f_warp_w_db, dep_
     final_img[:, 3*s+bo2:3*s+3*bo2] = 0.
     final_img[s+bo2:s+3*bo2] = 0.
 
-    plt.imshow(final_img)
+    plt.imshow(np.clip(final_img, 0, 1))
     plt.show()
 
 

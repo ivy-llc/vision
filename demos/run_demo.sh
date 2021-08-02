@@ -6,6 +6,7 @@ function cleanup() {
   exit 1
 }
 
+demos="demos."
 function main() {
   xhost +local:root
   docker run --rm -it --gpus all --net host --privileged --env NVIDIA_DISABLE_REQUIRE=1 --name "demo" --shm-size 64g\
@@ -20,7 +21,7 @@ function main() {
   \
   -v /home/"${USER}"/PyRep/pyrep:/PyRep/pyrep \
   \
-   ivydl/ivy-vision:latest python3 -m "${@:1}"
+   ivydl/ivy-vision:latest python3 -m $demos"$1" "${@:2}"
 }
 
-main "$@" || cleanup "$1"
+main "$@" || cleanup
