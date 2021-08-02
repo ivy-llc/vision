@@ -1,10 +1,7 @@
 # global
 import os
 import ivy
-import cv2
-import ivy.jax
 import argparse
-import ivy.mxnd
 import ivy_mech
 import ivy_vision
 import numpy as np
@@ -154,7 +151,7 @@ class Simulator(BaseSimulator):
 def main(interactive=True, try_use_sim=True, f=None):
     f = choose_random_framework() if f is None else f
     set_framework(f)
-    with_mxnd = f is ivy.mxnd
+    with_mxnd = ivy.get_framework_str() == 'mxnd'
     if with_mxnd:
         print('\nMXnet does not support "sum" or "min" reductions for scatter_nd,\n'
               'instead it only supports non-deterministic replacement for duplicates.\n'
@@ -186,6 +183,7 @@ def main(interactive=True, try_use_sim=True, f=None):
         rendered_img_with_db, _, _ = ivy_vision.quantize_to_image(
             pix_coords, final_image_dims, feat, ivy.zeros(final_image_dims + [4]), with_db=with_db)
 
+        import cv2
         a_img = cv2.resize(ivy.to_numpy(rgbs[0]), (256, 256))
         a_img[0:50, 0:50] = np.zeros_like(a_img[0:50, 0:50])
         a_img[5:45, 5:45] = np.ones_like(a_img[5:45, 5:45])

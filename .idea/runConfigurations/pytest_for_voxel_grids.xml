@@ -3,9 +3,9 @@
     <module name="ivy_vision" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
-    <option name="SDK_HOME" value="docker://ivy_vision:latest/python3" />
+    <option name="SDK_HOME" value="" />
     <option name="WORKING_DIRECTORY" value="" />
-    <option name="IS_MODULE_SDK" value="false" />
+    <option name="IS_MODULE_SDK" value="true" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <EXTENSION ID="DockerContainerSettingsRunConfigurationExtension">
@@ -35,19 +35,19 @@
             <option name="readOnly" value="false" />
           </DockerVolumeBindingImpl>
           <DockerVolumeBindingImpl>
-            <option name="containerPath" value="/usr/lib/python3.6/ivy" />
+            <option name="containerPath" value="/ivy/ivy" />
             <option name="editable" value="true" />
             <option name="hostPath" value="$PROJECT_DIR$/../ivy/ivy" />
             <option name="readOnly" value="false" />
           </DockerVolumeBindingImpl>
           <DockerVolumeBindingImpl>
-            <option name="containerPath" value="/usr/lib/python3.6/ivy_mech" />
+            <option name="containerPath" value="/mech/ivy_mech" />
             <option name="editable" value="true" />
             <option name="hostPath" value="$PROJECT_DIR$/../ivy_mech/ivy_mech" />
             <option name="readOnly" value="false" />
           </DockerVolumeBindingImpl>
           <DockerVolumeBindingImpl>
-            <option name="containerPath" value="/usr/lib/python3.6/ivy_demo_utils" />
+            <option name="containerPath" value="/demo-utils/ivy_demo_utils" />
             <option name="editable" value="true" />
             <option name="hostPath" value="$PROJECT_DIR$/../ivy_demo_utils/ivy_demo_utils" />
             <option name="readOnly" value="false" />

@@ -45,7 +45,7 @@ class Simulator(BaseSimulator):
             self._spherical_vision_sensor.remove()
             self._default_camera.set_position(np.array([-2.3518, 4.3953, 2.8949]))
             self._default_camera.set_orientation(np.array([i*np.pi/180 for i in [112.90, 27.329, -10.978]]))
-            inv_ext_mat = ivy.reshape(ivy.array(self._default_vision_sensor.get_matrix(), 'float32'), (3, 4))
+            inv_ext_mat = ivy.array(self._default_vision_sensor.get_matrix()[0:3].tolist(), 'float32')
             self.default_camera_ext_mat_homo = ivy.inv(ivy_mech.make_transformation_homogeneous(inv_ext_mat))
 
             # public objects
