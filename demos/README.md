@@ -71,7 +71,7 @@ To run the script using a specific backend, tensorflow for example, then run lik
 
 ### Neural Rendering
 
-The first demo uses methods ``ivy_vision.sinusoid_positional_encoding``, and ``ivy_vision.render_implicit_features_and_depth``
+The first demo uses method ``ivy_vision.render_implicit_features_and_depth``
 to train a Neural Radiance Field (NeRF) model to encode a lego digger. The NeRF model can then be queried at new camera
 poses to render new images from poses unseen during training.
 

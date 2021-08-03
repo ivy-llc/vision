@@ -1,6 +1,7 @@
 # global
 import os
 import ivy
+import math
 import shutil
 import argparse
 import ivy_vision
@@ -25,7 +26,9 @@ class Model(ivy.Module):
         super(Model, self).__init__(dev_str)
 
     def _forward(self, x, feat=None, timestamps=None):
-        embedding = ivy_vision.sinusoid_positional_encoding(x, self._embedding_length)
+        embedding = ivy.fourier_encode(x/math.pi, max_freq=2*math.exp(math.log(2) * (self._embedding_length-1)),
+                                       num_bands=self._embedding_length, base=2.)
+        embedding = ivy.reshape(embedding, list(x.shape[:-1]) + [-1])
         x = ivy.relu(self._fc_layers[0](embedding))
         for i in range(1, self._num_layers-1):
             x = ivy.relu(self._fc_layers[i](x))
@@ -106,12 +109,12 @@ class NerfDemo:
         pix_coords = ivy_vision.create_uniform_pixel_coords_image(self._img_dims, dev_str=self._dev_str)
         rays_d = ivy_vision.pixel_coords_to_world_ray_vectors(
             cam_geom.inv_full_mats_homo[..., 0:3, :], pix_coords, cam_geom.extrinsics.cam_centers)
-        rays_o = ivy.expand_dims(ivy.expand_dims(cam_geom.extrinsics.cam_centers[..., 0], 0), 0)
+        rays_o = cam_geom.extrinsics.cam_centers[..., 0]
         return rays_o, rays_d
 
     def _loss_fn(self, model, rays_o, rays_d, target, v=None):
         rgb, depth = ivy_vision.render_implicit_features_and_depth(
-            model, rays_o[0, 0], rays_d, near=ivy.ones(self._img_dims, dev_str=self._dev_str) * 2,
+            model, rays_o, rays_d, near=ivy.ones(self._img_dims, dev_str=self._dev_str) * 2,
             far=ivy.ones(self._img_dims, dev_str=self._dev_str) * 6, samples_per_ray=self._samples_per_ray, v=v)
         return ivy.reduce_mean((rgb - target) ** 2)[0]
 

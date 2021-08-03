@@ -47,14 +47,6 @@ class ImplicitTestData(TestData):
                                                  [0.01524993, 0.12262806, 0.12084134],
                                                  [0.02295334, 0.03439996, 0.01307792]], np.float32)
 
-        # positional encoding
-        self.x = np.array([[0., 2.], [1., 3.], [2., 4.], [3., 5.]])
-        self.embedding = np.array(
-            [[0., 2., 0., 0.90929743, 1., -0.41614684, 0., -0.7568025, 1., -0.65364362],
-             [1., 3., 0.84147098, 0.14112001, 0.54030231, -0.9899925, 0.90929743, -0.2794155, -0.41614684, 0.96017029],
-             [2., 4., 0.90929743, -0.7568025, -0.41614684, -0.65364362, -0.7568025, 0.98935825, -0.65364362, -0.14550003],
-             [3., 5., 0.14112001, -0.95892427, -0.9899925, 0.28366219, -0.2794155, -0.54402111, 0.96017029, -0.83907153]])
-
         # render implicit features and depth
         self.implicit_fn = lambda pts, feat, timestamps, with_grads=True, v=None:\
             (ivy.array(self.features), ivy.array(self.densities))
@@ -126,13 +118,6 @@ def test_sample_images(dev_str, call):
                       (td.batch_size, td.num_cameras), td.image_dims)
     assert list(img0.shape) == [td.batch_size, td.num_cameras, 35, 3]
     assert list(img1.shape) == [td.batch_size, td.num_cameras, 35, 3]
-
-
-def test_sinusoid_positional_encoding(dev_str, call):
-    embed_length = 2
-    embedding = call(ivy_imp.sinusoid_positional_encoding, td.x, embed_length)
-    assert embedding.shape[-1] == td.x.shape[-1] + td.x.shape[-1] * 2 * embed_length
-    assert np.allclose(embedding, td.embedding)
 
 
 def test_sampled_volume_density_to_occupancy_probability(dev_str, call):

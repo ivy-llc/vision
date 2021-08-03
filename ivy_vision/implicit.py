@@ -171,23 +171,6 @@ def sample_images(list_of_images, num_pixels, batch_shape, image_dims, dev_str='
     return ivy.split(combined_img_sampled, image_channels, -1)
 
 
-def sinusoid_positional_encoding(x, embedding_length=10):
-    """
-    Perform sinusoid positional encoding of the inputs.
-
-    :param x: input array to encode *[batch_shape, dim]*
-    :type x: array
-    :param embedding_length: Length of the embedding. Default is 10.
-    :type embedding_length: int, optional
-    :return: The new positionally encoded array *[batch_shape, dim+dim*2*embedding_length]*
-    """
-    rets = [x]
-    for i in range(embedding_length):
-        for fn in [ivy.sin, ivy.cos]:
-            rets.append(fn(2.**i * x))
-    return ivy.concatenate(rets, -1)
-
-
 # noinspection PyUnresolvedReferences
 def sampled_volume_density_to_occupancy_probability(density, inter_sample_distance):
     """
