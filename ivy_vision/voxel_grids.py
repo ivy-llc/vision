@@ -12,8 +12,8 @@ def coords_to_voxel_grid(coords, voxel_shape_spec, mode='DIMS', coord_bounds=Non
                          dev_str=None):
     """
     Create voxel grid :math:`\mathbf{X}_v\in\mathbb{R}^{x×y×z×(3+N+1)}` from homogeneous co-ordinates
-    :math:`\mathbf{X}_w\in\mathbb{R}^{num\_coords×4}`. Each voxel contains 3+N+1 values: the mean normalized
-    co-ordinate inside the voxel for the projected pixels with :math:`0 < x, y, z < 1`, N coordinte features (optional),
+    :math:`\mathbf{X}_w\in\mathbb{R}^{num\_coords×4}`. Each voxel contains 3+N+1 values: the mean
+    world co-ordinate inside the voxel for the projected pixels, N coordinte features (optional),
     and also the number of projected pixels inside the voxel.
     Grid resolutions and dimensions are also returned separately for each entry in the batch.
     Note that the final batched voxel grid returned uses the maximum grid dimensions across the batch, this means
@@ -38,7 +38,8 @@ def coords_to_voxel_grid(coords, voxel_shape_spec, mode='DIMS', coord_bounds=Non
     :type batch_shape: sequence of ints, optional
     :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
     :type dev_str: str, optional
-    :return: Voxel grid *[batch_shape,x_max,v_max,z_max,3+feature_size+1]*, dimensions *[batch_shape,3]*, resolutions *[batch_shape,3]*, voxel_grid_lower_corners *[batch_shape,3]*
+    :return: Voxel grid *[batch_shape,x_max,v_max,z_max,3+feature_size+1]*, dimensions *[batch_shape,3]*,
+            resolutions *[batch_shape,3]*, voxel_grid_lower_corners *[batch_shape,3]*
     """
 
     if batch_shape is None:
@@ -127,7 +128,7 @@ def coords_to_voxel_grid(coords, voxel_shape_spec, mode='DIMS', coord_bounds=Non
                                            'int32'), dims_m_one)
 
     # BS x NC x 3
-    voxel_values = ((coords - bb_mins) % res) / (res + MIN_DENOMINATOR)
+    voxel_values = coords
 
     feature_size = 0
     if features is not None:
