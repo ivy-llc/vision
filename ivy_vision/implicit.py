@@ -290,9 +290,6 @@ def _render_implicit_features_and_depth_single_split(
 
     # flatten
 
-    # BS x FRBS x SPR x 1
-    z_vals_flat = ivy.reshape(z_vals, batch_shape + [flat_ray_batch_size, samples_per_ray, 1])
-
     # BS x FRBS x SPR x 3
     pts_flat = ivy.reshape(pts, batch_shape + [flat_ray_batch_size, samples_per_ray, 3])
 

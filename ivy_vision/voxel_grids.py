@@ -61,19 +61,23 @@ def coords_to_voxel_grid(coords, voxel_shape_spec, mode='DIMS', coord_bounds=Non
             _ivy.array(voxel_shape_spec), [1] * num_batch_dims + [3]), batch_shape + [1]), -2)
 
     # coord bounds spec as array
-    if coord_bounds is not None and len(coord_bounds) is 6:
+    if coord_bounds is not None:
+
+        if len(coord_bounds) is 6:
+
+            # BS x 6
+            coord_bounds = _ivy.tile(_ivy.reshape(
+                _ivy.array(coord_bounds, dtype_str='float32'), [1] * num_batch_dims + [6]), batch_shape + [1])
 
         # BS x 1 x 6
-        coord_bounds = _ivy.expand_dims(_ivy.tile(_ivy.reshape(
-            _ivy.array(coord_bounds, dtype_str='float32'),
-            [1] * num_batch_dims + [6]), batch_shape + [1]), -2)
+        coord_bounds = _ivy.expand_dims(coord_bounds, -2)
 
     # BS x N x 3
     coords = coords[..., 0:3]
 
     if coord_bounds is not None:
 
-        # BS x 1
+        # BS x 1 x 1
         x_min = coord_bounds[..., 0:1]
         y_min = coord_bounds[..., 1:2]
         z_min = coord_bounds[..., 2:3]
