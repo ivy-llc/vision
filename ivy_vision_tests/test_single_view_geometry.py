@@ -124,6 +124,13 @@ def test_world_to_ds_pixel_coords(dev_str, call):
                        td.pixel_coords_to_scatter[0], atol=1e-4)
 
 
+def test_world_coords_to_depth(dev_str, call):
+    assert np.allclose(call(ivy_svg.world_coords_to_depth, td.world_coords, td.full_mats), td.depth_maps,
+                       atol=1e-4)
+    assert np.allclose(call(ivy_svg.world_coords_to_depth, td.world_coords[0], td.full_mats[0]),
+                       td.depth_maps[0], atol=1e-4)
+
+
 def test_ds_pixel_to_world_coords(dev_str, call):
     # with 2D image dimensions
     assert np.allclose(call(ivy_svg.ds_pixel_to_world_coords, td.pixel_coords_to_scatter, td.inv_full_mats),
@@ -135,6 +142,13 @@ def test_ds_pixel_to_world_coords(dev_str, call):
     assert np.allclose(call(ivy_svg.ds_pixel_to_world_coords,
                             np.reshape(td.pixel_coords_to_scatter, batch_shape + [-1, 3]), td.inv_full_mats),
                        np.reshape(td.world_coords, batch_shape + [-1, 4]), atol=1e-6)
+
+
+def test_depth_to_world_coords(dev_str, call):
+    assert np.allclose(call(ivy_svg.depth_to_world_coords, td.depth_maps, td.inv_full_mats),
+                       td.world_coords, atol=1e-6)
+    assert np.allclose(call(ivy_svg.depth_to_world_coords, td.depth_maps[0], td.inv_full_mats[0]),
+                       td.world_coords[0], atol=1e-6)
 
 
 def test_pixel_coords_to_world_rays(dev_str, call):

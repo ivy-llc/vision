@@ -510,6 +510,25 @@ def world_to_ds_pixel_coords(coords_wrt_world, full_mat, batch_shape=None, image
     return _ivy_pg.transform(coords_wrt_world, full_mat, batch_shape, image_shape)
 
 
+def world_coords_to_depth(coords_wrt_world, full_mat, batch_shape=None, image_shape=None):
+    """
+    Get depth image :math:`\mathbf{X}_d\in\mathbb{R}^{is×1}` from world-centric
+    homogeneous co-ordinates image :math:`\mathbf{X}_w\in\mathbb{R}^{is×4}`.\n
+
+    :param coords_wrt_world: World-centric homogeneous co-ordinates image *[batch_shape,image_shape,4]*
+    :type coords_wrt_world: array
+    :param full_mat: Full projection matrix *[batch_shape,3,4]*
+    :type full_mat: array
+    :param batch_shape: Shape of batch. Inferred from inputs if None.
+    :type batch_shape: sequence of ints, optional
+    :param image_shape: Image shape. Inferred from inputs in None.
+    :type image_shape: sequence of ints, optional
+    :return: Depth image *[batch_shape,image_shape,1]*
+    """
+    # BS x IS x 1
+    return world_to_ds_pixel_coords(coords_wrt_world, full_mat, batch_shape, image_shape)[..., -1:]
+
+
 def ds_pixel_to_world_coords(ds_pixel_coords, inv_full_mat, batch_shape=None, image_shape=None):
     """
     Get world-centric homogeneous co-ordinates image :math:`\mathbf{X}_w\in\mathbb{R}^{is×4}` from depth scaled
@@ -547,6 +566,41 @@ def ds_pixel_to_world_coords(ds_pixel_coords, inv_full_mat, batch_shape=None, im
 
     # BS x IS x 4
     return _ivy_mec.make_coordinates_homogeneous(world_coords, batch_shape + image_shape)
+
+
+def depth_to_world_coords(depth, inv_full_mat, uniform_pixel_coords=None, batch_shape=None, image_dims=None):
+    """
+    Get world-centric homogeneous co-ordinates image :math:`\mathbf{X}_w\in\mathbb{R}^{hxw×4}` from depth image
+    :math:`\mathbf{X}_d\in\mathbb{R}^{hxw×1}`.\n
+
+    :param depth: Depth image: *[batch_shape,h,w,1]*
+    :type depth: array
+    :param inv_full_mat: Inverse full projection matrix *[batch_shape,3,4]*
+    :type inv_full_mat: array
+    :param uniform_pixel_coords: Image of homogeneous pixel co-ordinates. Created if None. *[batch_shape,h,w,3]*
+    :type uniform_pixel_coords: array, optional
+    :param batch_shape: Shape of batch. Inferred from inputs if None.
+    :type batch_shape: sequence of ints, optional
+    :param image_dims: Image shape. Inferred from inputs in None.
+    :type image_dims: sequence of ints, optional
+    :return: World-centric homogeneous co-ordinates image *[batch_shape,image_shape,4]*
+    """
+
+    if batch_shape is None:
+        batch_shape = depth.shape[:-3]
+
+    if image_dims is None:
+        image_dims = depth.shape[-3:-1]
+
+    # shapes as list
+    batch_shape = list(batch_shape)
+    image_dims = list(image_dims)
+
+    # BS x H x W x 3
+    ds_pixel_coords = depth_to_ds_pixel_coords(depth, uniform_pixel_coords, batch_shape, image_dims)
+
+    # BS x H x W x 4
+    return ds_pixel_to_world_coords(ds_pixel_coords, inv_full_mat, batch_shape, image_dims)
 
 
 def pixel_coords_to_world_ray_vectors(inv_full_mat, pixel_coords=None, camera_center=None, batch_shape=None,
