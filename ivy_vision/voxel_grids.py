@@ -100,7 +100,7 @@ def coords_to_voxel_grid(coords, voxel_shape_spec, mode='DIMS', coord_bounds=Non
     else:
 
         # BS x N
-        full_validity_mask = _ivy.cast(_ivy.ones(batch_shape + [num_coords_per_batch]), 'bool')
+        full_validity_mask = _ivy.cast(_ivy.ones(batch_shape + [num_coords_per_batch], dev_str=dev_str), 'bool')
 
         # BS x 1 x 3
         bb_mins = _ivy.reduce_min(coords, axis=-2, keepdims=True)
@@ -160,9 +160,9 @@ def coords_to_voxel_grid(coords, voxel_shape_spec, mode='DIMS', coord_bounds=Non
         max_dims = _ivy.reduce_max(_ivy.reshape(dims, batch_shape + [3]), axis=list(range(num_batch_dims)))
     else:
         max_dims = _ivy.reshape(dims, batch_shape + [3])
-    batch_shape_array_list = [_ivy.array(batch_shape, 'int32')] if num_batch_dims != 0 else []
+    batch_shape_array_list = [_ivy.array(batch_shape, 'int32', dev_str)] if num_batch_dims != 0 else []
     total_dims_list = _ivy.to_list(_ivy.concatenate(batch_shape_array_list +
-                                                    [max_dims, _ivy.array([4 + feature_size], 'int32')], -1))
+                                                    [max_dims, _ivy.array([4 + feature_size], 'int32', dev_str)], -1))
 
     # BS x x_max x y_max x z_max x 4
     scattered = _ivy.scatter_nd(all_indices_pruned_flat, voxel_values_pruned_flat, total_dims_list,
