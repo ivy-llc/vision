@@ -27,10 +27,11 @@ class PrimitiveScene(_Container):
         :param cuboid_dims: Cuboid dimensions, in order of x, y, z *[batch_shape,num_cuboids,3]*
         :type cuboid_dims: array, optional
         """
-        self['sphere_positions'] = sphere_positions
-        self['sphere_radii'] = sphere_radii
-        self['cuboid_ext_mats'] = cuboid_ext_mats
-        self['cuboid_dims'] = cuboid_dims
+        super(PrimitiveScene, self).__init__(
+            sphere_positions=sphere_positions,
+            sphere_radii=sphere_radii,
+            cuboid_ext_mats=cuboid_ext_mats,
+            cuboid_dims=cuboid_dims)
 
     # Class Methods #
     # --------------#
@@ -54,21 +55,6 @@ class PrimitiveScene(_Container):
     # Public Methods #
     # ---------------#
 
-    def set_slice(self, slice_obj, primitive_scene):
-        """
-        Set slice of primitive scene object.
-
-        :param slice_obj: slice object to set slice for all container elements.
-        :type slice_obj: slice of sequence of slices
-        :param primitive_scene: Intrinsics object to set the slice equal to.
-        :type primitive_scene: Intrinsics
-        :return: PrimitiveScene object, after setting desired slice.
-        """
-        self.sphere_positions[slice_obj] = primitive_scene.sphere_positions
-        self.sphere_radii[slice_obj] = primitive_scene.sphere_radii
-        self.cuboid_ext_mats[slice_obj] = primitive_scene.cuboid_ext_mats
-        self.cuboid_dims[slice_obj] = primitive_scene.cuboid_dims
-
     def sdf(self, query_positions):
         """
         Return signed distance function for the scene
@@ -90,16 +76,6 @@ class PrimitiveScene(_Container):
             all_sdfs_list.append(cuboid_sdfs)
         sdfs_concatted = _ivy.concatenate(all_sdfs_list, -1) if len(all_sdfs_list) > 1 else all_sdfs_list[0]
         return _ivy.reduce_min(sdfs_concatted, -1, keepdims=True)
-
-    # Getters #
-    # --------#
-
-    @property
-    def batch_shape(self):
-        """
-        Batch shape of each element in container
-        """
-        return self.shape_types.batch_shape[:-1]
 
 
 # noinspection PyMissingConstructor
@@ -125,11 +101,12 @@ class Intrinsics(_Container):
         :param inv_calib_mats: Inverse calibration matrices *[batch_shape,3,3]*
         :type inv_calib_mats: array
         """
-        self['focal_lengths'] = focal_lengths
-        self['persp_angles'] = persp_angles
-        self['pp_offsets'] = pp_offsets
-        self['calib_mats'] = calib_mats
-        self['inv_calib_mats'] = inv_calib_mats
+        super(Intrinsics, self).__init__(
+            focal_lengths=focal_lengths,
+            persp_angles=persp_angles,
+            pp_offsets=pp_offsets,
+            calib_mats=calib_mats,
+            inv_calib_mats=inv_calib_mats)
 
     # Class Methods #
     # --------------#
@@ -150,35 +127,6 @@ class Intrinsics(_Container):
         calib_mats = _ivy.identity(3, batch_shape=batch_shape)
         inv_calib_mats = _ivy.identity(3, batch_shape=batch_shape)
         return __class__(focal_lengths, persp_angles, pp_offsets, calib_mats, inv_calib_mats)
-
-    # Public Methods #
-    # ---------------#
-
-    def set_slice(self, slice_obj, intrinsics):
-        """
-        Set slice of intrinsics object.
-
-        :param slice_obj: slice object to set slice for all container elements.
-        :type slice_obj: slice of sequence of slices
-        :param intrinsics: Intrinsics object to set the slice equal to.
-        :type intrinsics: Intrinsics
-        :return: Intrinsics object, after setting desired slice.
-        """
-        self.focal_lengths[slice_obj] = intrinsics.focal_lengths
-        self.persp_angles[slice_obj] = intrinsics.persp_angles
-        self.pp_offsets[slice_obj] = intrinsics.pp_offsets
-        self.calib_mats[slice_obj] = intrinsics.calib_mats
-        self.inv_calib_mats[slice_obj] = intrinsics.inv_calib_mats
-
-    # Getters #
-    # --------#
-
-    @property
-    def batch_shape(self):
-        """
-        Batch shape of each element in container
-        """
-        return self.focal_lengths.batch_shape[:-1]
 
 
 # noinspection PyMissingConstructor
@@ -204,11 +152,12 @@ class Extrinsics(_Container):
         :param inv_ext_mats_homo: Inverse homogeneous extrinsic matrices *[batch_shape,4,4]*
         :type inv_ext_mats_homo: array
         """
-        self['cam_centers'] = cam_centers
-        self['Rs'] = Rs
-        self['inv_Rs'] = inv_Rs
-        self['ext_mats_homo'] = ext_mats_homo
-        self['inv_ext_mats_homo'] = inv_ext_mats_homo
+        super(Extrinsics, self).__init__(
+            cam_centers=cam_centers,
+            Rs=Rs,
+            inv_Rs=inv_Rs,
+            ext_mats_homo=ext_mats_homo,
+            inv_ext_mats_homo=inv_ext_mats_homo)
 
     # Class Methods #
     # --------------#
@@ -229,35 +178,6 @@ class Extrinsics(_Container):
         ext_mats_homo = _ivy.identity(4, batch_shape=batch_shape)
         inv_ext_mats_homo = _ivy.identity(4, batch_shape=batch_shape)
         return __class__(cam_centers, Rs, inv_Rs, ext_mats_homo, inv_ext_mats_homo)
-
-    # Public Methods #
-    # ---------------#
-
-    def set_slice(self, slice_obj, extrinsics):
-        """
-        Set slice of extrinsics object.
-
-        :param slice_obj: slice object to set slice for all container elements.
-        :type slice_obj: slice of sequence of slices
-        :param extrinsics: Extrinsics object to set the slice equal to.
-        :type extrinsics: Extrinsics
-        :return: Extrinsics object, after setting desired slice.
-        """
-        self.cam_centers[slice_obj] = extrinsics.cam_centers
-        self.Rs[slice_obj] = extrinsics.Rs
-        self.inv_Rs[slice_obj] = extrinsics.inv_Rs
-        self.ext_mats_homo[slice_obj] = extrinsics.ext_mats_homo
-        self.inv_ext_mats_homo[slice_obj] = extrinsics.inv_ext_mats_homo
-
-    # Getters #
-    # --------#
-
-    @property
-    def batch_shape(self):
-        """
-        Batch shape of each element in container
-        """
-        return self.cam_centers.batch_shape[:-2]
 
 
 # noinspection PyMissingConstructor
@@ -280,10 +200,11 @@ class CameraGeometry(_Container):
         :param inv_full_mats_homo: Inverse full homogeneous projection matrices *[batch_shape,4,4]*
         :type inv_full_mats_homo: array
         """
-        self['intrinsics'] = intrinsics
-        self['extrinsics'] = extrinsics
-        self['full_mats_homo'] = full_mats_homo
-        self['inv_full_mats_homo'] = inv_full_mats_homo
+        super(CameraGeometry, self).__init__(
+            intrinsics=intrinsics,
+            extrinsics=extrinsics,
+            full_mats_homo=full_mats_homo,
+            inv_full_mats_homo=inv_full_mats_homo)
 
     # Class Methods #
     # --------------#
@@ -302,31 +223,3 @@ class CameraGeometry(_Container):
         full_mats_homo = _ivy.identity(4, batch_shape=batch_shape)
         inv_full_mats_homo = _ivy.identity(4, batch_shape=batch_shape)
         return __class__(intrinsics, extrinsics, full_mats_homo, inv_full_mats_homo)
-
-    # Public Methods #
-    # ---------------#
-
-    def set_slice(self, slice_obj, cam_geom):
-        """
-        Set slice of camera geometry object.
-
-        :param slice_obj: slice object to set slice for all container elements.
-        :type slice_obj: slice of sequence of slices
-        :param cam_geom: Camera geometry object to set the slice equal to.
-        :type cam_geom: CameraGeometry
-        :return: CameraGeometry object, after setting desired slice.
-        """
-        self.intrinsics.set_slice(slice_obj, cam_geom.intrinsics)
-        self.extrinsics.set_slice(slice_obj, cam_geom.extrinsics)
-        self.full_mats_homo[slice_obj] = cam_geom.full_mats_homo
-        self.inv_full_mats_homo[slice_obj] = cam_geom.inv_full_mats_homo
-
-    # Getters #
-    # --------#
-
-    @property
-    def batch_shape(self):
-        """
-        Batch shape of each element in container
-        """
-        return self.full_mats_homo.batch_shape[:-2]
