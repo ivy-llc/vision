@@ -1,9 +1,5 @@
 # global
 import ivy as _ivy
-try:
-    import tensorflow as _tf
-except (ModuleNotFoundError, ImportError):
-    _tf = None
 from ivy.core.container import Container as _Container
 
 # local
@@ -38,43 +34,6 @@ class PrimitiveScene(_Container):
 
     # Class Methods #
     # --------------#
-
-    @staticmethod
-    def as_keras_inputs(batch_shape):
-        """
-        Return primitive scene object with array attributes as keras.Input objects. Only applicable for tensorflow.
-
-        :param batch_shape: Batch shape for each geometric array attribute
-        :type batch_shape: sequence of ints
-        :return: New primitive scene object, with each entry as keras.Input objects.
-        """
-        if _tf is None:
-            raise Exception('Tensorflow is not installed, as_keras_inputs() cannot be called.')
-        batch_shape = list(batch_shape)
-        batch_size = batch_shape[0]
-        batch_shape = batch_shape[1:] if len(batch_shape) > 1 else []
-        sphere_positions = _tf.keras.Input((batch_shape + [3, 4]), batch_size=batch_size)
-        sphere_radii = _tf.keras.Input((batch_shape + [1]), batch_size=batch_size)
-        cuboid_ext_mats = _tf.keras.Input((batch_shape + [3, 4]), batch_size=batch_size)
-        cuboid_dims = _tf.keras.Input((batch_shape + [3]), batch_size=batch_size)
-        return __class__(sphere_positions, sphere_radii, cuboid_ext_mats, cuboid_dims)
-
-    @staticmethod
-    def as_tensor_spec(prefix):
-        """
-        Return primitive scene object with array attributes as tf.TensorSpec objects. Only applicable for tensorflow.
-
-        :param prefix: prefix string for TensorSpec names.
-        :type prefix: str
-        :return: New primitive scene object, with each entry as TensorSpec objects.
-        """
-        if _tf is None:
-            raise Exception('Tensorflow is not installed, as_keras_inputs() cannot be called.')
-        sphere_positions = _tf.TensorSpec([1], _tf.float32, prefix + '_sphere_positions')
-        sphere_radii = _tf.TensorSpec([3, 4], _tf.float32, prefix + '_sphere_radii')
-        cuboid_ext_mats = _tf.TensorSpec([3], _tf.float32, prefix + '_cuboid_ext_mats')
-        cuboid_dims = _tf.TensorSpec([3], _tf.float32, prefix + '_cuboid_dims')
-        return __class__(sphere_positions, sphere_radii, cuboid_ext_mats, cuboid_dims)
 
     @staticmethod
     def as_identity(batch_shape):
@@ -176,45 +135,6 @@ class Intrinsics(_Container):
     # --------------#
 
     @staticmethod
-    def as_keras_inputs(batch_shape):
-        """
-        Return camera intrinsics object with array attributes as keras.Input objects. Only applicable for tensorflow.
-
-        :param batch_shape: Batch shape for each geometric array attribute
-        :type batch_shape: sequence of ints
-        :return: New camera intrinsics object, with each entry as keras.Input objects.
-        """
-        if _tf is None:
-            raise Exception('Tensorflow is not installed, as_keras_inputs() cannot be called.')
-        batch_shape = list(batch_shape)
-        batch_size = batch_shape[0]
-        batch_shape = batch_shape[1:] if len(batch_shape) > 1 else []
-        focal_lengths = _tf.keras.Input((batch_shape + [2]), batch_size=batch_size)
-        persp_angles = _tf.keras.Input((batch_shape + [2]), batch_size=batch_size)
-        pp_offsets = _tf.keras.Input((batch_shape + [2]), batch_size=batch_size)
-        calib_mats = _tf.keras.Input((batch_shape + [3, 3]), batch_size=batch_size)
-        inv_calib_mats = _tf.keras.Input((batch_shape + [3, 3]), batch_size=batch_size)
-        return __class__(focal_lengths, persp_angles, pp_offsets, calib_mats, inv_calib_mats)
-
-    @staticmethod
-    def as_tensor_spec(prefix):
-        """
-        Return camera intrinsics object with array attributes as tf.TensorSpec objects. Only applicable for tensorflow.
-
-        :param prefix: prefix string for TensorSpec names.
-        :type prefix: str
-        :return: New camera intrinsics object, with each entry as TensorSpec objects.
-        """
-        if _tf is None:
-            raise Exception('Tensorflow is not installed, as_keras_inputs() cannot be called.')
-        focal_lengths = _tf.TensorSpec([2], _tf.float32, prefix + '_focal_lengths')
-        persp_angles = _tf.TensorSpec([2], _tf.float32, prefix + '_persp_angles')
-        pp_offsets = _tf.TensorSpec([2], _tf.float32, prefix + '_pp_offsets')
-        calib_mats = _tf.TensorSpec([3, 3], _tf.float32, prefix + '_calib_mats')
-        inv_calib_mats = _tf.TensorSpec([3, 3], _tf.float32, prefix + '_inv_calib_mats')
-        return __class__(focal_lengths, persp_angles, pp_offsets, calib_mats, inv_calib_mats)
-
-    @staticmethod
     def as_identity(batch_shape):
         """
         Return camera intrinsics object with array attributes as either zeros or identity matrices.
@@ -294,45 +214,6 @@ class Extrinsics(_Container):
     # --------------#
 
     @staticmethod
-    def as_keras_inputs(batch_shape):
-        """
-        Return camera extrinsics object with array attributes as keras.Input objects. Only applicable for tensorflow.
-
-        :param batch_shape: Batch shape for each geometric array attribute.
-        :type batch_shape: sequence of ints
-        :return: New camera extrinsics object, with each entry as keras.Input objects.
-        """
-        if _tf is None:
-            raise Exception('Tensorflow is not installed, as_keras_inputs() cannot be called.')
-        batch_shape = list(batch_shape)
-        batch_size = batch_shape[0]
-        batch_shape = batch_shape[1:] if len(batch_shape) > 1 else []
-        cam_centers = _tf.keras.Input(tuple(batch_shape + [3, 1]), batch_size=batch_size)
-        Rs = _tf.keras.Input((batch_shape + [3, 3]), batch_size=batch_size)
-        inv_Rs = _tf.keras.Input((batch_shape + [3, 3]), batch_size=batch_size)
-        ext_mats_homo = _tf.keras.Input((batch_shape + [4, 4]), batch_size=batch_size)
-        inv_ext_mats_homo = _tf.keras.Input((batch_shape + [4, 4]), batch_size=batch_size)
-        return __class__(cam_centers, Rs, inv_Rs, ext_mats_homo, inv_ext_mats_homo)
-
-    @staticmethod
-    def as_tensor_spec(prefix):
-        """
-        Return camera extrinsics object with array attributes as tf.TensorSpec objects. Only applicable for tensorflow.
-
-        :param prefix: prefix string for TensorSpec names.
-        :type prefix: str
-        :return: New camera extrinsics object, with each entry as TensorSpec objects.
-        """
-        if _tf is None:
-            raise Exception('Tensorflow is not installed, as_keras_inputs() cannot be called.')
-        cam_centers = _tf.TensorSpec([3, 1], _tf.float32, prefix + '_cam_centers')
-        Rs = _tf.TensorSpec([3, 3], _tf.float32, prefix + '_Rs')
-        inv_Rs = _tf.TensorSpec([3, 3], _tf.float32, prefix + '_inv_Rs')
-        ext_mats_homo = _tf.TensorSpec([4, 4], _tf.float32, prefix + '_ext_mats_homo')
-        inv_ext_mats_homo = _tf.TensorSpec([4, 4], _tf.float32, prefix + '_inv_ext_mats_homo')
-        return __class__(cam_centers, Rs, inv_Rs, ext_mats_homo, inv_ext_mats_homo)
-
-    @staticmethod
     def as_identity(batch_shape):
         """
         Return camera extrinsics object with array attributes as either zeros or identity matrices.
@@ -406,43 +287,6 @@ class CameraGeometry(_Container):
 
     # Class Methods #
     # --------------#
-
-    @staticmethod
-    def as_keras_inputs(batch_shape):
-        """
-        Return camera geometry object with array attributes as keras.Input objects. Only applicable for tensorflow.
-
-        :param batch_shape: Batch shape for each geometric array attribute
-        :type batch_shape: sequence of ints
-        :return: New camera geometry object, with each entry as keras.Input objects.
-        """
-        if _tf is None:
-            raise Exception('Tensorflow is not installed, as_keras_inputs() cannot be called.')
-        intrinsics = Intrinsics.as_keras_inputs(batch_shape)
-        extrinsics = Extrinsics.as_keras_inputs(batch_shape)
-        batch_shape = list(batch_shape)
-        batch_size = batch_shape[0]
-        batch_shape = batch_shape[1:] if len(batch_shape) > 1 else []
-        full_mats_homo = _tf.keras.Input(batch_shape + [4, 4], batch_size=batch_size)
-        inv_full_mats_homo = _tf.keras.Input((batch_shape + [4, 4]), batch_size=batch_size)
-        return __class__(intrinsics, extrinsics, full_mats_homo, inv_full_mats_homo)
-
-    @staticmethod
-    def as_tensor_spec(prefix):
-        """
-        Return camera geometry object with array attributes as tf.TensorSpec objects. Only applicable for tensorflow.
-
-        :param prefix: prefix string for TensorSpec names.
-        :type prefix: str
-        :return: New camera geometry object, with each entry as TensorSpec objects.
-        """
-        if _tf is None:
-            raise Exception('Tensorflow is not installed, as_tensor_spec() cannot be called.')
-        intrinsics = Intrinsics.as_tensor_spec(prefix)
-        extrinsics = Extrinsics.as_tensor_spec(prefix)
-        full_mats_homo = _tf.TensorSpec([4, 4], _tf.float32, prefix + '_full_mats_homo')
-        inv_full_mats_homo = _tf.TensorSpec([4, 4], _tf.float32, prefix + '_inv_full_mats_homo')
-        return __class__(intrinsics, extrinsics, full_mats_homo, inv_full_mats_homo)
 
     @staticmethod
     def as_identity(batch_shape):
