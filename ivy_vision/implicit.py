@@ -11,7 +11,6 @@ from ivy_vision import single_view_geometry as _ivy_svg
 
 
 MIN_DENOMINATOR = 1e-12
-MEMORY_ON_DEVICE = None
 
 
 def downsampled_image_dims_from_desired_num_pixels(image_dims, num_pixels, maximum=False):
@@ -350,8 +349,8 @@ def _render_implicit_features_and_depth_single_split(
 
 
 def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, samples_per_ray, timestamps=None,
-                                       render_depth=True, render_feats=True, render_variance=False, chunk_size_scale=1.,
-                                       inter_feat_fn=None, with_grads=True, v=None):
+                                       render_depth=True, render_feats=True, render_variance=False,
+                                       chunk_size_per_GB=1000., inter_feat_fn=None, with_grads=True, v=None):
     """
     Render an rgb-d image, given an implicit rgb and density function conditioned on xyz data.
 
@@ -376,9 +375,9 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, sa
     :param render_variance: Whether to also render the feature variance. Default is False.
     :type render_variance: bool, optional
     :type render_variance: bool, optional
-    :param chunk_size_scale: The scale for the chunk size. The default value of 1 makes a best guess at the correct
-                             chunk size to almost fill the GPU memory. However, the value may need to be tweaked.
-    :type chunk_size_scale: float, optional
+    :param chunk_size_per_GB: The chunk size per GB of memory on the GPU. The value should be tweaked for
+                              optimal performance, by maximally filling the GPU memory.
+    :type chunk_size_per_GB: float, optional
     :param inter_feat_fn: Function to extract interpolated features from world-coords *[batch_shape,ray_batch_shape,3]*
     :type inter_feat_fn: callable, optional
     :param with_grads: Whether to track gradients during the network forward pass. Defualt is True.
@@ -394,15 +393,12 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, sa
     num_batch_dims = len(batch_shape)
     ray_batch_shape = list(rays_d.shape[num_batch_dims:-1])
     flat_ray_batch_size = int(np.prod(ray_batch_shape))
-    total_batch_shape = batch_shape + ray_batch_shape
 
     # memory on device
-    global MEMORY_ON_DEVICE
-    if MEMORY_ON_DEVICE is None:
-        MEMORY_ON_DEVICE = ivy.memory_on_dev(ivy.dev_str(rays_o))
+    memory_on_dev = ivy.cache_fn(ivy.memory_on_dev)(ivy.dev_str(rays_o))
 
     # chunk size
-    chunk_size = int(round(175000 * MEMORY_ON_DEVICE/10 * chunk_size_scale / flat_batch_size))
+    chunk_size = int(round(memory_on_dev * chunk_size_per_GB))
 
     # flatten
     rays_d = ivy.reshape(rays_d, batch_shape + [flat_ray_batch_size, 3])
