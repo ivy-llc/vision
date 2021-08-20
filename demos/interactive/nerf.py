@@ -36,7 +36,7 @@ class Model(ivy.Module):
                 x = ivy.concatenate([x, embedding], -1)
         x = self._fc_layers[-1](x)
         rgb = ivy.sigmoid(x[..., 0:3])
-        sigma_a = ivy.nn.relu(x[..., -1])
+        sigma_a = ivy.relu(x[..., -1])
         return rgb, sigma_a
 
 

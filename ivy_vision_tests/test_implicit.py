@@ -160,6 +160,6 @@ def test_render_implicit_features_and_depth(dev_str, call, with_features, with_t
         pytest.skip()
     rgb, depth = call(ivy_imp.render_implicit_features_and_depth, td.implicit_fn, td.rays_o, td.rays_d, td.near,
                       td.far, td.samples_per_ray, td.timestamps if with_timestamps else None,
-                      chunk_size_scale=0.1, inter_feat_fn=td.inter_feat_fn if with_features else None)
+                      chunk_size_per_gb=0.1, inter_feat_fn=td.inter_feat_fn if with_features else None)
     assert rgb.shape == (3, 3)
     assert depth.shape == (3, 1)
