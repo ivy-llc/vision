@@ -243,7 +243,7 @@ def quantize_to_image(pixel_coords, final_image_dims, feat=None, feat_prior=None
     quantized_img = _ivy.scatter_nd(_ivy.reshape(all_indices, [-1, num_batch_dims + 2]),
                                     _ivy.reshape(values_to_scatter, [-1, 2 * (2 + d) + 1]),
                                     batch_shape + final_image_dims + [2 * (2 + d) + 1],
-                                    reduction='replace' if _ivy.backend == 'mxnd' else red)
+                                    reduction='replace' if _ivy.backend == 'mxnet' else red)
 
     # BS x H x W x 1
     quantized_counter = quantized_img[..., -1:]

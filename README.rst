@@ -123,7 +123,7 @@ Run Through
 We run through some of the different parts of the library via a simple ongoing example script.
 The full script is available in the demos_ folder, as file ``run_through.py``.
 First, we select a random backend framework to use for the examples, from the options
-``ivy.jax``, ``ivy.tensorflow``, ``ivy.torch``, ``ivy.mxnd`` or ``ivy.numpy``,
+``ivy.jax``, ``ivy.tensorflow``, ``ivy.torch``, ``ivy.mxnet`` or ``ivy.numpy``,
 and use this to set the ivy backend framework.
 
 .. code-block:: python
@@ -346,7 +346,7 @@ and again render the new color image in target frame 1.
     # with depth buffer
     f1_forward_warp_w_db, _, _ = ivy_vision.quantize_to_image(
         ivy.reshape(ds_pixel_coords1_proj, (-1, 2)), img_dims, ivy.reshape(features_to_render, (-1, 4)),
-        ivy.zeros_like(features_to_render), with_db=False if ivy.get_framework() == 'mxnd' else True)
+        ivy.zeros_like(features_to_render), with_db=False if ivy.get_framework() == 'mxnet' else True)
 
 Again, visualizations of these images are given below.
 The images show the forward warping of both depth and color from frame 2 to frame 1,

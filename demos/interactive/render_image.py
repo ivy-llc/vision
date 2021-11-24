@@ -151,8 +151,8 @@ class Simulator(BaseSimulator):
 def main(interactive=True, try_use_sim=True, f=None):
     f = choose_random_framework() if f is None else f
     set_framework(f)
-    with_mxnd = ivy.get_framework_str() == 'mxnd'
-    if with_mxnd:
+    with_mxnet = ivy.current_framework_str() == 'mxnet'
+    if with_mxnet:
         print('\nMXnet does not support "sum" or "min" reductions for scatter_nd,\n'
               'instead it only supports non-deterministic replacement for duplicates.\n'
               'Depth buffer rendering (requies min) or fusion buffer (requies sum) are therefore unsupported.\n'
@@ -179,7 +179,7 @@ def main(interactive=True, try_use_sim=True, f=None):
         feat = ivy.concatenate((depth, rgb), -1)
         rendered_img_no_db, _, _ = ivy_vision.quantize_to_image(
             pix_coords, final_image_dims, feat, ivy.zeros(final_image_dims + [4]), with_db=False)
-        with_db = not with_mxnd
+        with_db = not with_mxnet
         rendered_img_with_db, _, _ = ivy_vision.quantize_to_image(
             pix_coords, final_image_dims, feat, ivy.zeros(final_image_dims + [4]), with_db=with_db)
 
@@ -204,8 +204,8 @@ def main(interactive=True, try_use_sim=True, f=None):
         target_img[5:45, 5:135] = np.ones_like(target_img[5:45, 5:135])
         cv2.putText(target_img, 'target', (13, 33), cv2.FONT_HERSHEY_SIMPLEX, 1.2, tuple([0] * 3), 2)
 
-        msg = 'non-deterministic' if with_mxnd else 'no depth buffer'
-        width = 360 if with_mxnd else 320
+        msg = 'non-deterministic' if with_mxnet else 'no depth buffer'
+        width = 360 if with_mxnet else 320
         no_db_img = np.copy(ivy.to_numpy(rendered_img_no_db[..., 3:]))
         no_db_img[0:50, 0:width+5] = np.zeros_like(no_db_img[0:50, 0:width+5])
         no_db_img[5:45, 5:width] = np.ones_like(no_db_img[5:45, 5:width])
@@ -218,7 +218,7 @@ def main(interactive=True, try_use_sim=True, f=None):
 
         raw_imgs = np.concatenate((np.concatenate((a_img, b_img), 1),
                                    np.concatenate((c_img, target_img), 1)), 0)
-        to_concat = (raw_imgs, no_db_img) if with_mxnd else (raw_imgs, no_db_img, with_db_img)
+        to_concat = (raw_imgs, no_db_img) if with_mxnet else (raw_imgs, no_db_img, with_db_img)
         final_img = np.concatenate(to_concat, 1)
 
         if interactive:

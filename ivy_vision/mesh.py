@@ -118,7 +118,7 @@ def rasterize_triangles(pixel_coords_triangles, image_dims, batch_shape=None, de
     return _ivy.cast(_ivy.flip(_ivy.scatter_nd(_ivy.reshape(all_indices, [-1, num_batch_dims + 2]),
                                                _ivy.reshape(_ivy.cast(edge_func, 'int32'), (-1, 1)),
                                                batch_shape + image_dims + [1],
-                                               reduction='replace' if _ivy.backend == 'mxnd' else 'sum'), -3), 'bool')
+                                               reduction='replace' if _ivy.backend == 'mxnet' else 'sum'), -3), 'bool')
 
 
 def create_trimesh_indices_for_image(batch_shape, image_dims, dev_str='cpu:0'):

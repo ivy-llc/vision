@@ -27,7 +27,7 @@ class Model(ivy.Module):
 
     def _forward(self, x, feat=None, timestamps=None):
         embedding = ivy.fourier_encode(x/math.pi, max_freq=2*math.exp(math.log(2) * (self._embedding_length-1)),
-                                       num_bands=self._embedding_length, base=2.)
+                                       num_bands=self._embedding_length)
         embedding = ivy.reshape(embedding, list(x.shape[:-1]) + [-1])
         x = ivy.relu(self._fc_layers[0](embedding))
         for i in range(1, self._num_layers-1):

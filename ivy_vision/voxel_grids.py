@@ -171,7 +171,7 @@ def coords_to_voxel_grid(coords, voxel_shape_spec, mode='DIMS', coord_bounds=Non
 
     # BS x x_max x y_max x z_max x 4
     scattered = _ivy.scatter_nd(all_indices_pruned_flat, voxel_values_pruned_flat, total_dims_list,
-                                reduction='replace' if _ivy.backend == 'mxnd' else 'sum')
+                                reduction='replace' if _ivy.backend == 'mxnet' else 'sum')
 
     # BS x x_max x y_max x z_max x 4 + feature_size, BS x 3, BS x 3, BS x 3
     return _ivy.concatenate((

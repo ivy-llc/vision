@@ -2,7 +2,7 @@
 import os
 import ivy
 import cv2
-import ivy.mxnd
+import ivy.mxnet
 import argparse
 import ivy_vision
 import numpy as np
@@ -430,7 +430,7 @@ def main(interactive=True, f=None):
     # with depth buffer
     f1_forward_warp_w_db, _, _ = ivy_vision.quantize_to_image(
         ivy.reshape(ds_pixel_coords1_proj, (-1, 2)), img_dims, ivy.reshape(features_to_render, (-1, 4)),
-        ivy.zeros_like(features_to_render), with_db=False if ivy.get_framework() == 'mxnd' else True)
+        ivy.zeros_like(features_to_render), with_db=False if ivy.get_framework() == 'mxnet' else True)
 
     # show images
     show_forward_warped_images(depth1, color1, f1_forward_warp_no_db, f1_forward_warp_w_db, depth_limits)

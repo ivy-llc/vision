@@ -263,7 +263,7 @@ def render_rays_via_termination_probabilities(ray_term_probs, features, render_v
     return rendering, var
 
 
-def _render_implicit_features_and_depth_single_split(
+def _render_implicit_features_and_depth(
         network_fn, rays_o, rays_d, near, far, samples_per_ray, timestamps=None, render_depth=True, render_feats=True,
         render_variance=False, inter_feat_fn=None, with_grads=True, v=None):
 
@@ -349,8 +349,8 @@ def _render_implicit_features_and_depth_single_split(
 
 
 def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, samples_per_ray, timestamps=None,
-                                       render_depth=True, render_feats=True, render_variance=False,
-                                       chunk_size_per_gb=10000., inter_feat_fn=None, with_grads=True, v=None):
+                                       render_depth=True, render_feats=True, render_variance=False, inter_feat_fn=None,
+                                       with_grads=True, v=None):
     """
     Render an rgb-d image, given an implicit rgb and density function conditioned on xyz data.
 
@@ -375,9 +375,6 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, sa
     :param render_variance: Whether to also render the feature variance. Default is False.
     :type render_variance: bool, optional
     :type render_variance: bool, optional
-    :param chunk_size_per_gb: The chunk size per GB of memory on the GPU. The value should be tweaked for
-                              optimal performance, by maximally filling the GPU memory.
-    :type chunk_size_per_gb: float, optional
     :param inter_feat_fn: Function to extract interpolated features from world-coords *[batch_shape,ray_batch_shape,3]*
     :type inter_feat_fn: callable, optional
     :param with_grads: Whether to track gradients during the network forward pass. Defualt is True.
@@ -389,16 +386,9 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, sa
 
     # shapes
     batch_shape = list(rays_o.shape[:-1])
-    flat_batch_size = int(np.prod(batch_shape))
     num_batch_dims = len(batch_shape)
     ray_batch_shape = list(rays_d.shape[num_batch_dims:-1])
     flat_ray_batch_size = int(np.prod(ray_batch_shape))
-
-    # memory on device
-    memory_on_dev = ivy.cache_fn(ivy.memory_on_dev)(ivy.dev_str(rays_o))
-
-    # chunk size
-    chunk_size = int(round(memory_on_dev * chunk_size_per_gb / (flat_batch_size * samples_per_ray)))
 
     # flatten
     rays_d = ivy.reshape(rays_d, batch_shape + [flat_ray_batch_size, 3])
@@ -406,9 +396,9 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, sa
     far = ivy.reshape(far, batch_shape + [flat_ray_batch_size])
 
     # run split call
-    rets = ivy.split_func_call(lambda rd, n, f: _render_implicit_features_and_depth_single_split(
-        network_fn, rays_o, rd, n, f, samples_per_ray, timestamps, render_depth, render_feats, render_variance,
-        inter_feat_fn, with_grads, v), [rays_d, near, far], chunk_size, [-2, -1, -1], -2)
+    rets = _render_implicit_features_and_depth(
+        network_fn, rays_o, rays_d, near, far, samples_per_ray, timestamps, render_depth, render_feats, render_variance,
+        inter_feat_fn, with_grads, v)
 
     # return un-flattened
     return [ivy.reshape(ret, batch_shape + ray_batch_shape + [-1]) for ret in rets]

@@ -45,7 +45,7 @@ docker pull ivydl/ivy-vision:latest
 All demos can be run by executing the python scripts directly.
 If a demo script is run without command line arguments, then a random backend framework will be selected from those installed.
 Alternatively, the `--framework` argument can be used to manually specify a framework from the options
-`jax`, `tensorflow`, `torch`, `mxnd` or `numpy`.
+`jax`, `tensorflow`, `torch`, `mxnet` or `numpy`.
 
 The examples below assume a docker installation, but the demo scripts can also
 be run with python directly for local installations.
