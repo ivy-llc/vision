@@ -3,13 +3,13 @@ import ivy.numpy
 import ivy.jax
 import ivy.tensorflow
 import ivy.torch
-import ivy.mxnd
+import ivy.mxnet
 from typing import List, Dict
 import itertools
 from ivy_tests import helpers
 
 
-FW_STRS = ['numpy', 'jax', 'tensorflow', 'tensorflow_graph', 'torch', 'mxnd']
+FW_STRS = ['numpy', 'jax', 'tensorflow', 'torch', 'mxnet']
 
 
 def get_test_devices() -> Dict[ivy.Framework, List[str]]:
@@ -31,15 +31,13 @@ TEST_DEV_STRS: Dict[ivy.Framework, List[str]] = get_test_devices()
 TEST_FRAMEWORKS: Dict[str, ivy.Framework] = {'numpy': ivy.numpy,
                                              'jax': ivy.jax,
                                              'tensorflow': ivy.tensorflow,
-                                             'tensorflow_graph': ivy.tensorflow,
                                              'torch': ivy.torch,
-                                             'mxnd': ivy.mxnd}
+                                             'mxnet': ivy.mxnet}
 TEST_CALL_METHODS: Dict[str, callable] = {'numpy': helpers.np_call,
                                           'jax': helpers.jnp_call,
                                           'tensorflow': helpers.tf_call,
-                                          'tensorflow_graph': helpers.tf_graph_call,
                                           'torch': helpers.torch_call,
-                                          'mxnd': helpers.mx_call}
+                                          'mxnet': helpers.mx_call}
 
 
 @pytest.fixture(autouse=True)
@@ -61,7 +59,7 @@ def pytest_generate_tests(metafunc):
             dev_strs = raw_value.split(',')
 
     if 'f' in metafunc.fixturenames:
-        raw_value = metafunc.config.getoption('--backend')
+        raw_value = metafunc.config.getoption('--framework')
         if raw_value == 'all':
             f_strs = TEST_FRAMEWORKS.keys()
         else:
@@ -80,4 +78,4 @@ def pytest_generate_tests(metafunc):
 
 def pytest_addoption(parser):
     parser.addoption('--dev_str', action="store", default="cpu:0")
-    parser.addoption('--backend', action="store", default="all")
+    parser.addoption('--framework', action="store", default="all")
