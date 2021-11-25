@@ -1,7 +1,7 @@
-ivy-core
-ivy-mech
-ivy-vision
-ivy-demo-utils
+ivy-core # mod_name=ivy
+ivy-mech # mod_name=ivy_mech
+ivy-vision # mod_name=ivy_vision
+ivy-demo-utils # mod_name=ivy_demo_utils
 open3d
 imageio
-imageio-ffmpeg
+imageio-ffmpeg # mod_name=imageio
