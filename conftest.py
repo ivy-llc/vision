@@ -41,8 +41,12 @@ TEST_CALL_METHODS: Dict[str, callable] = {'numpy': helpers.np_call,
 
 
 @pytest.fixture(autouse=True)
-def run_around_tests(f):
+def run_around_tests(dev_str, f, call):
+    if 'gpu' in dev_str and call is helpers.np_call:
+        # Numpy does not support GPU
+        pytest.skip()
     with f.use:
+        ivy.set_default_device(dev_str)
         yield
 
 
