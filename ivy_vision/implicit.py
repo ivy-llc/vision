@@ -263,9 +263,41 @@ def render_rays_via_termination_probabilities(ray_term_probs, features, render_v
     return rendering, var
 
 
-def _render_implicit_features_and_depth(
-        network_fn, rays_o, rays_d, near, far, samples_per_ray, timestamps=None, render_depth=True, render_feats=True,
-        render_variance=False, inter_feat_fn=None, with_grads=True, v=None):
+def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, samples_per_ray, timestamps=None,
+                                       render_depth=True, render_feats=True, render_variance=False, inter_feat_fn=None,
+                                       with_grads=True, v=None):
+    """
+    Render an rgb-d image, given an implicit rgb and density function conditioned on xyz data.
+
+    :param network_fn: the implicit function.
+    :type network_fn: callable
+    :param rays_o: The camera center *[batch_shape,3]*
+    :type rays_o: array
+    :param rays_d: The rays in world space *[batch_shape,ray_batch_shape,3]*
+    :type rays_d: array
+    :param near: The near clipping plane values *[batch_shape,ray_batch_shape]*
+    :type near: array
+    :param far: The far clipping plane values *[batch_shape,ray_batch_shape]*
+    :type far: array
+    :param samples_per_ray: The number of stratified samples to use along each ray
+    :type samples_per_ray: int
+    :param timestamps: The timestamps associated with each image. Default is None. *[batch_shape,1]*
+    :type timestamps: array, optional
+    :param render_depth: Whether to render the depth. Default is True.
+    :type render_depth: bool, optional
+    :param render_feats: Whether to render the features. Default is True.
+    :type render_feats: bool, optional
+    :param render_variance: Whether to also render the feature variance. Default is False.
+    :type render_variance: bool, optional
+    :type render_variance: bool, optional
+    :param inter_feat_fn: Function to extract interpolated features from world-coords *[batch_shape,ray_batch_shape,3]*
+    :type inter_feat_fn: callable, optional
+    :param with_grads: Whether to track gradients during the network forward pass. Defualt is True.
+    :type with_grads: bool, optional
+    :param v: The container of trainable variables for the implicit model. default is to use internal variables.
+    :type v: ivy Container of variables
+    :return: The rendered feature *[batch_shape,ray_batch_shape,feat]* and radial depth *[batch_shape,ray_batch_shape,1]*
+    """
 
     # shapes
     batch_shape = list(rays_o.shape[:-1])
@@ -346,59 +378,3 @@ def _render_implicit_features_and_depth(
 
     # up to BS x RBS x OF, BS x RBS x OF, BS x RBS x 1, BS x RBS x 1
     return ret_vals
-
-
-def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, samples_per_ray, timestamps=None,
-                                       render_depth=True, render_feats=True, render_variance=False, inter_feat_fn=None,
-                                       with_grads=True, v=None):
-    """
-    Render an rgb-d image, given an implicit rgb and density function conditioned on xyz data.
-
-    :param network_fn: the implicit function.
-    :type network_fn: callable
-    :param rays_o: The camera center *[batch_shape,3]*
-    :type rays_o: array
-    :param rays_d: The rays in world space *[batch_shape,ray_batch_shape,3]*
-    :type rays_d: array
-    :param near: The near clipping plane values *[batch_shape,ray_batch_shape]*
-    :type near: array
-    :param far: The far clipping plane values *[batch_shape,ray_batch_shape]*
-    :type far: array
-    :param samples_per_ray: The number of stratified samples to use along each ray
-    :type samples_per_ray: int
-    :param timestamps: The timestamps associated with each image. Default is None. *[batch_shape,1]*
-    :type timestamps: array, optional
-    :param render_depth: Whether to render the depth. Default is True.
-    :type render_depth: bool, optional
-    :param render_feats: Whether to render the features. Default is True.
-    :type render_feats: bool, optional
-    :param render_variance: Whether to also render the feature variance. Default is False.
-    :type render_variance: bool, optional
-    :type render_variance: bool, optional
-    :param inter_feat_fn: Function to extract interpolated features from world-coords *[batch_shape,ray_batch_shape,3]*
-    :type inter_feat_fn: callable, optional
-    :param with_grads: Whether to track gradients during the network forward pass. Defualt is True.
-    :type with_grads: bool, optional
-    :param v: The container of trainable variables for the implicit model. default is to use internal variables.
-    :type v: ivy Container of variables
-    :return: The rendered feature *[batch_shape,ray_batch_shape,feat]* and radial depth *[batch_shape,ray_batch_shape,1]*
-    """
-
-    # shapes
-    batch_shape = list(rays_o.shape[:-1])
-    num_batch_dims = len(batch_shape)
-    ray_batch_shape = list(rays_d.shape[num_batch_dims:-1])
-    flat_ray_batch_size = int(np.prod(ray_batch_shape))
-
-    # flatten
-    rays_d = ivy.reshape(rays_d, batch_shape + [flat_ray_batch_size, 3])
-    near = ivy.reshape(near, batch_shape + [flat_ray_batch_size])
-    far = ivy.reshape(far, batch_shape + [flat_ray_batch_size])
-
-    # run split call
-    rets = _render_implicit_features_and_depth(
-        network_fn, rays_o, rays_d, near, far, samples_per_ray, timestamps, render_depth, render_feats, render_variance,
-        inter_feat_fn, with_grads, v)
-
-    # return un-flattened
-    return [ivy.reshape(ret, batch_shape + ray_batch_shape + [-1]) for ret in rets]
