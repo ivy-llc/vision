@@ -20,13 +20,15 @@ RUN git clone https://github.com/ivy-dl/mech && \
     cat requirements.txt | grep -v "ivy-" | pip3 install --no-cache-dir -r /dev/stdin && \
     python3 setup.py develop --no-deps
 
+COPY requirements.txt /
+RUN cat requirements.txt | grep -v "ivy-" | pip3 install --no-cache-dir -r /dev/stdin
+
+COPY demos/requirements.txt /demo_requirements.txt
+RUN cat requirements.txt | grep -v "ivy-" | pip3 install --no-cache-dir -r /dev/stdin
+
+RUN python3 test_dependencies.py -fp requirements.txt,demo_requirements.txt && \
+    rm -rf requirements.txt && \
+    rm -rf demo_requirements.txt
+
 RUN mkdir ivy_vision
 WORKDIR /ivy_vision
-
-COPY requirements.txt /ivy_vision
-RUN cat requirements.txt | grep -v "ivy-" | pip3 install --no-cache-dir -r /dev/stdin && \
-    rm -rf requirements.txt
-
-COPY demos/requirements.txt /ivy_vision
-RUN cat requirements.txt | grep -v "ivy-" | pip3 install --no-cache-dir -r /dev/stdin && \
-    rm -rf requirements.txt
