@@ -92,6 +92,9 @@ class NerfDemo:
         # model
         self._model = Model(num_layers, layer_dim, self._embed_length)
 
+        # device manager
+        self._dev_manager = ivy.DevManager(dev_strs=[ivy.default_device()])
+
         # compile
         if compile_flag:
             rays_o, rays_d = self._get_rays(self._cam_geoms[0])
@@ -109,9 +112,40 @@ class NerfDemo:
         rays_o = cam_geom.extrinsics.cam_centers[..., 0]
         return rays_o, rays_d
 
+    @staticmethod
+    def _render_implicit_features_and_depth_with_splitting(
+            network_fn, rays_o, rays_d, near, far, samples_per_ray, timestamps=None, render_depth=True,
+            render_feats=True, render_variance=False, inter_feat_fn=None, with_grads=True, v=None):
+
+        # shapes
+        batch_shape = list(rays_o.shape[:-1])
+        flat_batch_size = int(np.prod(batch_shape))
+        num_batch_dims = len(batch_shape)
+        ray_batch_shape = list(rays_d.shape[num_batch_dims:-1])
+        flat_ray_batch_size = int(np.prod(ray_batch_shape))
+
+        # memory on device
+        memory_on_dev = ivy.cache_fn(ivy.total_mem_on_dev)(ivy.dev_str(rays_o))
+
+        # chunk size
+        max_chunk_size = int(round(memory_on_dev * 10000 / (flat_batch_size * samples_per_ray)))
+
+        # flatten
+        rays_d = ivy.reshape(rays_d, batch_shape + [flat_ray_batch_size, 3])
+        near = ivy.reshape(near, batch_shape + [flat_ray_batch_size])
+        far = ivy.reshape(far, batch_shape + [flat_ray_batch_size])
+
+        # run split call
+        rets = ivy.split_func_call(lambda rd, n, f: ivy_vision.render_implicit_features_and_depth(
+            network_fn, rays_o, rd, n, f, samples_per_ray, timestamps, render_depth, render_feats, render_variance,
+            inter_feat_fn, with_grads, v), [rays_d, near, far], 'concat', max_chunk_size=max_chunk_size,
+                                   input_axes=[-2, -1, -1], output_axes=-2)
+
+        # return un-flattened
+        return [ivy.reshape(ret, batch_shape + ray_batch_shape + [-1]) for ret in rets]
+
     def _loss_fn(self, model, rays_o, rays_d, target, v=None):
-        near = ivy.ones(self._img_dims)
-        rgb, depth = ivy_vision.render_implicit_features_and_depth(
+        rgb, depth = self._render_implicit_features_and_depth_with_splitting(
             model, rays_o, rays_d, near=ivy.ones(self._img_dims) * 2,
             far=ivy.ones(self._img_dims) * 6, samples_per_ray=self._samples_per_ray, v=v)
         return ivy.reduce_mean((rgb - target) ** 2)[0]
@@ -121,6 +155,9 @@ class NerfDemo:
 
     def train(self):
         optimizer = ivy.Adam(self._lr)
+
+        if not self._dev_manager.tuned:
+            print('tuning tensor splitting for device allocation, the first few iterations may be slow...')
 
         for i in range(self._num_iters + 1):
 
@@ -140,10 +177,17 @@ class NerfDemo:
 
                 # Render the holdout view for logging
                 rays_o, rays_d = self._get_rays(self._test_cam_geom)
-                rgb, depth = ivy_vision.render_implicit_features_and_depth(
+                rgb, depth = self._render_implicit_features_and_depth_with_splitting(
                     self._model, rays_o, rays_d, near=ivy.ones(self._img_dims) * 2,
                     far=ivy.ones(self._img_dims)*6, samples_per_ray=self._samples_per_ray)
                 plt.imsave(os.path.join(self._vis_log_dir, 'img_{}.png'.format(str(i).zfill(3))), ivy.to_numpy(rgb))
+
+            # tune the tensor splitting for keeping within device memory
+            if not self._dev_manager.tuned:
+                print('tuning step...')
+                self._dev_manager.ds_tune_step()
+                if self._dev_manager.tuned:
+                    print('device splitting tuning complete!')
 
         print('Completed Training')
 
@@ -185,7 +229,7 @@ class NerfDemo:
             cam_geom = ivy_vision.inv_ext_mat_and_intrinsics_to_cam_geometry_object(
                 c2w[0:3], self._intrinsics[0])
             rays_o, rays_d = self._get_rays(cam_geom)
-            rgb, depth = ivy_vision.render_implicit_features_and_depth(
+            rgb, depth = self._render_implicit_features_and_depth_with_splitting(
                 self._model, rays_o, rays_d, near=ivy.ones(self._img_dims) * 2,
                 far=ivy.ones(self._img_dims) * 6, samples_per_ray=self._samples_per_ray)
             frames.append((255 * np.clip(ivy.to_numpy(rgb), 0, 1)).astype(np.uint8))

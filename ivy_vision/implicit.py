@@ -377,4 +377,4 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far, sa
             ret_vals.append(radial_depth)
 
     # up to BS x RBS x OF, BS x RBS x OF, BS x RBS x 1, BS x RBS x 1
-    return ret_vals
+    return tuple(ret_vals)
