@@ -29,7 +29,7 @@ RUN git clone https://github.com/ivy-dl/vision && \
 COPY requirements.txt /
 RUN cat requirements.txt | grep -v "ivy-" | pip3 install --no-cache-dir -r /dev/stdin
 
-COPY demos/requirements.txt /demo_requirements.txt
+COPY ivy_vision_demos/requirements.txt /demo_requirements.txt
 RUN cat demo_requirements.txt | grep -v "ivy-" | pip3 install --no-cache-dir -r /dev/stdin
 
 RUN python3 test_dependencies.py -fp requirements.txt,demo_requirements.txt && \

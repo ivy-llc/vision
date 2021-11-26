@@ -8,7 +8,7 @@ import ivy_tests.helpers as helpers
 
 
 def test_demo_run_through(dev_str, f, call):
-    from demos.run_through import main
+    from ivy_vision_demos.run_through import main
     if call in [helpers.tf_graph_call]:
         # these particular demos are only implemented in eager mode, without compilation
         pytest.skip()
@@ -18,7 +18,7 @@ def test_demo_run_through(dev_str, f, call):
 @pytest.mark.parametrize(
     "with_sim", [False])
 def test_demo_coords_to_voxel_grid(with_sim, dev_str, f, call):
-    from demos.interactive.coords_to_voxel_grid import main
+    from ivy_vision_demos.interactive.coords_to_voxel_grid import main
     if call in [helpers.tf_graph_call]:
         # these particular demos are only implemented in eager mode, without compilation
         pytest.skip()
@@ -28,7 +28,7 @@ def test_demo_coords_to_voxel_grid(with_sim, dev_str, f, call):
 @pytest.mark.parametrize(
     "with_sim", [False])
 def test_demo_render_image(with_sim, dev_str, f, call):
-    from demos.interactive.render_image import main
+    from ivy_vision_demos.interactive.render_image import main
     if call in [helpers.tf_graph_call]:
         # these particular demos are only implemented in eager mode, without compilation
         pytest.skip()
@@ -38,7 +38,7 @@ def test_demo_render_image(with_sim, dev_str, f, call):
 @pytest.mark.parametrize(
     "with_sim", [False])
 def test_demo_nerf(with_sim, dev_str, f, call):
-    from demos.interactive.nerf import main
+    from ivy_vision_demos.interactive.nerf import main
     if call in [helpers.np_call, helpers.tf_graph_call, helpers.mx_call]:
         # NumPy does not support gradients
         # these particular demos are only implemented in eager mode, without compilation
