@@ -91,10 +91,10 @@ def test_coord_image_to_trimesh(dev_str, call):
         pytest.skip()
     coord_img = ivy.array(td.coord_img.tolist())
     vertices, trimesh_indices = call(ivy_mesh.coord_image_to_trimesh, coord_img,
-                                     batch_shape=[1], image_dims=[4, 3], dev_str='cpu')
+                                     batch_shape=[1], image_dims=[4, 3], dev_str=dev_str)
     assert np.allclose(vertices, td.tri_mesh_4x3_vertices, atol=1e-3)
     assert np.allclose(trimesh_indices, td.tri_mesh_4x3_indices, atol=1e-3)
     vertices, trimesh_indices = call(ivy_mesh.coord_image_to_trimesh, td.coord_img, td.coord_validity_img,
-                                     batch_shape=[1], image_dims=[4, 3], dev_str='cpu')
+                                     batch_shape=[1], image_dims=[4, 3], dev_str=dev_str)
     assert np.allclose(vertices, td.tri_mesh_4x3_vertices, atol=1e-3)
     assert np.allclose(trimesh_indices, td.tri_mesh_4x3_valid_indices, atol=1e-3)

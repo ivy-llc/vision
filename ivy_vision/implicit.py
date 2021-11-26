@@ -38,7 +38,7 @@ def downsampled_image_dims_from_desired_num_pixels(image_dims, num_pixels, maxim
 
 
 def create_sampled_pixel_coords_image(image_dims, samples_per_dim, batch_shape=None, normalized=False, randomize=True,
-                                      homogeneous=False, dev_str='cpu'):
+                                      homogeneous=False, dev_str=None):
     """
     Create image of randomly sampled homogeneous integer :math:`xy` pixel co-ordinates :math:`\mathbf{X}\in\mathbb{Z}^{h×w×3}`,
     stored as floating point values. The origin is at the top-left corner of the image, with :math:`+x` rightwards, and
@@ -104,7 +104,7 @@ def create_sampled_pixel_coords_image(image_dims, samples_per_dim, batch_shape=N
     return downsam_pix_coords
 
 
-def sample_images(list_of_images, num_pixels, batch_shape, image_dims, dev_str='cpu'):
+def sample_images(list_of_images, num_pixels, batch_shape, image_dims, dev_str=None):
     """
     Samples each image in a list of aligned images at num_pixels random pixel co-ordinates, within a unifrom grid
     over the image.

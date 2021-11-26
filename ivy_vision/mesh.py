@@ -121,7 +121,7 @@ def rasterize_triangles(pixel_coords_triangles, image_dims, batch_shape=None, de
                                                reduction='replace' if _ivy.backend == 'mxnet' else 'sum'), -3), 'bool')
 
 
-def create_trimesh_indices_for_image(batch_shape, image_dims, dev_str='cpu:0'):
+def create_trimesh_indices_for_image(batch_shape, image_dims, dev_str=None):
     """
     Create triangle mesh for image with given image dimensions
 
