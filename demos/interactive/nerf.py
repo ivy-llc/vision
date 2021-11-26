@@ -42,7 +42,8 @@ class Model(ivy.Module):
 
 class NerfDemo:
 
-    def __init__(self, num_iters, samples_per_ray, num_layers, layer_dim, compile_flag, interactive, dev_str, f):
+    def __init__(self, num_iters, samples_per_ray, num_layers, layer_dim, with_tensor_splitting, compile_flag,
+                 interactive, dev_str, f):
 
         # ivy
         f = choose_random_framework() if f is None else f
@@ -92,8 +93,10 @@ class NerfDemo:
         # model
         self._model = Model(num_layers, layer_dim, self._embed_length)
 
-        # device manager
-        self._dev_manager = ivy.DevManager(dev_strs=[ivy.default_device()])
+        # tensor splitting
+        self._with_tensor_splitting = with_tensor_splitting
+        if with_tensor_splitting:
+            self._dev_manager = ivy.DevManager(dev_strs=[ivy.default_device()])
 
         # compile
         if compile_flag:
@@ -112,10 +115,14 @@ class NerfDemo:
         rays_o = cam_geom.extrinsics.cam_centers[..., 0]
         return rays_o, rays_d
 
-    @staticmethod
     def _render_implicit_features_and_depth_with_splitting(
-            network_fn, rays_o, rays_d, near, far, samples_per_ray, timestamps=None, render_depth=True,
+            self, network_fn, rays_o, rays_d, near, far, samples_per_ray, timestamps=None, render_depth=True,
             render_feats=True, render_variance=False, inter_feat_fn=None, with_grads=True, v=None):
+
+        if not self._with_tensor_splitting:
+            return ivy_vision.render_implicit_features_and_depth(
+                network_fn, rays_o, rays_d, near, far, samples_per_ray, timestamps, render_depth, render_feats,
+                render_variance, inter_feat_fn, with_grads, v)
 
         # shapes
         batch_shape = list(rays_o.shape[:-1])
@@ -156,7 +163,7 @@ class NerfDemo:
     def train(self):
         optimizer = ivy.Adam(self._lr)
 
-        if not self._dev_manager.tuned:
+        if self._with_tensor_splitting and not self._dev_manager.tuned:
             print('tuning tensor splitting for device allocation, the first few iterations may be slow...')
 
         for i in range(self._num_iters + 1):
@@ -183,7 +190,7 @@ class NerfDemo:
                 plt.imsave(os.path.join(self._vis_log_dir, 'img_{}.png'.format(str(i).zfill(3))), ivy.to_numpy(rgb))
 
             # tune the tensor splitting for keeping within device memory
-            if not self._dev_manager.tuned:
+            if self._with_tensor_splitting and not self._dev_manager.tuned:
                 print('tuning step...')
                 self._dev_manager.ds_tune_step()
                 if self._dev_manager.tuned:
@@ -238,8 +245,11 @@ class NerfDemo:
         imageio.mimwrite(vid_filename, frames, fps=30, quality=7)
 
 
-def main(num_iters, samples_per_ray, num_layers, layer_dim, compile_flag, interactive=True, dev_str=None, f=None):
-    nerf_demo = NerfDemo(num_iters, samples_per_ray, num_layers, layer_dim, compile_flag, interactive, dev_str, f)
+def main(num_iters, samples_per_ray, num_layers, layer_dim, with_tensor_splitting, compile_flag, interactive=True,
+         dev_str=None, f=None):
+
+    nerf_demo = NerfDemo(num_iters, samples_per_ray, num_layers, layer_dim, with_tensor_splitting, compile_flag,
+                         interactive, dev_str, f)
     nerf_demo.train()
     if interactive:
         nerf_demo.save_video()
@@ -255,6 +265,8 @@ if __name__ == '__main__':
                         help='The number of layers in the implicit network.')
     parser.add_argument('--layer_dim', type=int, default=256,
                         help='The dimension of each layer in the implicit network.')
+    parser.add_argument('--no_tensor_splitting', action='store_true',
+                        help='Turn off device splitting. In this case, all full sized tensors are sent to the device.')
     parser.add_argument('--compile', action='store_true',
                         help='Whether or not to compile the loss function.')
     parser.add_argument('--non_interactive', action='store_true',
@@ -266,4 +278,5 @@ if __name__ == '__main__':
     parsed_args = parser.parse_args()
     framework = None if parsed_args.framework is None else get_framework_from_str(parsed_args.framework)
     main(parsed_args.iterations, parsed_args.samples_per_ray, parsed_args.num_layers, parsed_args.layer_dim,
-         parsed_args.compile, not parsed_args.non_interactive, parsed_args.device, framework)
+         not parsed_args.no_tensor_splitting, parsed_args.compile, not parsed_args.non_interactive, parsed_args.device,
+         framework)
