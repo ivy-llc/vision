@@ -47,6 +47,6 @@ def test_demo_nerf(with_sim, dev_str, f, call):
         # MXNet does not support splitting along an axis with a remainder after division.
         pytest.skip()
     main(1, 2, 1, 1, False, with_sim, f=f)
-    this_dir = os.path.dirname(os.path.realpath(__file__))
-    os.remove(os.path.join(this_dir, 'nerf_video.mp4'))
-    shutil. rmtree(os.path.join(this_dir, 'nerf_renderings'))
+    cwd = os.getcwd()
+    os.remove(os.path.join(cwd, 'nerf_video.mp4'))
+    shutil. rmtree(os.path.join(cwd, 'nerf_renderings'))
