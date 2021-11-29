@@ -24,7 +24,7 @@ For a local installation, first install the dependencies:
 ```bash
 cd ~/ivy_vision
 python3 -m pip install -r requirements.txt
-cd ~/ivy_vision/demos
+cd ~/ivy_vision/ivy_vision_demos
 python3 -m pip install -r requirements.txt
 ```
 
@@ -55,7 +55,7 @@ be run with python directly for local installations.
 For a basic run through the library:
 
 ```bash
-cd ~/ivy_vision/demos
+cd ~/ivy_vision/ivy_vision_demos
 ./run_demo.sh run_through
 ```
 
@@ -76,7 +76,7 @@ to train a Neural Radiance Field (NeRF) model to encode a lego digger. The NeRF 
 poses to render new images from poses unseen during training.
 
 ```bash
-cd ~/ivy_vision/demos
+cd ~/ivy_vision/ivy_vision_demos
 ./run_demo.sh interactive.nerf
 ```
 
@@ -93,7 +93,7 @@ and a voxel grid reconstruction is dynamically generated from the 6 depth maps,
 using the method ivy_vision.coords_to_voxel_grid.
 
 ```bash
-cd ~/ivy_vision/demos
+cd ~/ivy_vision/ivy_vision_demos
 ./run_demo.sh interactive.coords_to_voxel_grid
 ```
 
@@ -110,7 +110,7 @@ and a target camera frame is dragged around the scene. Point renderings are then
 using method ivy_vision.quantize_to_image, both with and without the use of depth buffer.
 
 ```bash
-cd ~/ivy_vision/demos
+cd ~/ivy_vision/ivy_vision_demos
 ./run_demo.sh interactive.render_image
 ```
 Example output from the simulator, and the forward warp point renderings, are given below:

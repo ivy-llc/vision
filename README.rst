@@ -107,8 +107,8 @@ Click on the icons below for their respective github pages.
 
 Ivy vision can be installed like so: ``pip install ivy-vision``
 
-.. _demos: https://github.com/ivy-dl/vision/tree/master/demos
-.. _interactive: https://github.com/ivy-dl/vision/tree/master/demos/interactive
+.. _demos: https://github.com/ivy-dl/vision/tree/master/ivy_vision_demos
+.. _interactive: https://github.com/ivy-dl/vision/tree/master/ivy_vision_demos/interactive
 
 To quickly see the different aspects of the library, we suggest you check out the demos_!
 we suggest you start by running the script ``run_through.py``,
