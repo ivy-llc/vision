@@ -21,7 +21,7 @@
     </a>
     <br clear="all" />
 
-**3D Vision functions with end-to-end support for deep learning developers, written in Ivy.**
+**3D Vision functions with end-to-end support for machine learning developers, written in Ivy.**
 
 .. raw:: html
 
@@ -67,7 +67,7 @@ Ivy vision focuses predominantly on 3D vision, with functions for camera geometr
 co-ordinate frame transformations, forward warping, inverse warping, optical flow, depth triangulation, voxel grids,
 point clouds, signed distance functions, and others.  Check out the docs_ for more info!
 
-The library is built on top of the Ivy deep learning framework.
+The library is built on top of the Ivy machine learning framework.
 This means all functions simultaneously support:
 Jax, Tensorflow, PyTorch, MXNet, and Numpy.
 
@@ -498,7 +498,7 @@ The acquiring cameras all remain static, while the target frame for point render
 Get Involed
 -----------
 
-We hope the functions in this library are useful to a wide range of deep learning developers.
+We hope the functions in this library are useful to a wide range of machine learning developers.
 However, there are many more areas of 3D vision which could be covered by this library.
 
 If there are any particular vision functions you feel are missing,
@@ -513,7 +513,7 @@ Citation
 ::
 
     @article{lenton2021ivy,
-      title={Ivy: Templated Deep Learning for Inter-Framework Portability},
+      title={Ivy: Unified Machine Learning for Inter-Framework Portability},
       author={Lenton, Daniel and Pardo, Fabio and Falck, Fabian and James, Stephen and Clark, Ronald},
       journal={arXiv preprint arXiv:2102.02886},
       year={2021}
