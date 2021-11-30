@@ -5,3 +5,4 @@ ivy-demo-utils # mod_name=ivy_demo_utils
 open3d
 imageio
 imageio-ffmpeg # mod_name=imageio
+opencv-python # mod_name=cv2
