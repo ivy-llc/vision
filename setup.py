@@ -44,7 +44,7 @@ lines = [line for line in lines if not (is_html(line) or is_raw_block(line))]
 long_description = '\n'.join(lines)
 
 setup(name='ivy-vision',
-      version='1.1.7',
+      version='1.1.8',
       author='Ivy Team',
       author_email='ivydl.team@gmail.com',
       description='3D Vision functions with end-to-end support for machine learning developers, written in Ivy.',
