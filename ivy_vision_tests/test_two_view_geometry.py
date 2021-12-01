@@ -78,9 +78,9 @@ def test_sphere_to_sphere_coords(dev_str, call):
 
 def test_get_fundamental_matrix(dev_str, call):
     assert np.allclose(call(ivy_tvg.get_fundamental_matrix, td.full_mats[:, 0:1], td.full_mats[:, 1:2]),
-                       td.fund_mats, atol=1e-6)
+                       td.fund_mats, atol=1e-5)
     assert np.allclose(call(ivy_tvg.get_fundamental_matrix, td.full_mats[:, 0], td.full_mats[:, 1]),
-                       td.fund_mats[:, 0], atol=1e-6)
+                       td.fund_mats[:, 0], atol=1e-5)
 
 
 def test_closest_mutual_points_along_two_skew_rays(dev_str, call):
