@@ -260,12 +260,8 @@ All of these matrices are contained within the Ivy camera geometry class.
 
 The geometries used in this quick start demo are based upon the scene presented below.
 
-.. raw:: html
-
-    <p align="center">
-        <img width="75%" style="display: block;" src='docs/partial_source/images/scene.png'>
-    </p>
-
+.. image:: https://github.com/ivy-dl/vision/blob/master/docs/partial_source/images/scene.png
+   :width: 100%
 
 The code sample below demonstrates all of the attributes contained within the Ivy camera geometry class.
 
@@ -318,11 +314,8 @@ This representation simplifies projections between frames.
 
 The rgb and depth images are presented below.
 
-.. raw:: html
-
-    <p align="center">
-        <img width="100%" style="display: block;" src='docs/partial_source/images/rgb_and_depth.png'>
-    </p>
+.. image:: https://github.com/ivy-dl/vision/blob/master/docs/partial_source/images/rgb_and_depth.png
+   :width: 100%
 
 **Optical Flow and Depth Triangulation**
 
@@ -347,11 +340,8 @@ We start with some optical flow and depth triangulation functions.
 
 Visualizations of these images are given below.
 
-.. raw:: html
-
-    <p align="center">
-        <img width="100%" style="display: block;" src='docs/partial_source/images/flow_and_depth.png'>
-    </p>
+.. image:: https://github.com/ivy-dl/vision/blob/master/docs/partial_source/images/flow_and_depth.png
+   :width: 100%
 
 **Inverse and Forward Warping**
 
@@ -397,11 +387,8 @@ Again, visualizations of these images are given below.
 The images represent intermediate steps for the inverse warping of color from frame 2 to frame 1,
 which is shown in the bottom right corner.
 
-.. raw:: html
-
-    <p align="center">
-        <img width="100%" style="display: block;" src='docs/partial_source/images/inverse_warped.png'>
-    </p>
+.. image:: https://github.com/ivy-dl/vision/blob/master/docs/partial_source/images/inverse_warped.png
+   :width: 100%
 
 For forward warping, we instead assume depth to be known in the source frame.
 A common approach is to construct a mesh, and then perform rasterization of the mesh.
@@ -442,11 +429,8 @@ Again, visualizations of these images are given below.
 The images show the forward warping of both depth and color from frame 2 to frame 1,
 which are shown with and without depth buffers in the right-hand and central columns respectively.
 
-.. raw:: html
-
-    <p align="center">
-        <img width="100%" style="display: block;" src='docs/partial_source/images/forward_warped.png'>
-    </p>
+.. image:: https://github.com/ivy-dl/vision/blob/master/docs/partial_source/images/forward_warped.png
+   :width: 100%
 
 Interactive Demos
 -----------------
