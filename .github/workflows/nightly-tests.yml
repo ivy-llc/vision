@@ -7,9 +7,9 @@ jobs:
       - name: Checkout 🛎️Ivy
         uses: actions/checkout@v2
         with:
-          path: ivy_vision
+          path: vision
           persist-credentials: false
 
       - name: Run Tests
         run: |
-          docker run --rm -v `pwd`/ivy_vision:/ivy_vision ivydl/ivy-vision:latest python3 -m pytest ivy_vision_tests/
+          docker run --rm -v `pwd`/vision:/vision ivydl/ivy-vision:latest python3 -m pytest ivy_vision_tests/
