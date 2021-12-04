@@ -41,6 +41,12 @@
             <option name="readOnly" value="false" />
           </DockerVolumeBindingImpl>
           <DockerVolumeBindingImpl>
+            <option name="containerPath" value="/demo-utils/ivy_demo_utils" />
+            <option name="editable" value="true" />
+            <option name="hostPath" value="$PROJECT_DIR$/../demo-utils/ivy_demo_utils" />
+            <option name="readOnly" value="false" />
+          </DockerVolumeBindingImpl>
+          <DockerVolumeBindingImpl>
             <option name="containerPath" value="/mech/ivy_mech" />
             <option name="editable" value="true" />
             <option name="hostPath" value="$PROJECT_DIR$/../mech/ivy_mech" />
