@@ -8,7 +8,7 @@ Running these demos is quick and simple.
 First, clone this repo:
 
 ```bash
-git clone https://github.com/ivy-dl/vision.git ~/ivy_vision
+git clone https://github.com/unifyai/vision.git ~/ivy_vision
 ```
 
 The interactive demos optionally make use of the simulator
@@ -59,7 +59,7 @@ cd ~/ivy_vision/ivy_vision_demos
 ./run_demo.sh run_through
 ```
 
-This script, and the various parts of the library, are further discussed in the [Run Through](https://github.com/ivy-dl/vision#run-through) section of the main README.
+This script, and the various parts of the library, are further discussed in the [Run Through](https://github.com/unifyai/vision#run-through) section of the main README.
 We advise following along with this section for maximum effect. The demo script should also be opened locally,
 and breakpoints added to step in at intermediate points to further explore.
 
@@ -83,7 +83,7 @@ cd ~/ivy_vision/ivy_vision_demos
 At the end of the demo, a video nerf_video.mp4 is created of renderings from unseen camera poses around a sphere.
 
 <p align="center">
-    <img width="50%" style="display: block;" src='https://github.com/ivy-dl/ivy-dl.github.io/blob/master/img/externally_linked/ivy_vision/nerf_demo.gif?raw=true'>
+    <img width="50%" style="display: block;" src='https://github.com/unifyai/unifyai.github.io/blob/master/img/externally_linked/ivy_vision/nerf_demo.gif?raw=true'>
 </p>
 
 ### Co-ordinates to Voxel Grid
@@ -100,7 +100,7 @@ cd ~/ivy_vision/ivy_vision_demos
 Example output from the simulator, and Open3D renderings, are given below:
 
 <p align="center">
-    <img width="75%" style="display: block;" src='https://github.com/ivy-dl/ivy-dl.github.io/blob/master/img/externally_linked/ivy_vision/voxel_grid_demo.gif?raw=true'>
+    <img width="75%" style="display: block;" src='https://github.com/unifyai/unifyai.github.io/blob/master/img/externally_linked/ivy_vision/voxel_grid_demo.gif?raw=true'>
 </p>
 
 ### Point Rendering
@@ -116,10 +116,10 @@ cd ~/ivy_vision/ivy_vision_demos
 Example output from the simulator, and the forward warp point renderings, are given below:
 
 <p align="center">
-    <img width="75%" style="display: block;" src='https://github.com/ivy-dl/ivy-dl.github.io/blob/master/img/externally_linked/ivy_vision/point_render_demo.gif?raw=true'>
+    <img width="75%" style="display: block;" src='https://github.com/unifyai/unifyai.github.io/blob/master/img/externally_linked/ivy_vision/point_render_demo.gif?raw=true'>
 </p>
 
 ## Get Involved
 
 If you have any issues running any of the demos, would like to request further demos, or would like to implement your own, then get it touch.
-Feature requests, pull requests, and [tweets](https://twitter.com/ivythread) all welcome!
+Feature requests, pull requests, and [tweets](https://twitter.com/unify_ai) all welcome!
