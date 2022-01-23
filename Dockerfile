@@ -2,26 +2,26 @@ FROM ivydl/ivy:latest-copsim
 
 # Install Ivy
 RUN rm -rf ivy && \
-    git clone https://github.com/ivy-dl/ivy && \
+    git clone https://github.com/unifyai/ivy && \
     cd ivy && \
     cat requirements.txt | grep -v "ivy-" | pip3 install --no-cache-dir -r /dev/stdin && \
     cat optional.txt | grep -v "ivy-" | pip3 install --no-cache-dir -r /dev/stdin && \
     python3 setup.py develop --no-deps
 
 # Install Ivy Demo Utils
-RUN git clone https://github.com/ivy-dl/demo-utils && \
+RUN git clone https://github.com/unifyai/demo-utils && \
     cd demo-utils && \
     cat requirements.txt | grep -v "ivy-" | pip3 install --no-cache-dir -r /dev/stdin && \
     python3 setup.py develop --no-deps
 
 # Install Ivy Mech
-RUN git clone https://github.com/ivy-dl/mech && \
+RUN git clone https://github.com/unifyai/mech && \
     cd mech && \
     cat requirements.txt | grep -v "ivy-" | pip3 install --no-cache-dir -r /dev/stdin && \
     python3 setup.py develop --no-deps
 
 # Install Ivy Vision
-RUN git clone https://github.com/ivy-dl/vision && \
+RUN git clone https://github.com/unifyai/vision && \
     cd vision && \
     cat requirements.txt | grep -v "ivy-" | pip3 install --no-cache-dir -r /dev/stdin && \
     python3 setup.py develop --no-deps
