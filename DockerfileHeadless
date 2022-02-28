@@ -1,4 +1,4 @@
-FROM ivydl/ivy-vision:latest
+FROM unifyai/ivy-vision:latest
 
 # Entrypoint
 RUN echo '#!/bin/bash\n/usr/bin/xvfb-run --auto-servernum "$@"' > /entrypoint && \

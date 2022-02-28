@@ -37,7 +37,7 @@ For a docker installation, first ensure [docker](https://docs.docker.com/get-doc
 Then simply pull the ivy vision image:
 
 ```bash
-docker pull ivydl/ivy-vision:latest
+docker pull unifyai/ivy-vision:latest
 ```
 
 ## Demos

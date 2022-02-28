@@ -1,4 +1,4 @@
-FROM ivydl/ivy:latest-copsim
+FROM unifyai/ivy:latest-copsim
 
 # Install Ivy
 RUN rm -rf ivy && \
