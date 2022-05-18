@@ -1,6 +1,4 @@
-"""
-Collection of Smoothing Functions
-"""
+"""Collection of Smoothing Functions"""
 
 # global
 import ivy as _ivy
@@ -14,16 +12,23 @@ MIN_DENOMINATOR = 1e-12
 
 # noinspection PyUnresolvedReferences
 def weighted_image_smooth(mean, weights, kernel_dim):
-    """
-    Smooth an image using weight values from a weight image of the same size.
+    """Smooth an image using weight values from a weight image of the same size.
 
-    :param mean: Image to smooth *[batch_shape,h,w,d]*
-    :type mean: array
-    :param weights: Variance image, with the variance values of each pixel in the image *[batch_shape,h,w,d]*
-    :type weights: array
-    :param kernel_dim: The dimension of the kernel
-    :type kernel_dim: int
-    :return: Image smoothed based on variance image and smoothing kernel.
+    Parameters
+    ----------
+    mean
+        Image to smooth *[batch_shape,h,w,d]*
+    weights
+        Variance image, with the variance values of each pixel in the image
+        *[batch_shape,h,w,d]*
+    kernel_dim
+        The dimension of the kernel
+
+    Returns
+    -------
+    ret
+        Image smoothed based on variance image and smoothing kernel.
+
     """
 
     # shapes as list
@@ -49,20 +54,29 @@ def weighted_image_smooth(mean, weights, kernel_dim):
 
 
 def smooth_image_fom_var_image(mean, var, kernel_dim, kernel_scale, dev_str=None):
-    """
-    Smooth an image using variance values from a variance image of the same size, and a spatial smoothing kernel.
+    """Smooth an image using variance values from a variance image of the same size,
+    and a spatial smoothing kernel.
 
-    :param mean: Image to smooth *[batch_shape,h,w,d]*
-    :type mean: array
-    :param var: Variance image, with the variance values of each pixel in the image *[batch_shape,h,w,d]*
-    :type var: array
-    :param kernel_dim: The dimension of the kernel
-    :type kernel_dim: int
-    :param kernel_scale: The scale of the kernel along the channel dimension *[d]*
-    :type kernel_scale: array
-    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev_str: str, optional
-    :return: Image smoothed based on variance image and smoothing kernel.
+    Parameters
+    ----------
+    mean
+        Image to smooth *[batch_shape,h,w,d]*
+    var
+        Variance image, with the variance values of each pixel in the image
+        *[batch_shape,h,w,d]*
+    kernel_dim
+        The dimension of the kernel
+    kernel_scale
+        The scale of the kernel along the channel dimension *[d]*
+    dev_str
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
+        Same as x if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Image smoothed based on variance image and smoothing kernel.
+
     """
 
     if dev_str is None:

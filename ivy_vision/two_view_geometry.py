@@ -1,6 +1,4 @@
-"""
-Collection of Two-View-Geometry Functions
-"""
+"""Collection of Two-View-Geometry Functions"""
 
 # global
 import ivy as _ivy
@@ -16,24 +14,32 @@ MIN_DENOMINATOR = 1e-12
 
 
 def ds_pixel_to_ds_pixel_coords(ds_pixel_coords1, cam1to2_full_mat, batch_shape=None, image_shape=None, dev_str=None):
-    """
-    Transform depth scaled homogeneous pixel co-ordinates image in first camera frame
+    """Transform depth scaled homogeneous pixel co-ordinates image in first camera frame
     :math:`\mathbf{X}_{p1}\in\mathbb{R}^{is×3}` to depth scaled homogeneous pixel co-ordinates image in second camera
     frame :math:`\mathbf{X}_{p2}\in\mathbb{R}^{is×3}`, given camera to camera projection matrix
     :math:`\mathbf{P}_{1→2}\in\mathbb{R}^{3×4}`.\n
     `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=174>`_
 
-    :param ds_pixel_coords1: Depth scaled homogeneous pixel co-ordinates image in frame 1 *[batch_shape,image_shape,3]*
-    :type ds_pixel_coords1: array
-    :param cam1to2_full_mat: Camera1-to-camera2 full projection matrix *[batch_shape,3,4]*
-    :type cam1to2_full_mat: array
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_shape: Image shape. Inferred from inputs in None.
-    :type image_shape: sequence of ints, optional
-    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev_str: str, optional
-    :return: Depth scaled homogeneous pixel co-ordinates image in frame 2 *[batch_shape,image_shape,3]*
+    Parameters
+    ----------
+    ds_pixel_coords1
+        Depth scaled homogeneous pixel co-ordinates image in frame 1 *[batch_shape,image_shape,3]*
+    cam1to2_full_mat
+        Camera1-to-camera2 full projection matrix *[batch_shape,3,4]*
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_shape
+        Image shape. Inferred from inputs in None. (Default value = None)
+    dev_str
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
+        Same as x if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Depth scaled homogeneous pixel co-ordinates image in frame 2
+        *[batch_shape,image_shape,3]*
+
     """
 
     if batch_shape is None:
@@ -58,22 +64,29 @@ def ds_pixel_to_ds_pixel_coords(ds_pixel_coords1, cam1to2_full_mat, batch_shape=
 
 
 def cam_to_cam_coords(cam_coords1, cam1to2_ext_mat, batch_shape=None, image_shape=None, dev_str=None):
-    """
-    Transform camera-centric homogeneous co-ordinates image for camera 1 :math:`\mathbf{X}_{c1}\in\mathbb{R}^{is×4}` to
+    """Transform camera-centric homogeneous co-ordinates image for camera 1 :math:`\mathbf{X}_{c1}\in\mathbb{R}^{is×4}` to
     camera-centric homogeneous co-ordinates image for camera 2 :math:`\mathbf{X}_{c2}\in\mathbb{R}^{is×4}`.\n
     `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=174>`_
 
-    :param cam_coords1: Camera-centric homogeneous co-ordinates image in frame 1 *[batch_shape,image_shape,4]*
-    :type cam_coords1: array
-    :param cam1to2_ext_mat: Camera1-to-camera2 extrinsic projection matrix *[batch_shape,3,4]*
-    :type cam1to2_ext_mat: array
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_shape: Image shape. Inferred from inputs in None.
-    :type image_shape: sequence of ints, optional
-    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev_str: str, optional
-    :return: Depth scaled homogeneous pixel co-ordinates image in frame 2 *[batch_shape,image_shape,3]*
+    Parameters
+    ----------
+    cam_coords1
+        Camera-centric homogeneous co-ordinates image in frame 1 *[batch_shape,image_shape,4]*
+    cam1to2_ext_mat
+        Camera1-to-camera2 extrinsic projection matrix *[batch_shape,3,4]*
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_shape
+        Image shape. Inferred from inputs in None. (Default value = None)
+    dev_str
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
+        Same as x if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Depth scaled homogeneous pixel co-ordinates image in frame 2 *[batch_shape,image_shape,3]*
+
     """
 
     if batch_shape is None:
@@ -98,20 +111,28 @@ def cam_to_cam_coords(cam_coords1, cam1to2_ext_mat, batch_shape=None, image_shap
 
 
 def sphere_to_sphere_coords(sphere_coords1, cam1to2_ext_mat, batch_shape=None, image_shape=None):
-    """
-    Convert camera-centric ego-sphere polar co-ordinates image in frame 1 :math:`\mathbf{S}_{c1}\in\mathbb{R}^{is×3}`
+    """Convert camera-centric ego-sphere polar co-ordinates image in frame 1 :math:`\mathbf{S}_{c1}\in\mathbb{R}^{is×3}`
     to camera-centric ego-sphere polar co-ordinates image in frame 2 :math:`\mathbf{S}_{c2}\in\mathbb{R}^{is×3}`.\n
     `[reference] <https://en.wikipedia.org/wiki/Spherical_coordinate_system#Cartesian_coordinates>`_
-    
-    :param sphere_coords1: Camera-centric ego-sphere polar co-ordinates image in frame 1 *[batch_shape,image_shape,3]*
-    :type sphere_coords1: array
-    :param cam1to2_ext_mat: Camera1-to-camera2 extrinsic projection matrix *[batch_shape,3,4]*
-    :type cam1to2_ext_mat: array
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_shape: Image shape. Inferred from inputs in None.
-    :type image_shape: sequence of ints, optional
-    :return: Camera-centric ego-sphere polar co-ordinates image in frame 2 *[batch_shape,image_shape,3]*
+
+    Parameters
+    ----------
+    sphere_coords1
+        Camera-centric ego-sphere polar co-ordinates image in frame 1
+        *[batch_shape,image_shape,3]*
+    cam1to2_ext_mat
+        Camera1-to-camera2 extrinsic projection matrix *[batch_shape,3,4]*
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_shape
+        Image shape. Inferred from inputs in None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Camera-centric ego-sphere polar co-ordinates image in frame 2
+        *[batch_shape,image_shape,3]*
+
     """
 
     if batch_shape is None:
@@ -135,22 +156,29 @@ def sphere_to_sphere_coords(sphere_coords1, cam1to2_ext_mat, batch_shape=None, i
 
 def angular_pixel_to_angular_pixel_coords(angular_pixel_coords1, cam1to2_ext_mat, pixels_per_degree, batch_shape=None,
                                           image_shape=None):
-    """
-    Convert angular pixel co-ordinates image in frame 1 :math:`\mathbf{A}_{p1}\in\mathbb{R}^{is×3}` to angular pixel
+    """Convert angular pixel co-ordinates image in frame 1 :math:`\mathbf{A}_{p1}\in\mathbb{R}^{is×3}` to angular pixel
     co-ordinates image in frame 2 :math:`\mathbf{A}_{p2}\in\mathbb{R}^{is×3}`.\n
     `[reference] <https://en.wikipedia.org/wiki/Spherical_coordinate_system#Cartesian_coordinates>`_
 
-    :param angular_pixel_coords1: Angular pixel co-ordinates image in frame 1 *[batch_shape,image_shape,3]*
-    :type angular_pixel_coords1: array
-    :param cam1to2_ext_mat: Camera1-to-camera2 extrinsic projection matrix *[batch_shape,3,4]*
-    :type cam1to2_ext_mat: array
-    :param pixels_per_degree: Number of pixels per angular degree
-    :type pixels_per_degree: float
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_shape: Image dimensions. Inferred from inputs in None.
-    :type image_shape: sequence of ints, optional
-    :return: Camera-centric ego-sphere polar co-ordinates image in frame 2 *[batch_shape,image_shape,3]*
+    Parameters
+    ----------
+    angular_pixel_coords1
+        Angular pixel co-ordinates image in frame 1 *[batch_shape,image_shape,3]*
+    cam1to2_ext_mat
+        Camera1-to-camera2 extrinsic projection matrix *[batch_shape,3,4]*
+    pixels_per_degree
+        Number of pixels per angular degree
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_shape
+        Image dimensions. Inferred from inputs in None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Camera-centric ego-sphere polar co-ordinates image in frame 2
+        *[batch_shape,image_shape,3]*
+
     """
 
     if batch_shape is None:
@@ -176,25 +204,34 @@ def angular_pixel_to_angular_pixel_coords(angular_pixel_coords1, cam1to2_ext_mat
 
 def get_fundamental_matrix(full_mat1, full_mat2, camera_center1=None, pinv_full_mat1=None, batch_shape=None,
                            dev_str=None):
-    """
-    Compute fundamental matrix :math:`\mathbf{F}\in\mathbb{R}^{3×3}` between two cameras, given their extrinsic
+    """Compute fundamental matrix :math:`\mathbf{F}\in\mathbb{R}^{3×3}` between two cameras, given their extrinsic
     matrices :math:`\mathbf{E}_1\in\mathbb{R}^{3×4}` and :math:`\mathbf{E}_2\in\mathbb{R}^{3×4}`.\n
     `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=262>`_
     bottom of page 244, section 9.2.2, equation 9.1
 
-    :param full_mat1: Frame 1 full projection matrix *[batch_shape,3,4]*
-    :type full_mat1: array
-    :param full_mat2: Frame 2 full projection matrix *[batch_shape,3,4]*
-    :type full_mat2: array
-    :param camera_center1: Frame 1 camera center, inferred from full_mat1 if None *[batch_shape,3,1]*
-    :type camera_center1: array, optional
-    :param pinv_full_mat1: Frame 1 full projection matrix pseudo-inverse, inferred from full_mat1 if None *[batch_shape,4,3]*
-    :type pinv_full_mat1: array, optional
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev_str: str, optional
-    :return: Fundamental matrix connecting frames 1 and 2 *[batch_shape,3,3]*
+    Parameters
+    ----------
+    full_mat1
+        Frame 1 full projection matrix *[batch_shape,3,4]*
+    full_mat2
+        Frame 2 full projection matrix *[batch_shape,3,4]*
+    camera_center1
+        Frame 1 camera center, inferred from full_mat1 if None *[batch_shape,3,1]*
+        (Default value = None)
+    pinv_full_mat1
+        Frame 1 full projection matrix pseudo-inverse, inferred from full_mat1 if None
+        *[batch_shape,4,3]* (Default value = None)
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    dev_str
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
+        Same as x if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Fundamental matrix connecting frames 1 and 2 *[batch_shape,3,3]*
+
     """
 
     if batch_shape is None:
@@ -229,8 +266,7 @@ def get_fundamental_matrix(full_mat1, full_mat2, camera_center1=None, pinv_full_
 # noinspection PyUnresolvedReferences
 def closest_mutual_points_along_two_skew_rays(camera_centers, world_ray_vectors, batch_shape=None, image_shape=None,
                                               dev_str=None):
-    """
-    Compute closest mutual homogeneous co-ordinates :math:`\mathbf{x}_{1,i,j}\in\mathbb{R}^{4}` and
+    """Compute closest mutual homogeneous co-ordinates :math:`\mathbf{x}_{1,i,j}\in\mathbb{R}^{4}` and
     :math:`\mathbf{x}_{2,i,j}\in\mathbb{R}^{4}` along two world-centric rays
     :math:`\overset{\sim}{\mathbf{C}_1} + λ_1\mathbf{rv}_{1,i,j}` and
     :math:`\overset{\sim}{\mathbf{C}_2} + λ_2\mathbf{rv}_{2,i,j}`, for each index aligned pixel between two
@@ -241,17 +277,25 @@ def closest_mutual_points_along_two_skew_rays(camera_centers, world_ray_vectors,
     `[reference] <https://math.stackexchange.com/questions/1414285/location-of-shortest-distance-between-two-skew-lines-in-3d>`_
     second answer in forum
 
-    :param camera_centers: Camera center *[batch_shape,2,3,1]*
-    :type camera_centers: array
-    :param world_ray_vectors: World ray vectors *[batch_shape,2,image_shape,3]*
-    :type world_ray_vectors: array
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_shape: Image dimensions. Inferred from inputs in None.
-    :type image_shape: sequence of ints, optional
-    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev_str: str, optional
-    :return: Closest mutual points image *[batch_shape,2,image_shape,4]*
+    Parameters
+    ----------
+    camera_centers
+        Camera center *[batch_shape,2,3,1]*
+    world_ray_vectors
+        World ray vectors *[batch_shape,2,image_shape,3]*
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_shape
+        Image dimensions. Inferred from inputs in None. (Default value = None)
+    dev_str
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
+        Same as x if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Closest mutual points image *[batch_shape,2,image_shape,4]*
+
     """
 
     if batch_shape is None:
@@ -306,6 +350,23 @@ def closest_mutual_points_along_two_skew_rays(camera_centers, world_ray_vectors,
 
 def _triangulate_depth_by_closest_mutual_points(ds_pixel_coords, full_mats, inv_full_mats, camera_centers, batch_shape,
                                                 image_shape):
+    """
+
+    Parameters
+    ----------
+    ds_pixel_coords
+
+    full_mats
+
+    inv_full_mats
+
+    camera_centers
+
+    batch_shape
+
+    image_shape
+
+    """
 
     # single view geom batch shape
     svg_batch_shape = batch_shape + [2]
@@ -327,6 +388,23 @@ def _triangulate_depth_by_closest_mutual_points(ds_pixel_coords, full_mats, inv_
 
 
 def _triangulate_depth_by_homogeneous_dlt(ds_pixel_coords, full_mats, _, _1, batch_shape, image_shape):
+    """
+
+    Parameters
+    ----------
+    ds_pixel_coords
+
+    full_mats
+
+    _
+
+    _1
+
+    batch_shape
+
+    image_shape
+
+    """
 
     # num batch dims
     num_batch_dims = len(batch_shape)
@@ -385,25 +463,35 @@ TRI_METHODS = {'cmp': _triangulate_depth_by_closest_mutual_points,
 
 def triangulate_depth(ds_pixel_coords, full_mats, inv_full_mats=None, camera_centers=None, method='cmp',
                       batch_shape=None, image_shape=None):
-    """
-    Triangulate depth in frame 1, returning depth scaled homogeneous pixel co-ordinate image
-    :math:`\mathbf{X}\in\mathbb{R}^{is×3}` in frame 1.\n
+    """Triangulate depth in frame 1, returning depth scaled homogeneous pixel
+    co-ordinate image :math:`\mathbf{X}\in\mathbb{R}^{is×3}` in frame 1.\n
 
-    :param ds_pixel_coords: Homogeneous pixel co-ordinate images: *[batch_shape,image_shape,3]*
-    :type ds_pixel_coords: array
-    :param full_mats: Full projection matrices *[batch_shape,2,3,4]*
-    :type full_mats: array
-    :param inv_full_mats: Inverse full projection matrices, required for closest_mutual_points method *[batch_shape,2,3,4]*
-    :type inv_full_mats: array, optional
-    :param camera_centers: Camera centers, required for closest_mutual_points method *[batch_shape,2,3,1]*
-    :type camera_centers: array, optional
-    :param method: Triangulation method, one of [cmp|dlt], for closest mutual points or homogeneous dlt approach, closest_mutual_points by default
-    :type method: str, optional
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_shape: Image dimensions. Inferred from inputs in None.
-    :type image_shape: sequence of ints, optional
-    :return: Depth scaled homogeneous pixel co-ordinates image in frame 1 *[batch_shape,image_shape,3]*
+    Parameters
+    ----------
+    ds_pixel_coords
+        Homogeneous pixel co-ordinate images: *[batch_shape,image_shape,3]*
+    full_mats
+        Full projection matrices *[batch_shape,2,3,4]*
+    inv_full_mats
+        Inverse full projection matrices, required for closest_mutual_points method
+        *[batch_shape,2,3,4]* (Default value = None)
+    camera_centers
+        Camera centers, required for closest_mutual_points method *[batch_shape,2,3,1]*
+        (Default value = None)
+    method
+        Triangulation method, one of [cmp|dlt], for closest mutual points or
+        homogeneous dlt approach, closest_mutual_points by default
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_shape
+        Image dimensions. Inferred from inputs in None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Depth scaled homogeneous pixel co-ordinates image in frame 1
+        *[batch_shape,image_shape,3]*
+
     """
 
     if batch_shape is None:
