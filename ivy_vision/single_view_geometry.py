@@ -1,6 +1,4 @@
-"""
-Collection of Single-View-Geometry Functions
-"""
+"""Collection of Single-View-Geometry Functions"""
 
 # global
 import ivy as _ivy
@@ -20,8 +18,7 @@ MIN_DENOMINATOR = 1e-12
 
 
 def create_uniform_pixel_coords_image(image_dims, batch_shape=None, normalized=False, homogeneous=True, dev_str=None):
-    """
-    Create image of homogeneous integer :math:`xy` pixel co-ordinates :math:`\mathbf{X}\in\mathbb{Z}^{h×w×3}`, stored
+    """Create image of homogeneous integer :math:`xy` pixel co-ordinates :math:`\mathbf{X}\in\mathbb{Z}^{h×w×3}`, stored
     as floating point values. The origin is at the top-left corner of the image, with :math:`+x` rightwards, and
     :math:`+y` downwards. The final homogeneous dimension are all ones. In subsequent use of this image, the depth of
     each pixel can be represented using this same homogeneous representation, by simply scaling each 3-vector by the
@@ -30,17 +27,24 @@ def create_uniform_pixel_coords_image(image_dims, batch_shape=None, normalized=F
     `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=172>`_
     deduction from top of page 154, section 6.1, equation 6.1
 
-    :param image_dims: Image dimensions.
-    :type image_dims: sequence of ints.
-    :param batch_shape: Shape of batch. Assumed no batch dimensions if None.
-    :type batch_shape: sequence of ints, optional
-    :param normalized: Whether to normalize x-y pixel co-ordinates to the range 0-1. Default is False.
-    :type normalized: bool, optional
-    :param homogeneous: Whether the pixel co-ordinates should be 3D homogeneous or just 2D. Default is True.
-    :type: homogeneous: bool, optional
-    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
-    :type dev_str: str, optional
-    :return: Image of homogeneous pixel co-ordinates *[batch_shape,height,width,3]*
+    Parameters
+    ----------
+    image_dims
+        Image dimensions.
+    batch_shape
+        Shape of batch. Assumed no batch dimensions if None. (Default value = None)
+    normalized
+        Whether to normalize x-y pixel co-ordinates to the range 0-1. Default is False.
+    homogeneous
+        Whether the pixel co-ordinates should be 3D homogeneous or just 2D. Default is True.
+    dev_str
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Image of homogeneous pixel co-ordinates *[batch_shape,height,width,3]*
+
     """
 
     # shapes as lists
@@ -80,18 +84,24 @@ def create_uniform_pixel_coords_image(image_dims, batch_shape=None, normalized=F
 
 
 def persp_angles_to_focal_lengths(persp_angles, image_dims, dev_str=None):
-    """
-    Compute focal lengths :math:`f_x, f_y` from perspective angles :math:`θ_x, θ_y`.\n
+    """Compute focal lengths :math:`f_x, f_y` from perspective angles :math:`θ_x, θ_y`.\n
     `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=172>`_
     deduction from page 154, section 6.1, figure 6.1
 
-    :param persp_angles: Perspective angles *[batch_shape,2]*
-    :type persp_angles: array
-    :param image_dims: Image dimensions.
-    :type image_dims: sequence of ints
-    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev_str: str, optional
-    :return: Focal lengths *[batch_shape,2]*
+    Parameters
+    ----------
+    persp_angles
+        Perspective angles *[batch_shape,2]*
+    image_dims
+        Image dimensions.
+    dev_str
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Focal lengths *[batch_shape,2]*
+
     """
 
     if dev_str is None:
@@ -106,18 +116,24 @@ def persp_angles_to_focal_lengths(persp_angles, image_dims, dev_str=None):
 
 
 def focal_lengths_to_persp_angles(focal_lengths, image_dims, dev_str=None):
-    """
-    Compute perspective angles :math:`θ_x, θ_y` from focal lengths :math:`f_x, f_y`.\n
+    """Compute perspective angles :math:`θ_x, θ_y` from focal lengths :math:`f_x, f_y`.\n
     `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=172>`_
     deduction from page 154, section 6.1, figure 6.1
 
-    :param focal_lengths: *[batch_shape,2]*
-    :type focal_lengths: array
-    :param image_dims: Image dimensions.
-    :type image_dims: sequence of ints
-    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev_str: str, optional
-    :return: Perspective angles *[batch_shape,2]*
+    Parameters
+    ----------
+    focal_lengths
+        batch_shape,2]*
+    image_dims
+        Image dimensions.
+    dev_str
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Perspective angles *[batch_shape,2]*
+
     """
 
     if dev_str is None:
@@ -132,21 +148,27 @@ def focal_lengths_to_persp_angles(focal_lengths, image_dims, dev_str=None):
 
 
 def focal_lengths_and_pp_offsets_to_calib_mat(focal_lengths, pp_offsets, batch_shape=None, dev_str=None):
-    """
-    Compute calibration matrix :math:`\mathbf{K}\in\mathbb{R}^{3×3}` from focal lengths :math:`f_x, f_y` and
+    """Compute calibration matrix :math:`\mathbf{K}\in\mathbb{R}^{3×3}` from focal lengths :math:`f_x, f_y` and
     principal-point offsets :math:`p_x, p_y`.\n
     `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=173>`_
     page 155, section 6.1, equation 6.4
 
-    :param focal_lengths: Focal lengths *[batch_shape,2]*
-    :type focal_lengths: array
-    :param pp_offsets: Principal-point offsets *[batch_shape,2]*
-    :type pp_offsets: array
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev_str: str, optional
-    :return: Calibration matrix *[batch_shape,3,3]*
+    Parameters
+    ----------
+    focal_lengths
+        Focal lengths *[batch_shape,2]*
+    pp_offsets
+        Principal-point offsets *[batch_shape,2]*
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    dev_str
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Calibration matrix *[batch_shape,3,3]*
+
     """
 
     if batch_shape is None:
@@ -177,19 +199,25 @@ def focal_lengths_and_pp_offsets_to_calib_mat(focal_lengths, pp_offsets, batch_s
 
 # noinspection PyUnresolvedReferences
 def rot_mat_and_cam_center_to_ext_mat(rotation_mat, camera_center, batch_shape=None):
-    """
-    Get extrinsic matrix :math:`\mathbf{E}\in\mathbb{R}^{3×4}` from rotation matrix
+    """Get extrinsic matrix :math:`\mathbf{E}\in\mathbb{R}^{3×4}` from rotation matrix
     :math:`\mathbf{R}\in\mathbb{R}^{3×3}` and camera centers :math:`\overset{\sim}{\mathbf{C}}\in\mathbb{R}^{3×1}`.\n
     `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=175>`_
     page 157, section 6.1, equation 6.11
 
-    :param rotation_mat: Rotation matrix *[batch_shape,3,3]*
-    :type rotation_mat: array
-    :param camera_center: Camera center *[batch_shape,3,1]*
-    :type camera_center: array
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :return: Extrinsic matrix *[batch_shape,3,4]*
+    Parameters
+    ----------
+    rotation_mat
+        Rotation matrix *[batch_shape,3,3]*
+    camera_center
+        Camera center *[batch_shape,3,1]*
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Extrinsic matrix *[batch_shape,3,4]*
+
     """
 
     if batch_shape is None:
@@ -213,19 +241,25 @@ def rot_mat_and_cam_center_to_ext_mat(rotation_mat, camera_center, batch_shape=N
 
 
 def depth_to_ds_pixel_coords(depth, uniform_pixel_coords=None, batch_shape=None, image_dims=None):
-    """
-    Get depth scaled homogeneous pixel co-ordinates image :math:`\mathbf{X}_p\in\mathbb{R}^{h×w×3}` from depth image
+    """Get depth scaled homogeneous pixel co-ordinates image :math:`\mathbf{X}_p\in\mathbb{R}^{h×w×3}` from depth image
     :math:`\mathbf{X}_d\in\mathbb{R}^{h×w×1}`.\n
 
-    :param depth: Depth image *[batch_shape,h,w,1]*
-    :type depth: array
-    :param uniform_pixel_coords: Image of homogeneous pixel co-ordinates. Created if None. *[batch_shape,h,w,3]*
-    :type uniform_pixel_coords: array, optional
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_dims: Image dimensions. Inferred from inputs in None.
-    :type image_dims: sequence of ints, optional
-    :return: Depth scaled homogeneous pixel co-ordinates image *[batch_shape,h,w,3]*
+    Parameters
+    ----------
+    depth
+        Depth image *[batch_shape,h,w,1]*
+    uniform_pixel_coords
+        Image of homogeneous pixel co-ordinates. Created if None. *[batch_shape,h,w,3]* (Default value = None)
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_dims
+        Image dimensions. Inferred from inputs in None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Depth scaled homogeneous pixel co-ordinates image *[batch_shape,h,w,3]*
+
     """
 
     if batch_shape is None:
@@ -247,21 +281,27 @@ def depth_to_ds_pixel_coords(depth, uniform_pixel_coords=None, batch_shape=None,
 
 
 def depth_to_radial_depth(depth, inv_calib_mat, uniform_pix_coords=None, batch_shape=None, image_dims=None):
-    """
-    Get radial depth image :math:`\mathbf{X}_{rd}\in\mathbb{R}^{hxw×1}` from depth image
+    """Get radial depth image :math:`\mathbf{X}_{rd}\in\mathbb{R}^{hxw×1}` from depth image
     :math:`\mathbf{X}_d\in\mathbb{R}^{hxw×1}`.\n
 
-    :param depth: Depth scaled homogeneous pixel co-ordinates image *[batch_shape,image_dims,1]*
-    :type depth: array
-    :param inv_calib_mat: Inverse calibration matrix *[batch_shape,3,3]*
-    :type inv_calib_mat: array
-    :param uniform_pix_coords: Uniform homogeneous pixel co-ordinates, constructed if None. *[batch_shape,image_dims,3]*
-    :type uniform_pix_coords: array, optional
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_dims: Image shape. Inferred from inputs in None.
-    :type image_dims: sequence of ints, optional
-    :return: Radial depth image *[batch_shape,image_dims,1]*
+    Parameters
+    ----------
+    depth
+        Depth scaled homogeneous pixel co-ordinates image *[batch_shape,image_dims,1]*
+    inv_calib_mat
+        Inverse calibration matrix *[batch_shape,3,3]*
+    uniform_pix_coords
+        Uniform homogeneous pixel co-ordinates, constructed if None. *[batch_shape,image_dims,3]* (Default value = None)
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_dims
+        Image shape. Inferred from inputs in None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Radial depth image *[batch_shape,image_dims,1]*
+
     """
 
     if batch_shape is None:
@@ -285,19 +325,25 @@ def depth_to_radial_depth(depth, inv_calib_mat, uniform_pix_coords=None, batch_s
 
 
 def ds_pixel_coords_to_radial_depth(ds_pixel_coords, inv_calib_mat, batch_shape=None, image_shape=None):
-    """
-    Get radial depth image :math:`\mathbf{X}_{rd}\in\mathbb{R}^{is×1}` from depth scaled homogeneous pixel
+    """Get radial depth image :math:`\mathbf{X}_{rd}\in\mathbb{R}^{is×1}` from depth scaled homogeneous pixel
     co-ordinates image :math:`\mathbf{X}_p\in\mathbb{R}^{is×3}`.\n
 
-    :param ds_pixel_coords: Depth scaled homogeneous pixel co-ordinates image *[batch_shape,image_shape,1]*
-    :type ds_pixel_coords: array
-    :param inv_calib_mat: Inverse calibration matrix *[batch_shape,3,3]*
-    :type inv_calib_mat: array
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_shape: Image shape. Inferred from inputs in None.
-    :type image_shape: sequence of ints, optional
-    :return: Radial depth image *[batch_shape,image_shape,1]*
+    Parameters
+    ----------
+    ds_pixel_coords
+        Depth scaled homogeneous pixel co-ordinates image *[batch_shape,image_shape,1]*
+    inv_calib_mat
+        Inverse calibration matrix *[batch_shape,3,3]*
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_shape
+        Image shape. Inferred from inputs in None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Radial depth image *[batch_shape,image_shape,1]*
+
     """
 
     if batch_shape is None:
@@ -319,21 +365,27 @@ def ds_pixel_coords_to_radial_depth(ds_pixel_coords, inv_calib_mat, batch_shape=
 
 
 def cam_to_ds_pixel_coords(coords_wrt_cam, calib_mat, batch_shape=None, image_shape=None):
-    """
-    Get depth scaled homogeneous pixel co-ordinates image :math:`\mathbf{X}_p\in\mathbb{R}^{is×3}` from camera-centric
+    """Get depth scaled homogeneous pixel co-ordinates image :math:`\mathbf{X}_p\in\mathbb{R}^{is×3}` from camera-centric
     homogeneous co-ordinates image :math:`\mathbf{X}_c\in\mathbb{R}^{is×4}`.\n
     `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=173>`_
     page 155, equation 6.3
 
-    :param coords_wrt_cam: Camera-centric homogeneous co-ordinates image *[batch_shape,image_shape,4]*
-    :type coords_wrt_cam: array
-    :param calib_mat: Calibration matrix *[batch_shape,3,3]*
-    :type calib_mat: array
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_shape: Image shape. Inferred from inputs in None.
-    :type image_shape: sequence of ints, optional
-    :return: Depth scaled homogeneous pixel co-ordinates image *[batch_shape,image_shape,3]*
+    Parameters
+    ----------
+    coords_wrt_cam
+        Camera-centric homogeneous co-ordinates image *[batch_shape,image_shape,4]*
+    calib_mat
+        Calibration matrix *[batch_shape,3,3]*
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_shape
+        Image shape. Inferred from inputs in None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Depth scaled homogeneous pixel co-ordinates image *[batch_shape,image_shape,3]*
+
     """
 
     if batch_shape is None:
@@ -355,42 +407,54 @@ def cam_to_ds_pixel_coords(coords_wrt_cam, calib_mat, batch_shape=None, image_sh
 
 
 def cam_coords_to_depth(coords_wrt_cam, calib_mat, batch_shape=None, image_shape=None):
-    """
-    Get depth image :math:`\mathbf{X}_p\in\mathbb{R}^{is×1}` from camera-centric
+    """Get depth image :math:`\mathbf{X}_p\in\mathbb{R}^{is×1}` from camera-centric
     homogeneous co-ordinates image :math:`\mathbf{X}_c\in\mathbb{R}^{is×4}`.\n
 
-    :param coords_wrt_cam: Camera-centric homogeneous co-ordinates image *[batch_shape,image_shape,4]*
-    :type coords_wrt_cam: array
-    :param calib_mat: Calibration matrix *[batch_shape,3,3]*
-    :type calib_mat: array
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_shape: Image shape. Inferred from inputs in None.
-    :type image_shape: sequence of ints, optional
-    :return: Depth image *[batch_shape,image_shape,1]*
+    Parameters
+    ----------
+    coords_wrt_cam
+        Camera-centric homogeneous co-ordinates image *[batch_shape,image_shape,4]*
+    calib_mat
+        Calibration matrix *[batch_shape,3,3]*
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_shape
+        Image shape. Inferred from inputs in None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Depth image *[batch_shape,image_shape,1]*
+
     """
     # BS x IS x 1
     return cam_to_ds_pixel_coords(coords_wrt_cam, calib_mat, batch_shape, image_shape)[..., -1:]
 
 
 def ds_pixel_to_cam_coords(ds_pixel_coords, inv_calib_mat, batch_shape=None, image_shape=None, dev_str=None):
-    """
-    Get camera-centric homogeneous co-ordinates image :math:`\mathbf{X}_c\in\mathbb{R}^{is×4}` from
+    """Get camera-centric homogeneous co-ordinates image :math:`\mathbf{X}_c\in\mathbb{R}^{is×4}` from
     depth scaled homogeneous pixel co-ordinates image :math:`\mathbf{X}_p\in\mathbb{R}^{is×3}`.\n
     `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=173>`_
     page 155, matrix inverse of equation 6.3
 
-    :param ds_pixel_coords: Depth scaled homogeneous pixel co-ordinates image *[batch_shape,image_shap,3]*
-    :type ds_pixel_coords: array
-    :param inv_calib_mat: Inverse calibration matrix *[batch_shape,3,3]*
-    :type inv_calib_mat: array
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_shape: Image dimensions. Inferred from inputs in None.
-    :type image_shape: sequence of ints, optional
-    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev_str: str, optional
-    :return: Camera-centric homogeneous co-ordinates image *[batch_shape,image_shape,4]*
+    Parameters
+    ----------
+    ds_pixel_coords
+        Depth scaled homogeneous pixel co-ordinates image *[batch_shape,image_shap,3]*
+    inv_calib_mat
+        Inverse calibration matrix *[batch_shape,3,3]*
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_shape
+        Image dimensions. Inferred from inputs in None. (Default value = None)
+    dev_str
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Camera-centric homogeneous co-ordinates image *[batch_shape,image_shape,4]*
+
     """
 
     if batch_shape is None:
@@ -416,23 +480,29 @@ def ds_pixel_to_cam_coords(ds_pixel_coords, inv_calib_mat, batch_shape=None, ima
 
 def depth_to_cam_coords(depth, inv_calib_mat, uniform_pixel_coords=None, batch_shape=None, image_dims=None,
                         dev_str=None):
-    """
-    Get camera-centric homogeneous co-ordinates image :math:`\mathbf{X}_c\in\mathbb{R}^{hxw×4}` from
+    """Get camera-centric homogeneous co-ordinates image :math:`\mathbf{X}_c\in\mathbb{R}^{hxw×4}` from
     depth image :math:`\mathbf{X}_p\in\mathbb{R}^{hxw×1}`.\n
 
-    :param depth: Depth image *[batch_shape,h,w,1]*
-    :type depth: array
-    :param inv_calib_mat: Inverse calibration matrix *[batch_shape,3,3]*
-    :type inv_calib_mat: array
-    :param uniform_pixel_coords: Image of homogeneous pixel co-ordinates. Created if None. *[batch_shape,h,w,3]*
-    :type uniform_pixel_coords: array, optional
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_dims: Image dimensions. Inferred from inputs in None.
-    :type image_dims: sequence of ints, optional
-    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev_str: str, optional
-    :return: Camera-centric homogeneous co-ordinates image *[batch_shape,h,w,4]*
+    Parameters
+    ----------
+    depth
+        Depth image *[batch_shape,h,w,1]*
+    inv_calib_mat
+        Inverse calibration matrix *[batch_shape,3,3]*
+    uniform_pixel_coords
+        Image of homogeneous pixel co-ordinates. Created if None. *[batch_shape,h,w,3]* (Default value = None)
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_dims
+        Image dimensions. Inferred from inputs in None. (Default value = None)
+    dev_str
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Camera-centric homogeneous co-ordinates image *[batch_shape,h,w,4]*
+
     """
 
     if batch_shape is None:
@@ -456,23 +526,29 @@ def depth_to_cam_coords(depth, inv_calib_mat, uniform_pixel_coords=None, batch_s
 
 
 def world_to_cam_coords(coords_wrt_world, ext_mat, batch_shape=None, image_shape=None, dev_str=None):
-    """
-    Get camera-centric homogeneous co-ordinates image :math:`\mathbf{X}_c\in\mathbb{R}^{is×4}` from world-centric
+    """Get camera-centric homogeneous co-ordinates image :math:`\mathbf{X}_c\in\mathbb{R}^{is×4}` from world-centric
     homogeneous co-ordinates image :math:`\mathbf{X}_w\in\mathbb{R}^{is×4}`.\n
     `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=174>`_
     page 156, equation 6.6
 
-    :param coords_wrt_world: World-centric homogeneous co-ordinates image *[batch_shape,image_shape,4]*
-    :type coords_wrt_world: array
-    :param ext_mat: Extrinsic matrix *[batch_shape,3,4]*
-    :type ext_mat: array
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_shape: Image shape. Inferred from inputs in None.
-    :type image_shape: sequence of ints, optional
-    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev_str: str, optional
-    :return: Camera-centric homogeneous co-ordinates image *[batch_shape,image_shape,4]*
+    Parameters
+    ----------
+    coords_wrt_world
+        World-centric homogeneous co-ordinates image *[batch_shape,image_shape,4]*
+    ext_mat
+        Extrinsic matrix *[batch_shape,3,4]*
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_shape
+        Image shape. Inferred from inputs in None. (Default value = None)
+    dev_str
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Camera-centric homogeneous co-ordinates image *[batch_shape,image_shape,4]*
+
     """
 
     if batch_shape is None:
@@ -497,23 +573,29 @@ def world_to_cam_coords(coords_wrt_world, ext_mat, batch_shape=None, image_shape
 
 
 def cam_to_world_coords(coords_wrt_cam, inv_ext_mat, batch_shape=None, image_shape=None, dev_str=None):
-    """
-    Get world-centric homogeneous co-ordinates image :math:`\mathbf{X}_w\in\mathbb{R}^{is×4}` from camera-centric
+    """Get world-centric homogeneous co-ordinates image :math:`\mathbf{X}_w\in\mathbb{R}^{is×4}` from camera-centric
     homogeneous co-ordinates image :math:`\mathbf{X}_c\in\mathbb{R}^{is×4}`.\n
     `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=174>`_
     matrix inverse of page 156, equation 6.6
 
-    :param coords_wrt_cam: Camera-centric homogeneous co-ordinates image *[batch_shape,image_shape,4]*
-    :type coords_wrt_cam: array
-    :param inv_ext_mat: Inverse extrinsic matrix *[batch_shape,3,4]*
-    :type inv_ext_mat: array
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_shape: Image shape. Inferred from inputs in None.
-    :type image_shape: sequence of ints, optional
-    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev_str: str, optional
-    :return: World-centric homogeneous co-ordinates image *[batch_shape,image_shape,4]*
+    Parameters
+    ----------
+    coords_wrt_cam
+        Camera-centric homogeneous co-ordinates image *[batch_shape,image_shape,4]*
+    inv_ext_mat
+        Inverse extrinsic matrix *[batch_shape,3,4]*
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_shape
+        Image shape. Inferred from inputs in None. (Default value = None)
+    dev_str
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        World-centric homogeneous co-ordinates image *[batch_shape,image_shape,4]*
+
     """
 
     if batch_shape is None:
@@ -538,21 +620,27 @@ def cam_to_world_coords(coords_wrt_cam, inv_ext_mat, batch_shape=None, image_sha
 
 
 def world_to_ds_pixel_coords(coords_wrt_world, full_mat, batch_shape=None, image_shape=None):
-    """
-    Get depth scaled homogeneous pixel co-ordinates image :math:`\mathbf{X}_p\in\mathbb{R}^{is×3}` from world-centric
+    """Get depth scaled homogeneous pixel co-ordinates image :math:`\mathbf{X}_p\in\mathbb{R}^{is×3}` from world-centric
     homogeneous co-ordinates image :math:`\mathbf{X}_w\in\mathbb{R}^{is×4}`.\n
     `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=173>`_
     combination of page 156, equation 6.6, and page 155, equation 6.3
 
-    :param coords_wrt_world: World-centric homogeneous co-ordinates image *[batch_shape,image_shape,4]*
-    :type coords_wrt_world: array
-    :param full_mat: Full projection matrix *[batch_shape,3,4]*
-    :type full_mat: array
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_shape: Image shape. Inferred from inputs in None.
-    :type image_shape: sequence of ints, optional
-    :return: Depth scaled homogeneous pixel co-ordinates image *[batch_shape,image_shape,3]*
+    Parameters
+    ----------
+    coords_wrt_world
+        World-centric homogeneous co-ordinates image *[batch_shape,image_shape,4]*
+    full_mat
+        Full projection matrix *[batch_shape,3,4]*
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_shape
+        Image shape. Inferred from inputs in None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Depth scaled homogeneous pixel co-ordinates image *[batch_shape,image_shape,3]*
+
     """
 
     if batch_shape is None:
@@ -571,40 +659,52 @@ def world_to_ds_pixel_coords(coords_wrt_world, full_mat, batch_shape=None, image
 
 
 def world_coords_to_depth(coords_wrt_world, full_mat, batch_shape=None, image_shape=None):
-    """
-    Get depth image :math:`\mathbf{X}_d\in\mathbb{R}^{is×1}` from world-centric
+    """Get depth image :math:`\mathbf{X}_d\in\mathbb{R}^{is×1}` from world-centric
     homogeneous co-ordinates image :math:`\mathbf{X}_w\in\mathbb{R}^{is×4}`.\n
 
-    :param coords_wrt_world: World-centric homogeneous co-ordinates image *[batch_shape,image_shape,4]*
-    :type coords_wrt_world: array
-    :param full_mat: Full projection matrix *[batch_shape,3,4]*
-    :type full_mat: array
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_shape: Image shape. Inferred from inputs in None.
-    :type image_shape: sequence of ints, optional
-    :return: Depth image *[batch_shape,image_shape,1]*
+    Parameters
+    ----------
+    coords_wrt_world
+        World-centric homogeneous co-ordinates image *[batch_shape,image_shape,4]*
+    full_mat
+        Full projection matrix *[batch_shape,3,4]*
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_shape
+        Image shape. Inferred from inputs in None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Depth image *[batch_shape,image_shape,1]*
+
     """
     # BS x IS x 1
     return world_to_ds_pixel_coords(coords_wrt_world, full_mat, batch_shape, image_shape)[..., -1:]
 
 
 def ds_pixel_to_world_coords(ds_pixel_coords, inv_full_mat, batch_shape=None, image_shape=None):
-    """
-    Get world-centric homogeneous co-ordinates image :math:`\mathbf{X}_w\in\mathbb{R}^{is×4}` from depth scaled
+    """Get world-centric homogeneous co-ordinates image :math:`\mathbf{X}_w\in\mathbb{R}^{is×4}` from depth scaled
     homogeneous pixel co-ordinates image :math:`\mathbf{X}_p\in\mathbb{R}^{is×3}`.\n
     `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=173>`_
     combination of page 155, matrix inverse of equation 6.3, and matrix inverse of page 156, equation 6.6
 
-    :param ds_pixel_coords: Depth scaled homogeneous pixel co-ordinates image: *[batch_shape,image_shape,3]*
-    :type ds_pixel_coords: array
-    :param inv_full_mat: Inverse full projection matrix *[batch_shape,3,4]*
-    :type inv_full_mat: array
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_shape: Image shape. Inferred from inputs in None.
-    :type image_shape: sequence of ints, optional
-    :return: World-centric homogeneous co-ordinates image *[batch_shape,image_shape,4]*
+    Parameters
+    ----------
+    ds_pixel_coords
+        Depth scaled homogeneous pixel co-ordinates image: *[batch_shape,image_shape,3]*
+    inv_full_mat
+        Inverse full projection matrix *[batch_shape,3,4]*
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_shape
+        Image shape. Inferred from inputs in None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        World-centric homogeneous co-ordinates image *[batch_shape,image_shape,4]*
+
     """
 
     if batch_shape is None:
@@ -629,21 +729,27 @@ def ds_pixel_to_world_coords(ds_pixel_coords, inv_full_mat, batch_shape=None, im
 
 
 def depth_to_world_coords(depth, inv_full_mat, uniform_pixel_coords=None, batch_shape=None, image_dims=None):
-    """
-    Get world-centric homogeneous co-ordinates image :math:`\mathbf{X}_w\in\mathbb{R}^{hxw×4}` from depth image
+    """Get world-centric homogeneous co-ordinates image :math:`\mathbf{X}_w\in\mathbb{R}^{hxw×4}` from depth image
     :math:`\mathbf{X}_d\in\mathbb{R}^{hxw×1}`.\n
 
-    :param depth: Depth image: *[batch_shape,h,w,1]*
-    :type depth: array
-    :param inv_full_mat: Inverse full projection matrix *[batch_shape,3,4]*
-    :type inv_full_mat: array
-    :param uniform_pixel_coords: Image of homogeneous pixel co-ordinates. Created if None. *[batch_shape,h,w,3]*
-    :type uniform_pixel_coords: array, optional
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_dims: Image shape. Inferred from inputs in None.
-    :type image_dims: sequence of ints, optional
-    :return: World-centric homogeneous co-ordinates image *[batch_shape,h,w,4]*
+    Parameters
+    ----------
+    depth
+        Depth image: *[batch_shape,h,w,1]*
+    inv_full_mat
+        Inverse full projection matrix *[batch_shape,3,4]*
+    uniform_pixel_coords
+        Image of homogeneous pixel co-ordinates. Created if None. *[batch_shape,h,w,3]* (Default value = None)
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_dims
+        Image shape. Inferred from inputs in None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        World-centric homogeneous co-ordinates image *[batch_shape,h,w,4]*
+
     """
 
     if batch_shape is None:
@@ -665,25 +771,31 @@ def depth_to_world_coords(depth, inv_full_mat, uniform_pixel_coords=None, batch_
 
 def pixel_coords_to_world_ray_vectors(inv_full_mat, pixel_coords=None, camera_center=None, batch_shape=None,
                                       image_shape=None):
-    """
-    Calculate world-centric ray vector image :math:`\mathbf{RV}\in\mathbb{R}^{is×3}` from homogeneous pixel co-ordinate
+    """Calculate world-centric ray vector image :math:`\mathbf{RV}\in\mathbb{R}^{is×3}` from homogeneous pixel co-ordinate
     image :math:`\mathbf{X}_p\in\mathbb{R}^{is×3}`. Each ray vector :math:`\mathbf{rv}_{i,j}\in\mathbb{R}^{3}` is
     represented as a unit vector from the camera center :math:`\overset{\sim}{\mathbf{C}}\in\mathbb{R}^{3×1}`, in the
     world frame. Co-ordinates :math:`\mathbf{x}_{i,j}\in\mathbb{R}^{3}` along the world ray can then be parameterized as
     :math:`\mathbf{x}_{i,j}=\overset{\sim}{\mathbf{C}} + λ\mathbf{rv}_{i,j}`, where :math:`λ` is a scalar who's
     magnitude dictates the position of the world co-ordinate along the world ray.
 
-    :param inv_full_mat: Inverse full projection matrix *[batch_shape,3,4]*
-    :type inv_full_mat: array
-    :param pixel_coords: Homogeneous pixel co-ordinates image, created uniformly if None. *[batch_shape,image_shape,3]*
-    :type pixel_coords: array, optional
-    :param camera_center: Camera centers, inferred from inv_full_mat if None *[batch_shape,3,1]*
-    :type camera_center: array, optional
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_shape: Image shape. Inferred from inputs in None.
-    :type image_shape: sequence of ints, optional
-    :return: World ray vectors *[batch_shape,image_shape,3]*
+    Parameters
+    ----------
+    inv_full_mat
+        Inverse full projection matrix *[batch_shape,3,4]*
+    pixel_coords
+        Homogeneous pixel co-ordinates image, created uniformly if None. *[batch_shape,image_shape,3]* (Default value = None)
+    camera_center
+        Camera centers, inferred from inv_full_mat if None *[batch_shape,3,1]* (Default value = None)
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_shape
+        Image shape. Inferred from inputs in None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        World ray vectors *[batch_shape,image_shape,3]*
+
     """
 
     if batch_shape is None:
@@ -719,8 +831,7 @@ def pixel_coords_to_world_ray_vectors(inv_full_mat, pixel_coords=None, camera_ce
 
 
 def sphere_coords_to_world_ray_vectors(sphere_coords, inv_rotation_mat, batch_shape=None, image_shape=None):
-    """
-    Calculate world-centric ray vector image :math:`\mathbf{RV}\in\mathbb{R}^{is×3}` from camera-centric ego-sphere
+    """Calculate world-centric ray vector image :math:`\mathbf{RV}\in\mathbb{R}^{is×3}` from camera-centric ego-sphere
     polar co-ordinates image :math:`\mathbf{S}_c\in\mathbb{R}^{is×3}`. Each ray vector
     :math:`\mathbf{rv}_{i,j}\in\mathbb{R}^{3}` is represented as a unit vector from the camera center
     :math:`\overset{\sim}{\mathbf{C}}\in\mathbb{R}^{3×1}`, in the world frame. Co-ordinates
@@ -728,15 +839,22 @@ def sphere_coords_to_world_ray_vectors(sphere_coords, inv_rotation_mat, batch_sh
     :math:`\mathbf{x}_{i,j}=\overset{\sim}{\mathbf{C}} + λ\mathbf{rv}_{i,j}`, where :math:`λ` is a scalar who's
     magnitude dictates the position of the world co-ordinate along the world ray.
 
-    :param sphere_coords: Camera-centric ego-sphere polar co-ordinates image *[batch_shape,image_shape,3]*
-    :type sphere_coords: array
-    :param inv_rotation_mat: Inverse rotation matrix *[batch_shape,3,3]*
-    :type inv_rotation_mat: array
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_shape: Image dimensions. Inferred from inputs in None.
-    :type image_shape: sequence of ints, optional
-    :return: World ray vectors *[batch_shape,image_shape,3]*
+    Parameters
+    ----------
+    sphere_coords
+        Camera-centric ego-sphere polar co-ordinates image *[batch_shape,image_shape,3]*
+    inv_rotation_mat
+        Inverse rotation matrix *[batch_shape,3,3]*
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_shape
+        Image dimensions. Inferred from inputs in None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        World ray vectors *[batch_shape,image_shape,3]*
+
     """
 
     if batch_shape is None:
@@ -757,20 +875,26 @@ def sphere_coords_to_world_ray_vectors(sphere_coords, inv_rotation_mat, batch_sh
 
 
 def bilinearly_interpolate_image(image, sampling_pixel_coords, batch_shape=None, image_dims=None):
-    """
-    Bilinearly interpolate image :math:`\mathbf{X}\in\mathbb{R}^{h×w×d}` at sampling pixel locations
+    """Bilinearly interpolate image :math:`\mathbf{X}\in\mathbb{R}^{h×w×d}` at sampling pixel locations
     :math:`\mathbf{S}\in\mathbb{R}^{h×w×2}`, to return interpolated image :math:`\mathbf{X}_I\in\mathbb{R}^{h×w×d}`.\n
     `[reference] <https://en.wikipedia.org/wiki/Bilinear_interpolation>`_
 
-    :param image: Image to be interpolated *[batch_shape,h,w,d]*
-    :type image: array
-    :param sampling_pixel_coords: Pixel co-ordinates to sample the image at *[batch_shape,h,w,2]*
-    :type sampling_pixel_coords: array
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_dims: Image dimensions. Inferred from inputs in None.
-    :type image_dims: sequence of ints, optional
-    :return: Interpolated image *[batch_shape,h,w,d]*
+    Parameters
+    ----------
+    image
+        Image to be interpolated *[batch_shape,h,w,d]*
+    sampling_pixel_coords
+        Pixel co-ordinates to sample the image at *[batch_shape,h,w,2]*
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_dims
+        Image dimensions. Inferred from inputs in None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Interpolated image *[batch_shape,h,w,d]*
+
     """
 
     if batch_shape is None:
@@ -801,15 +925,21 @@ def bilinearly_interpolate_image(image, sampling_pixel_coords, batch_shape=None,
 
 # noinspection PyUnusedLocal
 def inv_ext_mat_to_camera_center(inv_ext_mat):
-    """
-    Compute camera center :math:`\overset{\sim}{\mathbf{C}}\in\mathbb{R}^{3×1}` from camera extrinsic matrix
+    """Compute camera center :math:`\overset{\sim}{\mathbf{C}}\in\mathbb{R}^{3×1}` from camera extrinsic matrix
     :math:`\mathbf{E}\in\mathbb{R}^{3×4}`.\n
     `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=174>`_
     matrix inverse of page 156, equation 6.6
 
-    :param inv_ext_mat: Inverse extrinsic matrix *[batch_shape,3,4]*
-    :type inv_ext_mat: array
-    :return: Camera center *[batch_shape,3,1]*
+    Parameters
+    ----------
+    inv_ext_mat
+        Inverse extrinsic matrix *[batch_shape,3,4]*
+
+    Returns
+    -------
+    ret
+        Camera center *[batch_shape,3,1]*
+
     """
 
     # BS x 3 x 1
@@ -817,15 +947,21 @@ def inv_ext_mat_to_camera_center(inv_ext_mat):
 
 
 def calib_and_ext_to_full_mat(calib_mat, ext_mat):
-    """
-    Compute full projection matrix :math:`\mathbf{P}\in\mathbb{R}^{3×4}` from calibration
+    """Compute full projection matrix :math:`\mathbf{P}\in\mathbb{R}^{3×4}` from calibration
     :math:`\mathbf{K}\in\mathbb{R}^{3×3}` and extrinsic matrix :math:`\mathbf{E}\in\mathbb{R}^{3×4}`.\n
 
-    :param calib_mat: Calibration matrix *[batch_shape,3,3]*
-    :type calib_mat: array
-    :param ext_mat: Extrinsic matrix *[batch_shape,3,4]*
-    :type ext_mat: array
-    :return: Full projection matrix *[batch_shape,3,4]*
+    Parameters
+    ----------
+    calib_mat
+        Calibration matrix *[batch_shape,3,3]*
+    ext_mat
+        Extrinsic matrix *[batch_shape,3,4]*
+
+    Returns
+    -------
+    ret
+        Full projection matrix *[batch_shape,3,4]*
+
     """
 
     # BS x 3 x 4
@@ -833,16 +969,22 @@ def calib_and_ext_to_full_mat(calib_mat, ext_mat):
 
 
 def cam_to_sphere_coords(cam_coords, forward_facing_z=True):
-    """
-    Convert camera-centric homogeneous cartesian co-ordinates image :math:`\mathbf{X}_c\in\mathbb{R}^{h×w×4}` to
+    """Convert camera-centric homogeneous cartesian co-ordinates image :math:`\mathbf{X}_c\in\mathbb{R}^{h×w×4}` to
     camera-centric ego-sphere polar co-ordinates image :math:`\mathbf{S}_c\in\mathbb{R}^{h×w×3}`.\n
     `[reference] <https://en.wikipedia.org/wiki/Spherical_coordinate_system#Cartesian_coordinates>`_
 
-    :param cam_coords: Camera-centric homogeneous cartesian co-ordinates image *[batch_shape,h,w,4]*
-    :type cam_coords: array
-    :param forward_facing_z: Whether to use reference frame so z is forward facing. Default is False.
-    :type forward_facing_z: bool, optional
-    :return: Camera-centric ego-sphere polar co-ordinates image *[batch_shape,h,w,3]*
+    Parameters
+    ----------
+    cam_coords
+        Camera-centric homogeneous cartesian co-ordinates image *[batch_shape,h,w,4]*
+    forward_facing_z
+        Whether to use reference frame so z is forward facing. Default is False.
+
+    Returns
+    -------
+    ret
+        Camera-centric ego-sphere polar co-ordinates image *[batch_shape,h,w,3]*
+
     """
 
     # BS x H x W x 3
@@ -856,20 +998,26 @@ def cam_to_sphere_coords(cam_coords, forward_facing_z=True):
 
 
 def ds_pixel_to_sphere_coords(ds_pixel_coords, inv_calib_mat, batch_shape=None, image_shape=None):
-    """
-    Convert depth scaled homogeneous pixel co-ordinates image :math:`\mathbf{X}_p\in\mathbb{R}^{is×3}` to
+    """Convert depth scaled homogeneous pixel co-ordinates image :math:`\mathbf{X}_p\in\mathbb{R}^{is×3}` to
     camera-centric ego-sphere polar co-ordinates image :math:`\mathbf{S}_c\in\mathbb{R}^{is×3}`.\n
     `[reference] <https://en.wikipedia.org/wiki/Spherical_coordinate_system#Cartesian_coordinates>`_
 
-    :param ds_pixel_coords: Depth scaled homogeneous pixel co-ordinates image *[batch_shape,image_shape,3]*
-    :type ds_pixel_coords: array
-    :param inv_calib_mat: Inverse calibration matrix *[batch_shape,3,3]*
-    :type inv_calib_mat: array
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_shape: Image dimensions. Inferred from inputs in None.
-    :type image_shape: sequence of ints, optional
-    :return: Camera-centric ego-sphere polar co-ordinates image *[batch_shape,image_shape,3]*
+    Parameters
+    ----------
+    ds_pixel_coords
+        Depth scaled homogeneous pixel co-ordinates image *[batch_shape,image_shape,3]*
+    inv_calib_mat
+        Inverse calibration matrix *[batch_shape,3,3]*
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_shape
+        Image dimensions. Inferred from inputs in None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Camera-centric ego-sphere polar co-ordinates image *[batch_shape,image_shape,3]*
+
     """
 
     if batch_shape is None:
@@ -891,16 +1039,22 @@ def ds_pixel_to_sphere_coords(ds_pixel_coords, inv_calib_mat, batch_shape=None, 
 
 
 def angular_pixel_to_sphere_coords(angular_pixel_coords, pixels_per_degree):
-    """
-    Convert angular pixel co-ordinates image :math:`\mathbf{A}_p\in\mathbb{R}^{h×w×3}` to camera-centric ego-sphere
+    """Convert angular pixel co-ordinates image :math:`\mathbf{A}_p\in\mathbb{R}^{h×w×3}` to camera-centric ego-sphere
     polar co-ordinates image :math:`\mathbf{S}_c\in\mathbb{R}^{h×w×3}`.\n
     `[reference] <https://en.wikipedia.org/wiki/Spherical_coordinate_system#Cartesian_coordinates>`_
 
-    :param angular_pixel_coords: Angular pixel co-ordinates image *[batch_shape,h,w,3]*
-    :type angular_pixel_coords: array
-    :param pixels_per_degree: Number of pixels per angular degree
-    :type pixels_per_degree: float
-    :return: Camera-centric ego-sphere polar co-ordinates image *[batch_shape,h,w,3]*
+    Parameters
+    ----------
+    angular_pixel_coords
+        Angular pixel co-ordinates image *[batch_shape,h,w,3]*
+    pixels_per_degree
+        Number of pixels per angular degree
+
+    Returns
+    -------
+    ret
+        Camera-centric ego-sphere polar co-ordinates image *[batch_shape,h,w,3]*
+
     """
 
     # BS x H x W x 1
@@ -920,20 +1074,26 @@ def angular_pixel_to_sphere_coords(angular_pixel_coords, pixels_per_degree):
 
 
 def sphere_to_cam_coords(sphere_coords, forward_facing_z=True, batch_shape=None, dev_str=None):
-    """
-    Convert camera-centric ego-sphere polar co-ordinates image :math:`\mathbf{S}_c\in\mathbb{R}^{bs×3}` to
+    """Convert camera-centric ego-sphere polar co-ordinates image :math:`\mathbf{S}_c\in\mathbb{R}^{bs×3}` to
     camera-centric homogeneous cartesian co-ordinates image :math:`\mathbf{X}_c\in\mathbb{R}^{bs×4}`.\n
     `[reference] <https://en.wikipedia.org/wiki/Spherical_coordinate_system#Cartesian_coordinates>`_
 
-    :param sphere_coords: Camera-centric ego-sphere polar co-ordinates image *[batch_shape,3]*
-    :type sphere_coords: array
-    :param forward_facing_z: Whether to use reference frame so z is forward facing. Default is False.
-    :type forward_facing_z: bool, optional
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev_str: str, optional
-    :return: *Camera-centric homogeneous cartesian co-ordinates image *[batch_shape,4]*
+    Parameters
+    ----------
+    sphere_coords
+        Camera-centric ego-sphere polar co-ordinates image *[batch_shape,3]*
+    forward_facing_z
+        Whether to use reference frame so z is forward facing. Default is False.
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    dev_str
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Camera-centric homogeneous cartesian co-ordinates image *[batch_shape,4]*
+
     """
 
     if batch_shape is None:
@@ -956,20 +1116,26 @@ def sphere_to_cam_coords(sphere_coords, forward_facing_z=True, batch_shape=None,
 
 
 def sphere_to_ds_pixel_coords(sphere_coords, calib_mat, batch_shape=None, image_shape=None):
-    """
-    Convert camera-centric ego-sphere polar co-ordinates image :math:`\mathbf{S}_c\in\mathbb{R}^{is×3}` to depth scaled
+    """Convert camera-centric ego-sphere polar co-ordinates image :math:`\mathbf{S}_c\in\mathbb{R}^{is×3}` to depth scaled
     homogeneous pixel co-ordinates image :math:`\mathbf{X}_p\in\mathbb{R}^{is×3}`.\n
     `[reference] <https://en.wikipedia.org/wiki/Spherical_coordinate_system#Cartesian_coordinates>`_
 
-    :param sphere_coords: Camera-centric ego-sphere polar co-ordinates image *[batch_shape,image_shape,3]*
-    :type sphere_coords: array
-    :param calib_mat: Calibration matrix *[batch_shape,3,3]*
-    :type calib_mat: array
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_shape: Image dimensions. Inferred from inputs in None.
-    :type image_shape: sequence of ints, optional
-    :return: Depth scaled homogeneous pixel co-ordinates image *[batch_shape,image_shape,3]*
+    Parameters
+    ----------
+    sphere_coords
+        Camera-centric ego-sphere polar co-ordinates image *[batch_shape,image_shape,3]*
+    calib_mat
+        Calibration matrix *[batch_shape,3,3]*
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_shape
+        Image dimensions. Inferred from inputs in None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Depth scaled homogeneous pixel co-ordinates image *[batch_shape,image_shape,3]*
+
     """
 
     if batch_shape is None:
@@ -991,16 +1157,22 @@ def sphere_to_ds_pixel_coords(sphere_coords, calib_mat, batch_shape=None, image_
 
 
 def sphere_to_angular_pixel_coords(sphere_coords, pixels_per_degree):
-    """
-    Convert camera-centric ego-sphere polar co-ordinates image :math:`\mathbf{S}_c\in\mathbb{R}^{h×w×3}` to angular
+    """Convert camera-centric ego-sphere polar co-ordinates image :math:`\mathbf{S}_c\in\mathbb{R}^{h×w×3}` to angular
     pixel co-ordinates image :math:`\mathbf{A}_p\in\mathbb{R}^{h×w×3}`.\n
     `[reference] <https://en.wikipedia.org/wiki/Spherical_coordinate_system#Cartesian_coordinates>`_
 
-    :param sphere_coords: Camera-centric ego-sphere polar co-ordinates image *[batch_shape,h,w,3]*
-    :type sphere_coords: array
-    :param pixels_per_degree: Number of pixels per angular degree
-    :type pixels_per_degree: float
-    :return: Angular pixel co-ordinates image *[batch_shape,h,w,3]*
+    Parameters
+    ----------
+    sphere_coords
+        Camera-centric ego-sphere polar co-ordinates image *[batch_shape,h,w,3]*
+    pixels_per_degree
+        Number of pixels per angular degree
+
+    Returns
+    -------
+    ret
+        Angular pixel co-ordinates image *[batch_shape,h,w,3]*
+
     """
 
     # BS x H x W x 1
@@ -1025,19 +1197,25 @@ def sphere_to_angular_pixel_coords(sphere_coords, pixels_per_degree):
 
 
 def persp_angles_and_pp_offsets_to_intrinsics_object(persp_angles, pp_offsets, image_dims, batch_shape=None):
-    """
-    Create camera intrinsics object from perspective angles :math:`θ_x, θ_y`, principal-point offsets :math:`p_x, p_y`
+    """Create camera intrinsics object from perspective angles :math:`θ_x, θ_y`, principal-point offsets :math:`p_x, p_y`
     and image dimensions [height, width].
 
-    :param persp_angles: Perspective angles *[batch_shape,2]*
-    :type persp_angles: array
-    :param pp_offsets: Principal-point offsets *[batch_shape,2]*
-    :type pp_offsets: array
-    :param image_dims: Image dimensions.
-    :type image_dims: sequence of ints
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :return: Camera intrinsics object.
+    Parameters
+    ----------
+    persp_angles
+        Perspective angles *[batch_shape,2]*
+    pp_offsets
+        Principal-point offsets *[batch_shape,2]*
+    image_dims
+        Image dimensions.
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Camera intrinsics object.
+
     """
 
     if batch_shape is None:
@@ -1062,19 +1240,25 @@ def persp_angles_and_pp_offsets_to_intrinsics_object(persp_angles, pp_offsets, i
 
 
 def focal_lengths_and_pp_offsets_to_intrinsics_object(focal_lengths, pp_offsets, image_dims, batch_shape=None):
-    """
-    Create camera intrinsics object from focal lengths :math:`f_x, f_y`, principal-point offsets :math:`p_x, p_y`, and
+    """Create camera intrinsics object from focal lengths :math:`f_x, f_y`, principal-point offsets :math:`p_x, p_y`, and
     image dimensions [height, width].
 
-    :param focal_lengths: Focal lengths *[batch_shape,2]*
-    :type focal_lengths: array
-    :param pp_offsets: Principal-point offsets *[batch_shape,2]*
-    :type pp_offsets: array
-    :param image_dims: Image dimensions. Inferred from inputs in None.
-    :type image_dims: sequence of ints
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :return: Camera intrinsics object
+    Parameters
+    ----------
+    focal_lengths
+        Focal lengths *[batch_shape,2]*
+    pp_offsets
+        Principal-point offsets *[batch_shape,2]*
+    image_dims
+        Image dimensions. Inferred from inputs in None.
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Camera intrinsics object
+
     """
 
     if batch_shape is None:
@@ -1099,16 +1283,22 @@ def focal_lengths_and_pp_offsets_to_intrinsics_object(focal_lengths, pp_offsets,
 
 
 def calib_mat_to_intrinsics_object(calib_mat, image_dims, batch_shape=None):
-    """
-    Create camera intrinsics object from calibration matrix.
+    """Create camera intrinsics object from calibration matrix.
 
-    :param calib_mat: Calibration matrices *[batch_shape,3,3]*
-    :type calib_mat: array
-    :param image_dims: Image dimensions. Inferred from inputs in None.
-    :type image_dims: sequence of ints
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :return: Camera intrinsics object
+    Parameters
+    ----------
+    calib_mat
+        Calibration matrices *[batch_shape,3,3]*
+    image_dims
+        Image dimensions. Inferred from inputs in None.
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Camera intrinsics object
+
     """
 
     if batch_shape is None:
@@ -1136,19 +1326,25 @@ def calib_mat_to_intrinsics_object(calib_mat, image_dims, batch_shape=None):
 
 
 def ext_mat_and_intrinsics_to_cam_geometry_object(ext_mat, intrinsics, batch_shape=None, dev_str=None):
-    """
-    Create camera geometry object from extrinsic matrix :math:`\mathbf{E}\in\mathbb{R}^{3×4}`, and camera intrinsics
+    """Create camera geometry object from extrinsic matrix :math:`\mathbf{E}\in\mathbb{R}^{3×4}`, and camera intrinsics
     object.
 
-    :param ext_mat: Extrinsic matrix *[batch_shape,3,4]*
-    :type ext_mat: array
-    :param intrinsics: camera intrinsics object
-    :type intrinsics: camera_intrinsics
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev_str: str, optional
-    :return: Camera geometry object
+    Parameters
+    ----------
+    ext_mat
+        Extrinsic matrix *[batch_shape,3,4]*
+    intrinsics
+        camera intrinsics object
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    dev_str
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Camera geometry object
+
     """
 
     if batch_shape is None:
@@ -1207,19 +1403,25 @@ def ext_mat_and_intrinsics_to_cam_geometry_object(ext_mat, intrinsics, batch_sha
 
 
 def inv_ext_mat_and_intrinsics_to_cam_geometry_object(inv_ext_mat, intrinsics, batch_shape=None, dev_str=None):
-    """
-    Create camera geometry object from inverse extrinsic matrix :math:`\mathbf{E}^{-1}\in\mathbb{R}^{3×4}`, and camera
+    """Create camera geometry object from inverse extrinsic matrix :math:`\mathbf{E}^{-1}\in\mathbb{R}^{3×4}`, and camera
     intrinsics object.
 
-    :param inv_ext_mat: Inverse extrinsic matrix *[batch_shape,3,4]*
-    :type inv_ext_mat: array
-    :param intrinsics: camera intrinsics object
-    :type intrinsics: camera_intrinsics
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev_str: str, optional
-    :return: Camera geometry object
+    Parameters
+    ----------
+    inv_ext_mat
+        Inverse extrinsic matrix *[batch_shape,3,4]*
+    intrinsics
+        camera intrinsics object
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    dev_str
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Camera geometry object
+
     """
 
     if batch_shape is None:

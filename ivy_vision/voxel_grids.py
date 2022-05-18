@@ -1,6 +1,4 @@
-"""
-Collection of Voxel-Grid Functions
-"""
+"""Collection of Voxel-Grid Functions"""
 
 # global
 import ivy as _ivy
@@ -10,8 +8,7 @@ MIN_DENOMINATOR = 1e-12
 
 def coords_to_voxel_grid(coords, voxel_shape_spec, mode='DIMS', coord_bounds=None, features=None, batch_shape=None,
                          dev_str=None):
-    """
-    Create voxel grid :math:`\mathbf{X}_v\in\mathbb{R}^{x×y×z×(3+N+1)}` from homogeneous co-ordinates
+    """Create voxel grid :math:`\mathbf{X}_v\in\mathbb{R}^{x×y×z×(3+N+1)}` from homogeneous co-ordinates
     :math:`\mathbf{X}_w\in\mathbb{R}^{num\_coords×4}`. Each voxel contains 3+N+1 values: the mean
     world co-ordinate inside the voxel for the projected pixels, N coordinte features (optional),
     and also the number of projected pixels inside the voxel.
@@ -21,25 +18,32 @@ def coords_to_voxel_grid(coords, voxel_shape_spec, mode='DIMS', coord_bounds=Non
     of the grid space, originating from the corner of minimum :math:`x,y,z` values.\n
     `[reference] <https://en.wikipedia.org/wiki/Voxel>`_
 
-    :param coords: Homogeneous co-ordinates *[batch_shape,c,4]*
-    :type coords: array
-    :param voxel_shape_spec: Either the number of voxels in x,y,z directions, or the resolutions (metres) in x,y,z
-                                directions, depending on mode. Batched or unbatched. *[batch_shape,3]* or *[3]*
-    :type voxel_shape_spec: array
-    :param mode: Shape specification mode, either "DIMS" or "RES"
-    :type mode: str
-    :param coord_bounds: Co-ordinate x, y, z boundaries *[batch_shape,6]* or *[6]*
-    :type coord_bounds: array
-    :param features: Co-ordinate features *[batch_shape,c,4]*.
-                              E.g. RGB values, low-dimensional features, etc.
-                              Features mapping to the same voxel are averaged.
-    :type features: array
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev_str: str, optional
-    :return: Voxel grid *[batch_shape,x_max,v_max,z_max,3+feature_size+1]*, dimensions *[batch_shape,3]*,
-            resolutions *[batch_shape,3]*, voxel_grid_lower_corners *[batch_shape,3]*
+    Parameters
+    ----------
+    coords
+        Homogeneous co-ordinates *[batch_shape,c,4]*
+    voxel_shape_spec
+        Either the number of voxels in x,y,z directions, or the resolutions (metres) in x,y,z
+        directions, depending on mode. Batched or unbatched. *[batch_shape,3]* or *[3]*
+    mode
+        Shape specification mode, either "DIMS" or "RES" (Default value = 'DIMS')
+    coord_bounds
+        Co-ordinate x, y, z boundaries *[batch_shape,6]* or *[6]* (Default value = None)
+    features
+        Co-ordinate features *[batch_shape,c,4]*.
+        E.g. RGB values, low-dimensional features, etc.
+        Features mapping to the same voxel are averaged. (Default value = None)
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    dev_str
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Voxel grid *[batch_shape,x_max,v_max,z_max,3+feature_size+1]*, dimensions *[batch_shape,3]*,
+        resolutions *[batch_shape,3]*, voxel_grid_lower_corners *[batch_shape,3]*
+
     """
 
     if batch_shape is None:

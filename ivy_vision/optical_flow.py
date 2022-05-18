@@ -1,6 +1,4 @@
-"""
-Collection of Optical Flow Functions
-"""
+"""Collection of Optical Flow Functions"""
 
 # global
 import ivy as _ivy
@@ -16,29 +14,35 @@ MIN_DENOMINATOR = 1e-12
 
 def depth_from_flow_and_cam_mats(flow, full_mats, inv_full_mats=None, camera_centers=None, uniform_pixel_coords=None,
                                  triangulation_method='cmp', batch_shape=None, image_dims=None, dev_str=None):
-    """
-    Compute depth map :math:`\mathbf{X}\in\mathbb{R}^{h×w×1}` in frame 1 using optical flow
+    """Compute depth map :math:`\mathbf{X}\in\mathbb{R}^{h×w×1}` in frame 1 using optical flow
     :math:`\mathbf{U}_{1→2}\in\mathbb{R}^{h×w×2}` from frame 1 to 2, and the camera geometry.\n
 
-    :param flow: Optical flow from frame 1 to 2 *[batch_shape,h,w,2]*
-    :type flow: array
-    :param full_mats: Full projection matrices *[batch_shape,2,3,4]*
-    :type full_mats: array
-    :param inv_full_mats: Inverse full projection matrices, inferred from full_mats if None and 'cmp' triangulation method *[batch_shape,2,3,4]*
-    :type inv_full_mats: array, optional
-    :param camera_centers: Camera centers, inferred from inv_full_mats if None and 'cmp' triangulation method *[batch_shape,2,3,1]*
-    :type camera_centers: array, optional
-    :param uniform_pixel_coords: Homogeneous uniform (integer) pixel co-ordinate images, inferred from image_dims if None *[batch_shape,h,w,3]*
-    :type uniform_pixel_coords: array, optional
-    :param triangulation_method: Triangulation method, one of [cmp|dlt], for closest mutual points or homogeneous dlt approach, closest_mutual_points by default
-    :type triangulation_method: str, optional
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_dims: Image dimensions. Inferred from inputs in None.
-    :type image_dims: sequence of ints, optional
-    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev_str: str, optional
-    :return: Depth map in frame 1 *[batch_shape,h,w,1]*
+    Parameters
+    ----------
+    flow
+        Optical flow from frame 1 to 2 *[batch_shape,h,w,2]*
+    full_mats
+        Full projection matrices *[batch_shape,2,3,4]*
+    inv_full_mats
+        Inverse full projection matrices, inferred from full_mats if None and 'cmp' triangulation method *[batch_shape,2,3,4]* (Default value = None)
+    camera_centers
+        Camera centers, inferred from inv_full_mats if None and 'cmp' triangulation method *[batch_shape,2,3,1]* (Default value = None)
+    uniform_pixel_coords
+        Homogeneous uniform (integer) pixel co-ordinate images, inferred from image_dims if None *[batch_shape,h,w,3]* (Default value = None)
+    triangulation_method
+        Triangulation method, one of [cmp|dlt], for closest mutual points or homogeneous dlt approach, closest_mutual_points by default
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_dims
+        Image dimensions. Inferred from inputs in None. (Default value = None)
+    dev_str
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Depth map in frame 1 *[batch_shape,h,w,1]*
+
     """
 
     if batch_shape is None:
@@ -80,19 +84,25 @@ def depth_from_flow_and_cam_mats(flow, full_mats, inv_full_mats=None, camera_cen
 
 
 def flow_from_depth_and_cam_mats(pixel_coords1, cam1to2_full_mat, batch_shape=None, image_shape=None):
-    """
-    Compute optical flow :math:`\mathbf{U}_{1→2}\in\mathbb{R}^{is×2}` from frame 1 to 2, using depth map
+    """Compute optical flow :math:`\mathbf{U}_{1→2}\in\mathbb{R}^{is×2}` from frame 1 to 2, using depth map
     :math:`\mathbf{X}\in\mathbb{R}^{is×1}` in frame 1, and the camera geometry.\n
 
-    :param pixel_coords1: Depth scaled homogeneous pixel co-ordinates image in frame 1 *[batch_shape,image_shape,3]*
-    :type pixel_coords1: array
-    :param cam1to2_full_mat: Camera1-to-camera2 full projection matrix *[batch_shape,3,4]*
-    :type cam1to2_full_mat: array
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_shape: Image dimensions. Inferred from inputs in None.
-    :type image_shape: sequence of ints, optional
-    :return: Optical flow from frame 1 to 2 *[batch_shape,image_shape,2]*
+    Parameters
+    ----------
+    pixel_coords1
+        Depth scaled homogeneous pixel co-ordinates image in frame 1 *[batch_shape,image_shape,3]*
+    cam1to2_full_mat
+        Camera1-to-camera2 full projection matrix *[batch_shape,3,4]*
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_shape
+        Image dimensions. Inferred from inputs in None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Optical flow from frame 1 to 2 *[batch_shape,image_shape,2]*
+
     """
 
     if batch_shape is None:
@@ -120,23 +130,29 @@ def flow_from_depth_and_cam_mats(pixel_coords1, cam1to2_full_mat, batch_shape=No
 
 def project_flow_to_epipolar_line(flow, fund_mat, uniform_pixel_coords=None, batch_shape=None, image_dims=None,
                                   dev_str=None):
-    """
-    Project optical flow :math:`\mathbf{U}_{1→2}\in\mathbb{R}^{h×w×2}` to epipolar line in frame 1.\n
+    """Project optical flow :math:`\mathbf{U}_{1→2}\in\mathbb{R}^{h×w×2}` to epipolar line in frame 1.\n
     `[reference] <https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_an_equation>`_
 
-    :param flow: Optical flow from frame 1 to 2 *[batch_shape,h,w,2]*
-    :type flow: array
-    :param fund_mat: Fundamental matrix connecting frames 1 and 2 *[batch_shape,3,3]*
-    :type fund_mat: array
-    :param uniform_pixel_coords: Homogeneous uniform (integer) pixel co-ordinate images, inferred from image_dims if None *[batch_shape,h,w,3]*
-    :type uniform_pixel_coords: array, optional
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_dims: Image dimensions. Inferred from inputs in None.
-    :type image_dims: sequence of ints, optional
-    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev_str: str, optional
-    :return: Optical flow from frame 1 to 2, projected to frame 1 epipolar line *[batch_shape,h,w,2]*
+    Parameters
+    ----------
+    flow
+        Optical flow from frame 1 to 2 *[batch_shape,h,w,2]*
+    fund_mat
+        Fundamental matrix connecting frames 1 and 2 *[batch_shape,3,3]*
+    uniform_pixel_coords
+        Homogeneous uniform (integer) pixel co-ordinate images, inferred from image_dims if None *[batch_shape,h,w,3]* (Default value = None)
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_dims
+        Image dimensions. Inferred from inputs in None. (Default value = None)
+    dev_str
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Optical flow from frame 1 to 2, projected to frame 1 epipolar line *[batch_shape,h,w,2]*
+
     """
 
     if batch_shape is None:
@@ -185,21 +201,27 @@ def project_flow_to_epipolar_line(flow, fund_mat, uniform_pixel_coords=None, bat
 
 # noinspection PyUnresolvedReferences
 def pixel_cost_volume(image1, image2, search_range, batch_shape=None):
-    """
-    Compute cost volume from image feature patch comparisons between first image
+    """Compute cost volume from image feature patch comparisons between first image
     :math:`\mathbf{X}_1\in\mathbb{R}^{h×w×d}` and second image :math:`\mathbf{X}_2\in\mathbb{R}^{h×w×d}`, as used in
     FlowNet paper.\n
     `[reference] <https://www.cv-foundation.org/openaccess/content_iccv_2015/papers/Dosovitskiy_FlowNet_Learning_Optical_ICCV_2015_paper.pdf>`_
 
-    :param image1: Image 1 *[batch_shape,h,w,D]*
-    :type image1: array
-    :param image2: Image 2 *[batch_shape,h,w,D]*
-    :type image2: array
-    :param search_range: Search range for patch comparisons.
-    :type search_range: int
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :return: Cost volume between the images *[batch_shape,h,w,(search_range*2+1)^2]*
+    Parameters
+    ----------
+    image1
+        Image 1 *[batch_shape,h,w,D]*
+    image2
+        Image 2 *[batch_shape,h,w,D]*
+    search_range
+        Search range for patch comparisons.
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Cost volume between the images *[batch_shape,h,w,(search_range*2+1)^2]*
+
     """
 
     if batch_shape is None:
@@ -243,28 +265,34 @@ def pixel_cost_volume(image1, image2, search_range, batch_shape=None):
 def velocity_from_flow_cam_coords_and_cam_mats(flow_t_to_tm1, cam_coords_t, cam_coords_tm1,
                                                cam_tm1_to_t_ext_mat, delta_t, uniform_pixel_coords=None,
                                                batch_shape=None, image_dims=None, dev_str=None):
-    """
-    Compute relative cartesian velocity from optical flow, camera co-ordinates, and camera extrinsics.
+    """Compute relative cartesian velocity from optical flow, camera co-ordinates, and camera extrinsics.
 
-    :param flow_t_to_tm1: Optical flow from frame t to t-1 *[batch_shape,h,w,2]*
-    :type flow_t_to_tm1: array
-    :param cam_coords_t: Camera-centric homogeneous co-ordinates image in frame t *[batch_shape,h,w,4]*
-    :type cam_coords_t: array
-    :param cam_coords_tm1: Camera-centric homogeneous co-ordinates image in frame t-1 *[batch_shape,h,w,4]*
-    :type cam_coords_tm1: array
-    :param cam_tm1_to_t_ext_mat: Camera t-1 to camera t extrinsic projection matrix *[batch_shape,3,4]*
-    :type cam_tm1_to_t_ext_mat: array
-    :param delta_t: Time difference between frame at timestep t-1 and t *[batch_shape,1]*
-    :type delta_t: array
-    :param uniform_pixel_coords: Homogeneous uniform (integer) pixel co-ordinate images, inferred from image_dims if None *[batch_shape,h,w,3]*
-    :type uniform_pixel_coords: array, optional
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_dims: Image dimensions. Inferred from inputs in None.
-    :type image_dims: sequence of ints, optional
-    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev_str: str, optional
-    :return: Cartesian velocity measurements relative to the camera *[batch_shape,h,w,3]*
+    Parameters
+    ----------
+    flow_t_to_tm1
+        Optical flow from frame t to t-1 *[batch_shape,h,w,2]*
+    cam_coords_t
+        Camera-centric homogeneous co-ordinates image in frame t *[batch_shape,h,w,4]*
+    cam_coords_tm1
+        Camera-centric homogeneous co-ordinates image in frame t-1 *[batch_shape,h,w,4]*
+    cam_tm1_to_t_ext_mat
+        Camera t-1 to camera t extrinsic projection matrix *[batch_shape,3,4]*
+    delta_t
+        Time difference between frame at timestep t-1 and t *[batch_shape,1]*
+    uniform_pixel_coords
+        Homogeneous uniform (integer) pixel co-ordinate images, inferred from image_dims if None *[batch_shape,h,w,3]* (Default value = None)
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_dims
+        Image dimensions. Inferred from inputs in None. (Default value = None)
+    dev_str
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Cartesian velocity measurements relative to the camera *[batch_shape,h,w,3]*
+
     """
 
     if batch_shape is None:
@@ -322,24 +350,30 @@ def velocity_from_flow_cam_coords_and_cam_mats(flow_t_to_tm1, cam_coords_t, cam_
 
 def project_cam_coords_with_object_transformations(cam_coords_1, id_image, obj_ids, obj_trans,
                                                    cam_1_to_2_ext_mat, batch_shape=None, image_shape=None):
-    """
-    Compute velocity image from co-ordinate image, id image, and object transformations.
+    """Compute velocity image from co-ordinate image, id image, and object transformations.
 
-    :param cam_coords_1: Camera-centric homogeneous co-ordinates image in frame t *[batch_shape,image_shape,4]*
-    :type cam_coords_1: array
-    :param id_image: Image containing per-pixel object ids *[batch_shape,h,w,1]*
-    :type id_image: array
-    :param obj_ids: Object ids *[batch_shape,num_obj,1]*
-    :type obj_ids: array
-    :param obj_trans: Object transformations for this frame over time *[batch_shape,num_obj,3,4]*
-    :type obj_trans: array
-    :param cam_1_to_2_ext_mat: Camera 1 to camera 2 extrinsic projection matrix *[batch_shape,3,4]*
-    :type cam_1_to_2_ext_mat: array
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_shape: Image dimensions. Inferred from inputs in None.
-    :type image_shape: sequence of ints, optional
-    :return: Relative velocity image *[batch_shape,image_shape,3]*
+    Parameters
+    ----------
+    cam_coords_1
+        Camera-centric homogeneous co-ordinates image in frame t *[batch_shape,image_shape,4]*
+    id_image
+        Image containing per-pixel object ids *[batch_shape,h,w,1]*
+    obj_ids
+        Object ids *[batch_shape,num_obj,1]*
+    obj_trans
+        Object transformations for this frame over time *[batch_shape,num_obj,3,4]*
+    cam_1_to_2_ext_mat
+        Camera 1 to camera 2 extrinsic projection matrix *[batch_shape,3,4]*
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_shape
+        Image dimensions. Inferred from inputs in None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Relative velocity image *[batch_shape,image_shape,3]*
+
     """
 
     if batch_shape is None:
@@ -418,26 +452,32 @@ def project_cam_coords_with_object_transformations(cam_coords_1, id_image, obj_i
 
 def velocity_from_cam_coords_id_image_and_object_trans(cam_coords_t, id_image, obj_ids, obj_trans, delta_t,
                                                        batch_shape=None, image_shape=None, dev_str=None):
-    """
-    Compute velocity image from co-ordinate image, id image, and object transformations.
+    """Compute velocity image from co-ordinate image, id image, and object transformations.
 
-    :param cam_coords_t: Camera-centric homogeneous co-ordinates image in frame t *[batch_shape,image_shape,4]*
-    :type cam_coords_t: array
-    :param id_image: Image containing per-pixel object ids *[batch_shape,image_shape,1]*
-    :type id_image: array
-    :param obj_ids: Object ids *[batch_shape,num_obj,1]*
-    :type obj_ids: array
-    :param obj_trans: Object transformations for this frame over time *[batch_shape,num_obj,3,4]*
-    :type obj_trans: array
-    :param delta_t: Time difference between frame at timestep t-1 and t *[batch_shape,1]*
-    :type delta_t: array
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_shape: Image dimensions. Inferred from inputs in None.
-    :type image_shape: sequence of ints, optional
-    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev_str: str, optional
-    :return: Relative velocity image *[batch_shape,image_shape,3]*
+    Parameters
+    ----------
+    cam_coords_t
+        Camera-centric homogeneous co-ordinates image in frame t *[batch_shape,image_shape,4]*
+    id_image
+        Image containing per-pixel object ids *[batch_shape,image_shape,1]*
+    obj_ids
+        Object ids *[batch_shape,num_obj,1]*
+    obj_trans
+        Object transformations for this frame over time *[batch_shape,num_obj,3,4]*
+    delta_t
+        Time difference between frame at timestep t-1 and t *[batch_shape,1]*
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_shape
+        Image dimensions. Inferred from inputs in None. (Default value = None)
+    dev_str
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Relative velocity image *[batch_shape,image_shape,3]*
+
     """
 
     if batch_shape is None:
@@ -480,26 +520,32 @@ def velocity_from_cam_coords_id_image_and_object_trans(cam_coords_t, id_image, o
 def flow_from_cam_coords_id_image_and_object_trans(cam_coords_f1, id_image, obj_ids, obj_trans,
                                                    calib_mat, cam_1_to_2_ext_mat, batch_shape=None,
                                                    image_shape=None):
-    """
-    Compute optical flow from co-ordinate image, id image, and object transformations.
+    """Compute optical flow from co-ordinate image, id image, and object transformations.
 
-    :param cam_coords_f1: Camera-centric homogeneous co-ordinates image in frame t *[batch_shape,image_shape,4]*
-    :type cam_coords_f1: array
-    :param id_image: Image containing per-pixel object ids *[batch_shape,image_shape,1]*
-    :type id_image: array
-    :param obj_ids: Object ids *[batch_shape,num_obj,1]*
-    :type obj_ids: array
-    :param obj_trans: Object transformations for this frame over time *[batch_shape,num_obj,3,4]*
-    :type obj_trans: array
-    :param calib_mat: Calibration matrix *[batch_shape,3,3]*
-    :type calib_mat: array
-    :param cam_1_to_2_ext_mat: Camera 1 to camera 2 extrinsic projection matrix *[batch_shape,3,4]*
-    :type cam_1_to_2_ext_mat: array
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_shape: Image dimensions. Inferred from inputs in None.
-    :type image_shape: sequence of ints, optional
-    :return: Relative velocity image *[batch_shape,image_shape,3]*
+    Parameters
+    ----------
+    cam_coords_f1
+        Camera-centric homogeneous co-ordinates image in frame t *[batch_shape,image_shape,4]*
+    id_image
+        Image containing per-pixel object ids *[batch_shape,image_shape,1]*
+    obj_ids
+        Object ids *[batch_shape,num_obj,1]*
+    obj_trans
+        Object transformations for this frame over time *[batch_shape,num_obj,3,4]*
+    calib_mat
+        Calibration matrix *[batch_shape,3,3]*
+    cam_1_to_2_ext_mat
+        Camera 1 to camera 2 extrinsic projection matrix *[batch_shape,3,4]*
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_shape
+        Image dimensions. Inferred from inputs in None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Relative velocity image *[batch_shape,image_shape,3]*
+
     """
 
     if batch_shape is None:

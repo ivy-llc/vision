@@ -1,22 +1,26 @@
-"""
-Collection of Padding Functions
-"""
+"""Collection of Padding Functions"""
 
 # global
 import ivy as _ivy
 
 
 def pad_omni_image(image, pad_size, image_dims=None):
-    """
-    Pad an omni-directional image with the correct image wrapping at the edges.
+    """Pad an omni-directional image with the correct image wrapping at the edges.
 
-    :param image: Image to perform the padding on *[batch_shape,h,w,d]*
-    :type image: array
-    :param pad_size: Number of pixels to pad.
-    :type pad_size: int
-    :param image_dims: Image dimensions. Inferred from Inputs if None.
-    :type image_dims: sequence of ints, optional
-    :return: New padded omni-directional image *[batch_shape,h+ps,w+ps,d]*
+    Parameters
+    ----------
+    image
+        Image to perform the padding on *[batch_shape,h,w,d]*
+    pad_size
+        Number of pixels to pad.
+    image_dims
+        Image dimensions. Inferred from Inputs if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        New padded omni-directional image *[batch_shape,h+ps,w+ps,d]*
+
     """
 
     if image_dims is None:

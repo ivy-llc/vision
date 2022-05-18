@@ -1,6 +1,4 @@
-"""
-Collection of Singed Distance Functions
-"""
+"""Collection of Singed Distance Functions"""
 # ToDo: extend to include cylinders and cones
 # https://www.iquilezles.org/www/articles/distfunctions/distfunctions.htm
 
@@ -9,17 +7,23 @@ import ivy as _ivy
 
 
 def sphere_signed_distances(sphere_positions, sphere_radii, query_positions):
-    """
-    Return the signed distances of a set of query points from the sphere surfaces.\n
+    """Return the signed distances of a set of query points from the sphere surfaces.\n
     `[reference] <https://www.iquilezles.org/www/articles/distfunctions/distfunctions.htm>`_
 
-    :param sphere_positions: Positions of the spheres *[batch_shape,num_spheres,3]*
-    :type sphere_positions: array
-    :param sphere_radii: Radii of the spheres *[batch_shape,num_spheres,1]*
-    :type sphere_radii: array
-    :param query_positions: Points for which to query the signed distances *[batch_shape,num_points,3]*
-    :type query_positions: array
-    :return: The distances of the query points from the closest sphere surface *[batch_shape,num_points,1]*
+    Parameters
+    ----------
+    sphere_positions
+        Positions of the spheres *[batch_shape,num_spheres,3]*
+    sphere_radii
+        Radii of the spheres *[batch_shape,num_spheres,1]*
+    query_positions
+        Points for which to query the signed distances *[batch_shape,num_points,3]*
+
+    Returns
+    -------
+    ret
+        The distances of the query points from the closest sphere surface *[batch_shape,num_points,1]*
+
     """
 
     # BS x NS x 1 x 3
@@ -39,19 +43,25 @@ def sphere_signed_distances(sphere_positions, sphere_radii, query_positions):
 
 
 def cuboid_signed_distances(cuboid_ext_mats, cuboid_dims, query_positions, batch_shape=None):
-    """
-    Return the signed distances of a set of query points from the cuboid surfaces.\n
+    """Return the signed distances of a set of query points from the cuboid surfaces.\n
     `[reference] <https://www.iquilezles.org/www/articles/distfunctions/distfunctions.htm>`_
 
-    :param cuboid_ext_mats: Extrinsic matrices of the cuboids *[batch_shape,num_cuboids,3,4]*
-    :type cuboid_ext_mats: array
-    :param cuboid_dims: Dimensions of the cuboids, in the order x, y, z *[batch_shape,num_cuboids,3]*
-    :type cuboid_dims: array
-    :param query_positions: Points for which to query the signed distances *[batch_shape,num_points,3]*
-    :type query_positions: array
-    :param batch_shape: Shape of batch. Assumed no batches if None.
-    :type batch_shape: sequence of ints, optional
-    :return: The distances of the query points from the closest cuboid surface *[batch_shape,num_points,1]*
+    Parameters
+    ----------
+    cuboid_ext_mats
+        Extrinsic matrices of the cuboids *[batch_shape,num_cuboids,3,4]*
+    cuboid_dims
+        Dimensions of the cuboids, in the order x, y, z *[batch_shape,num_cuboids,3]*
+    query_positions
+        Points for which to query the signed distances *[batch_shape,num_points,3]*
+    batch_shape
+        Shape of batch. Assumed no batches if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        The distances of the query points from the closest cuboid surface *[batch_shape,num_points,1]*
+
     """
 
     if batch_shape is None:

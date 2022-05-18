@@ -1,6 +1,4 @@
-"""
-Collection of Mesh Functions
-"""
+"""Collection of Mesh Functions"""
 
 # global
 import ivy as _ivy
@@ -14,21 +12,27 @@ MIN_DENOMINATOR = 1e-12
 
 
 def rasterize_triangles(pixel_coords_triangles, image_dims, batch_shape=None, dev_str=None):
-    """
-    Rasterize image-projected triangles
+    """Rasterize image-projected triangles
     based on: https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-stage
     and: https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-practical-implementation
 
-    :param pixel_coords_triangles: Projected image-space triangles to be rasterized
-                                    *[batch_shape,input_size,3,3]*
-    :type pixel_coords_triangles: array
-    :param image_dims: Image dimensions.
-    :type image_dims: sequence of ints
-    :param batch_shape: Shape of batch. Inferred from Inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev_str: str, optional
-    :return: Rasterized triangles
+    Parameters
+    ----------
+    pixel_coords_triangles
+        Projected image-space triangles to be rasterized
+        *[batch_shape,input_size,3,3]*
+    image_dims
+        Image dimensions.
+    batch_shape
+        Shape of batch. Inferred from Inputs if None. (Default value = None)
+    dev_str
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Rasterized triangles
+
     """
 
     if batch_shape is None:
@@ -122,16 +126,22 @@ def rasterize_triangles(pixel_coords_triangles, image_dims, batch_shape=None, de
 
 
 def create_trimesh_indices_for_image(batch_shape, image_dims, dev_str=None):
-    """
-    Create triangle mesh for image with given image dimensions
+    """Create triangle mesh for image with given image dimensions
 
-    :param batch_shape: Shape of batch.
-    :type batch_shape: sequence of ints
-    :param image_dims: Image dimensions.
-    :type image_dims: sequence of ints
-    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
-    :type dev_str: str, optional
-    :return: Triangle mesh indices for image *[batch_shape,h*w*some_other_stuff,3]*
+    Parameters
+    ----------
+    batch_shape
+        Shape of batch.
+    image_dims
+        Image dimensions.
+    dev_str
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Triangle mesh indices for image *[batch_shape,h*w*some_other_stuff,3]*
+
     """
 
     # shapes as lists
@@ -172,20 +182,26 @@ def create_trimesh_indices_for_image(batch_shape, image_dims, dev_str=None):
 
 
 def coord_image_to_trimesh(coord_img, validity_mask=None, batch_shape=None, image_dims=None, dev_str=None):
-    """
-    Create trimesh, with vertices and triangle indices, from co-ordinate image.
+    """Create trimesh, with vertices and triangle indices, from co-ordinate image.
 
-    :param coord_img: Image of co-ordinates *[batch_shape,h,w,3]*
-    :type coord_img: array
-    :param validity_mask: Boolean mask of where the coord image contains valid values *[batch_shape,h,w,1]*
-    :type validity_mask: array, optional
-    :param batch_shape: Shape of batch. Inferred from inputs if None.
-    :type batch_shape: sequence of ints, optional
-    :param image_dims: Image dimensions. Inferred from inputs in None.
-    :type image_dims: sequence of ints, optional
-    :param dev_str: device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None.
-    :type dev_str: str, optional
-    :return: Vertices *[batch_shape,(hxw),3]* amd Trimesh indices *[batch_shape,n,3]*
+    Parameters
+    ----------
+    coord_img
+        Image of co-ordinates *[batch_shape,h,w,3]*
+    validity_mask
+        Boolean mask of where the coord image contains valid values *[batch_shape,h,w,1]* (Default value = None)
+    batch_shape
+        Shape of batch. Inferred from inputs if None. (Default value = None)
+    image_dims
+        Image dimensions. Inferred from inputs in None. (Default value = None)
+    dev_str
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+
+    Returns
+    -------
+    ret
+        Vertices *[batch_shape,(hxw),3]* amd Trimesh indices *[batch_shape,n,3]*
+
     """
 
     if dev_str is None:
