@@ -7,10 +7,11 @@ from functools import reduce as _reduce
 
 
 def transform(coords, trans, batch_shape=None, image_shape=None):
-    """Transform image of :math:`n`-dimensional co-ordinates :math:`\mathbf{x}\in\mathbb{R}^{h×w×n}` by
-    transformation matrix :math:`\mathbf{f}\in\mathbb{R}^{m×n}`, to produce image of transformed co-ordinates
-    :math:`\mathbf{x}_{trans}\in\mathbb{R}^{h×w×m}`.\n
-    `[reference] <https://en.wikipedia.org/wiki/Matrix_multiplication>`_
+    """Transform image of :math:`n`-dimensional co-ordinates :math:`\mathbf{
+    x}\in\mathbb{R}^{h×w×n}` by transformation matrix :math:`\mathbf{f}\in\mathbb{
+    R}^{m×n}`, to produce image of transformed co-ordinates :math:`\mathbf{x}_{
+    trans}\in\mathbb{R}^{h×w×m}`.\n `[reference]
+    <https://en.wikipedia.org/wiki/Matrix_multiplication>`_
 
     Parameters
     ----------
@@ -59,10 +60,10 @@ def transform(coords, trans, batch_shape=None, image_shape=None):
 
 
 def projection_matrix_pseudo_inverse(proj_mat, batch_shape=None):
-    """Given projection matrix :math:`\mathbf{P}\in\mathbb{R}^{3×4}`, compute it's pseudo-inverse
-    :math:`\mathbf{P}^+\in\mathbb{R}^{4×3}`.\n
-    `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf?_ijt=25ihpil89dmfo4da975v402ogc#page=179>`_
-    bottom of page 161, section 6.2.2
+    """Given projection matrix :math:`\mathbf{P}\in\mathbb{R}^{3×4}`, compute it's
+    pseudo-inverse :math:`\mathbf{P}^+\in\mathbb{R}^{4×3}`.\n `[reference]
+    <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf?_ijt
+    =25ihpil89dmfo4da975v402ogc#page=179>`_ bottom of page 161, section 6.2.2
 
     Parameters
     ----------
@@ -96,10 +97,11 @@ def projection_matrix_pseudo_inverse(proj_mat, batch_shape=None):
 
 
 def projection_matrix_inverse(proj_mat):
-    """Given projection matrix :math:`\mathbf{P}\in\mathbb{R}^{3×4}`, compute it's inverse
-    :math:`\mathbf{P}^{-1}\in\mathbb{R}^{3×4}`.\n
-    `[reference] <https://github.com/pranjals16/cs676/blob/master/Hartley%2C%20Zisserman%20-%20Multiple%20View%20Geometry%20in%20Computer%20Vision.pdf#page=174>`_
-    middle of page 156, section 6.1, eq 6.6
+    """Given projection matrix :math:`\mathbf{P}\in\mathbb{R}^{3×4}`, compute it's
+    inverse :math:`\mathbf{P}^{-1}\in\mathbb{R}^{3×4}`.\n `[reference]
+    <https://github.com/pranjals16/cs676/blob/master/Hartley%2C%20Zisserman%20
+    -%20Multiple%20View%20Geometry%20in%20Computer%20Vision.pdf#page=174>`_ middle of
+    page 156, section 6.1, eq 6.6
 
     Parameters
     ----------
@@ -130,10 +132,12 @@ def projection_matrix_inverse(proj_mat):
 
 
 def solve_homogeneous_dlt(A):
-    """Given :math:`\mathbf{A}\in\mathbb{R}^{d×d}`, solve the system of :math:`d` equations in :math:`d` unknowns
-    :math:`\mathbf{Ax} = \mathbf{0}` using the homogeneous DLT method, to return :math:`\mathbf{x}\in\mathbb{R}^d`.\n
-    `[reference] <https://github.com/pranjals16/cs676/blob/master/Hartley%2C%20Zisserman%20-%20Multiple%20View%20Geometry%20in%20Computer%20Vision.pdf#page=106>`_
-    bottom of page 88, section 4.1
+    """Given :math:`\mathbf{A}\in\mathbb{R}^{d×d}`, solve the system of :math:`d`
+    equations in :math:`d` unknowns :math:`\mathbf{Ax} = \mathbf{0}` using the
+    homogeneous DLT method, to return :math:`\mathbf{x}\in\mathbb{R}^d`.\n `[
+    reference] <https://github.com/pranjals16/cs676/blob/master/Hartley%2C
+    %20Zisserman%20-%20Multiple%20View%20Geometry%20in%20Computer%20Vision.pdf#page
+    =106>`_ bottom of page 88, section 4.1
 
     Parameters
     ----------

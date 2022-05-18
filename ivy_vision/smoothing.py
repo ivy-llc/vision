@@ -19,7 +19,8 @@ def weighted_image_smooth(mean, weights, kernel_dim):
     mean
         Image to smooth *[batch_shape,h,w,d]*
     weights
-        Variance image, with the variance values of each pixel in the image *[batch_shape,h,w,d]*
+        Variance image, with the variance values of each pixel in the image
+        *[batch_shape,h,w,d]*
     kernel_dim
         The dimension of the kernel
 
@@ -53,20 +54,23 @@ def weighted_image_smooth(mean, weights, kernel_dim):
 
 
 def smooth_image_fom_var_image(mean, var, kernel_dim, kernel_scale, dev_str=None):
-    """Smooth an image using variance values from a variance image of the same size, and a spatial smoothing kernel.
+    """Smooth an image using variance values from a variance image of the same size,
+    and a spatial smoothing kernel.
 
     Parameters
     ----------
     mean
         Image to smooth *[batch_shape,h,w,d]*
     var
-        Variance image, with the variance values of each pixel in the image *[batch_shape,h,w,d]*
+        Variance image, with the variance values of each pixel in the image
+        *[batch_shape,h,w,d]*
     kernel_dim
         The dimension of the kernel
     kernel_scale
         The scale of the kernel along the channel dimension *[d]*
     dev_str
-        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
+        Same as x if None. (Default value = None)
 
     Returns
     -------

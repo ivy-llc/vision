@@ -8,22 +8,25 @@ MIN_DENOMINATOR = 1e-12
 
 def coords_to_voxel_grid(coords, voxel_shape_spec, mode='DIMS', coord_bounds=None, features=None, batch_shape=None,
                          dev_str=None):
-    """Create voxel grid :math:`\mathbf{X}_v\in\mathbb{R}^{x×y×z×(3+N+1)}` from homogeneous co-ordinates
-    :math:`\mathbf{X}_w\in\mathbb{R}^{num\_coords×4}`. Each voxel contains 3+N+1 values: the mean
-    world co-ordinate inside the voxel for the projected pixels, N coordinte features (optional),
-    and also the number of projected pixels inside the voxel.
-    Grid resolutions and dimensions are also returned separately for each entry in the batch.
-    Note that the final batched voxel grid returned uses the maximum grid dimensions across the batch, this means
-    some returned grids may contain redundant space, with all but the single largest batched grid occupying a subset
-    of the grid space, originating from the corner of minimum :math:`x,y,z` values.\n
-    `[reference] <https://en.wikipedia.org/wiki/Voxel>`_
+    """Create voxel grid :math:`\mathbf{X}_v\in\mathbb{R}^{x×y×z×(3+N+1)}` from
+    homogeneous co-ordinates :math:`\mathbf{X}_w\in\mathbb{R}^{num\_coords×4}`. Each
+    voxel contains 3+N+1 values: the mean world co-ordinate inside the voxel for the
+    projected pixels, N coordinte features (optional), and also the number of
+    projected pixels inside the voxel. Grid resolutions and dimensions are also
+    returned separately for each entry in the batch. Note that the final batched
+    voxel grid returned uses the maximum grid dimensions across the batch, this means
+    some returned grids may contain redundant space, with all but the single largest
+    batched grid occupying a subset of the grid space, originating from the corner of
+    minimum :math:`x,y,z` values.\n `[reference]
+    <https://en.wikipedia.org/wiki/Voxel>`_
 
     Parameters
     ----------
     coords
         Homogeneous co-ordinates *[batch_shape,c,4]*
     voxel_shape_spec
-        Either the number of voxels in x,y,z directions, or the resolutions (metres) in x,y,z
+        Either the number of voxels in x,y,z directions, or the resolutions (metres) in
+        x,y,z
         directions, depending on mode. Batched or unbatched. *[batch_shape,3]* or *[3]*
     mode
         Shape specification mode, either "DIMS" or "RES" (Default value = 'DIMS')
@@ -36,12 +39,14 @@ def coords_to_voxel_grid(coords, voxel_shape_spec, mode='DIMS', coord_bounds=Non
     batch_shape
         Shape of batch. Inferred from inputs if None. (Default value = None)
     dev_str
-        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
+        Same as x if None. (Default value = None)
 
     Returns
     -------
     ret
-        Voxel grid *[batch_shape,x_max,v_max,z_max,3+feature_size+1]*, dimensions *[batch_shape,3]*,
+        Voxel grid *[batch_shape,x_max,v_max,z_max,3+feature_size+1]*, dimensions
+        *[batch_shape,3]*,
         resolutions *[batch_shape,3]*, voxel_grid_lower_corners *[batch_shape,3]*
 
     """

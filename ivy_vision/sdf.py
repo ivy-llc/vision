@@ -7,8 +7,9 @@ import ivy as _ivy
 
 
 def sphere_signed_distances(sphere_positions, sphere_radii, query_positions):
-    """Return the signed distances of a set of query points from the sphere surfaces.\n
-    `[reference] <https://www.iquilezles.org/www/articles/distfunctions/distfunctions.htm>`_
+    """Return the signed distances of a set of query points from the sphere
+    surfaces.\n `[reference] <https://www.iquilezles.org/www/articles/distfunctions
+    /distfunctions.htm>`_
 
     Parameters
     ----------
@@ -22,7 +23,8 @@ def sphere_signed_distances(sphere_positions, sphere_radii, query_positions):
     Returns
     -------
     ret
-        The distances of the query points from the closest sphere surface *[batch_shape,num_points,1]*
+        The distances of the query points from the closest sphere surface
+        *[batch_shape,num_points,1]*
 
     """
 
@@ -43,8 +45,9 @@ def sphere_signed_distances(sphere_positions, sphere_radii, query_positions):
 
 
 def cuboid_signed_distances(cuboid_ext_mats, cuboid_dims, query_positions, batch_shape=None):
-    """Return the signed distances of a set of query points from the cuboid surfaces.\n
-    `[reference] <https://www.iquilezles.org/www/articles/distfunctions/distfunctions.htm>`_
+    """Return the signed distances of a set of query points from the cuboid
+    surfaces.\n `[reference] <https://www.iquilezles.org/www/articles/distfunctions
+    /distfunctions.htm>`_
 
     Parameters
     ----------
@@ -60,7 +63,8 @@ def cuboid_signed_distances(cuboid_ext_mats, cuboid_dims, query_positions, batch
     Returns
     -------
     ret
-        The distances of the query points from the closest cuboid surface *[batch_shape,num_points,1]*
+        The distances of the query points from the closest cuboid surface
+        *[batch_shape,num_points,1]*
 
     """
 

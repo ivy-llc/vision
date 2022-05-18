@@ -31,12 +31,14 @@ def ds_pixel_to_ds_pixel_coords(ds_pixel_coords1, cam1to2_full_mat, batch_shape=
     image_shape
         Image shape. Inferred from inputs in None. (Default value = None)
     dev_str
-        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
+        Same as x if None. (Default value = None)
 
     Returns
     -------
     ret
-        Depth scaled homogeneous pixel co-ordinates image in frame 2 *[batch_shape,image_shape,3]*
+        Depth scaled homogeneous pixel co-ordinates image in frame 2
+        *[batch_shape,image_shape,3]*
 
     """
 
@@ -77,7 +79,8 @@ def cam_to_cam_coords(cam_coords1, cam1to2_ext_mat, batch_shape=None, image_shap
     image_shape
         Image shape. Inferred from inputs in None. (Default value = None)
     dev_str
-        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
+        Same as x if None. (Default value = None)
 
     Returns
     -------
@@ -115,7 +118,8 @@ def sphere_to_sphere_coords(sphere_coords1, cam1to2_ext_mat, batch_shape=None, i
     Parameters
     ----------
     sphere_coords1
-        Camera-centric ego-sphere polar co-ordinates image in frame 1 *[batch_shape,image_shape,3]*
+        Camera-centric ego-sphere polar co-ordinates image in frame 1
+        *[batch_shape,image_shape,3]*
     cam1to2_ext_mat
         Camera1-to-camera2 extrinsic projection matrix *[batch_shape,3,4]*
     batch_shape
@@ -126,7 +130,8 @@ def sphere_to_sphere_coords(sphere_coords1, cam1to2_ext_mat, batch_shape=None, i
     Returns
     -------
     ret
-        Camera-centric ego-sphere polar co-ordinates image in frame 2 *[batch_shape,image_shape,3]*
+        Camera-centric ego-sphere polar co-ordinates image in frame 2
+        *[batch_shape,image_shape,3]*
 
     """
 
@@ -171,7 +176,8 @@ def angular_pixel_to_angular_pixel_coords(angular_pixel_coords1, cam1to2_ext_mat
     Returns
     -------
     ret
-        Camera-centric ego-sphere polar co-ordinates image in frame 2 *[batch_shape,image_shape,3]*
+        Camera-centric ego-sphere polar co-ordinates image in frame 2
+        *[batch_shape,image_shape,3]*
 
     """
 
@@ -210,13 +216,16 @@ def get_fundamental_matrix(full_mat1, full_mat2, camera_center1=None, pinv_full_
     full_mat2
         Frame 2 full projection matrix *[batch_shape,3,4]*
     camera_center1
-        Frame 1 camera center, inferred from full_mat1 if None *[batch_shape,3,1]* (Default value = None)
+        Frame 1 camera center, inferred from full_mat1 if None *[batch_shape,3,1]*
+        (Default value = None)
     pinv_full_mat1
-        Frame 1 full projection matrix pseudo-inverse, inferred from full_mat1 if None *[batch_shape,4,3]* (Default value = None)
+        Frame 1 full projection matrix pseudo-inverse, inferred from full_mat1 if None
+        *[batch_shape,4,3]* (Default value = None)
     batch_shape
         Shape of batch. Inferred from inputs if None. (Default value = None)
     dev_str
-        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
+        Same as x if None. (Default value = None)
 
     Returns
     -------
@@ -279,7 +288,8 @@ def closest_mutual_points_along_two_skew_rays(camera_centers, world_ray_vectors,
     image_shape
         Image dimensions. Inferred from inputs in None. (Default value = None)
     dev_str
-        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
+        Same as x if None. (Default value = None)
 
     Returns
     -------
@@ -453,8 +463,8 @@ TRI_METHODS = {'cmp': _triangulate_depth_by_closest_mutual_points,
 
 def triangulate_depth(ds_pixel_coords, full_mats, inv_full_mats=None, camera_centers=None, method='cmp',
                       batch_shape=None, image_shape=None):
-    """Triangulate depth in frame 1, returning depth scaled homogeneous pixel co-ordinate image
-    :math:`\mathbf{X}\in\mathbb{R}^{is×3}` in frame 1.\n
+    """Triangulate depth in frame 1, returning depth scaled homogeneous pixel
+    co-ordinate image :math:`\mathbf{X}\in\mathbb{R}^{is×3}` in frame 1.\n
 
     Parameters
     ----------
@@ -463,11 +473,14 @@ def triangulate_depth(ds_pixel_coords, full_mats, inv_full_mats=None, camera_cen
     full_mats
         Full projection matrices *[batch_shape,2,3,4]*
     inv_full_mats
-        Inverse full projection matrices, required for closest_mutual_points method *[batch_shape,2,3,4]* (Default value = None)
+        Inverse full projection matrices, required for closest_mutual_points method
+        *[batch_shape,2,3,4]* (Default value = None)
     camera_centers
-        Camera centers, required for closest_mutual_points method *[batch_shape,2,3,1]* (Default value = None)
+        Camera centers, required for closest_mutual_points method *[batch_shape,2,3,1]*
+        (Default value = None)
     method
-        Triangulation method, one of [cmp|dlt], for closest mutual points or homogeneous dlt approach, closest_mutual_points by default
+        Triangulation method, one of [cmp|dlt], for closest mutual points or
+        homogeneous dlt approach, closest_mutual_points by default
     batch_shape
         Shape of batch. Inferred from inputs if None. (Default value = None)
     image_shape
@@ -476,7 +489,8 @@ def triangulate_depth(ds_pixel_coords, full_mats, inv_full_mats=None, camera_cen
     Returns
     -------
     ret
-        Depth scaled homogeneous pixel co-ordinates image in frame 1 *[batch_shape,image_shape,3]*
+        Depth scaled homogeneous pixel co-ordinates image in frame 1
+        *[batch_shape,image_shape,3]*
 
     """
 

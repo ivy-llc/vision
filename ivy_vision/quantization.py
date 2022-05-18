@@ -14,12 +14,14 @@ def quantize_to_image(pixel_coords, final_image_dims, feat=None, feat_prior=None
                       pixel_coords_var=1e-3, feat_var=1e-3, pixel_coords_prior_var=1e12,
                       feat_prior_var=1e12, var_threshold=(1e-3, 1e12), uniform_pixel_coords=None,
                       batch_shape=None, dev_str=None):
-    """Quantize pixel co-ordinates with d feature channels (for depth, rgb, normals etc.), from
-    images :math:`\mathbf{X}\in\mathbb{R}^{input\_images\_shape×(2+d)}`, which may have been reprojected from a host of
-    different cameras (leading to non-integer pixel values), to a new quantized pixel co-ordinate image with the same
-    feature channels :math:`\mathbf{X}\in\mathbb{R}^{h×w×(2+d)}`, and with integer pixel co-ordinates.
-    Duplicates during the quantization are either probabilistically fused based on variance, or the minimum depth is
-    chosen when using depth buffer mode.
+    """Quantize pixel co-ordinates with d feature channels (for depth, rgb, normals
+    etc.), from images :math:`\mathbf{X}\in\mathbb{R}^{input\_images\_shape×(2+d)}`,
+    which may have been reprojected from a host of different cameras (leading to
+    non-integer pixel values), to a new quantized pixel co-ordinate image with the
+    same feature channels :math:`\mathbf{X}\in\mathbb{R}^{h×w×(2+d)}`, and with
+    integer pixel co-ordinates. Duplicates during the quantization are either
+    probabilistically fused based on variance, or the minimum depth is chosen when
+    using depth buffer mode.
 
     Parameters
     ----------
@@ -42,20 +44,25 @@ def quantize_to_image(pixel_coords, final_image_dims, feat=None, feat_prior=None
     feat_prior_var
         Features prior variance *[batch_shape,h,w,3]* (Default value = 1e12)
     var_threshold
-        Variance threshold, for projecting valid coords and clipping *[batch_shape,2+d,2]* (Default value = (1e-3)
+        Variance threshold, for projecting valid coords and clipping
+        *[batch_shape,2+d,2]* (Default value = (1e-3)
     uniform_pixel_coords
-        Homogeneous uniform (integer) pixel co-ordinate images, inferred from final_image_dims
+        Homogeneous uniform (integer) pixel co-ordinate images,
+        inferred from final_image_dims
         if None *[batch_shape,h,w,3]* (Default value = None)
     batch_shape
         Shape of batch. Assumed no batches if None. (Default value = None)
     dev_str
-        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
+        Same as x if None. (Default value = None)
 
     Returns
     -------
     ret
-        Quantized pixel co-ordinates image with d feature channels (for depth, rgb, normals etc.) *[batch_shape,h,w,2+d]*,
-        maybe the quantized variance, *[batch_shape,h,w,2+d]*, and scatter counter image *[batch_shape,h,w,1]*
+        Quantized pixel co-ordinates image with d feature channels
+        (for depth, rgb, normals etc.) *[batch_shape,h,w,2+d]*,
+        maybe the quantized variance, *[batch_shape,h,w,2+d]*, and scatter counter image
+        *[batch_shape,h,w,1]*
 
     """
 

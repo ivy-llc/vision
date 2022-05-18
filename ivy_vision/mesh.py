@@ -12,9 +12,11 @@ MIN_DENOMINATOR = 1e-12
 
 
 def rasterize_triangles(pixel_coords_triangles, image_dims, batch_shape=None, dev_str=None):
-    """Rasterize image-projected triangles
-    based on: https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-stage
-    and: https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-practical-implementation
+    """Rasterize image-projected triangles based on:
+    https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical
+    -implementation/rasterization-stage and:
+    https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical
+    -implementation/rasterization-practical-implementation
 
     Parameters
     ----------
@@ -26,7 +28,8 @@ def rasterize_triangles(pixel_coords_triangles, image_dims, batch_shape=None, de
     batch_shape
         Shape of batch. Inferred from Inputs if None. (Default value = None)
     dev_str
-        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
+        Same as x if None. (Default value = None)
 
     Returns
     -------
@@ -135,7 +138,8 @@ def create_trimesh_indices_for_image(batch_shape, image_dims, dev_str=None):
     image_dims
         Image dimensions.
     dev_str
-        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. (Default value = None)
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
+        (Default value = None)
 
     Returns
     -------
@@ -189,13 +193,15 @@ def coord_image_to_trimesh(coord_img, validity_mask=None, batch_shape=None, imag
     coord_img
         Image of co-ordinates *[batch_shape,h,w,3]*
     validity_mask
-        Boolean mask of where the coord image contains valid values *[batch_shape,h,w,1]* (Default value = None)
+        Boolean mask of where the coord image contains valid values
+        *[batch_shape,h,w,1]* (Default value = None)
     batch_shape
         Shape of batch. Inferred from inputs if None. (Default value = None)
     image_dims
         Image dimensions. Inferred from inputs in None. (Default value = None)
     dev_str
-        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
+        Same as x if None. (Default value = None)
 
     Returns
     -------

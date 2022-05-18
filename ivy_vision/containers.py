@@ -14,8 +14,9 @@ class PrimitiveScene(_Container):
                  sphere_radii=None,
                  cuboid_ext_mats=None,
                  cuboid_dims=None):
-        """Initialize scene description as a composition of primitive shapes.
-        # ToDo: extend this to include cylinders and cones once supported in ivy_vision.sdf module
+        """Initialize scene description as a composition of primitive shapes. # ToDo:
+        extend this to include cylinders and cones once supported in ivy_vision.sdf
+        module
 
         Parameters
         ----------
@@ -24,9 +25,11 @@ class PrimitiveScene(_Container):
         sphere_radii
             Sphere radii *[batch_shape,num_spheres,1]* (Default value = None)
         cuboid_ext_mats
-            Cuboid inverse extrinsic matrices *[batch_shape,num_cuboids,3,4]* (Default value = None)
+            Cuboid inverse extrinsic matrices *[batch_shape,num_cuboids,3,4]*
+            (Default value = None)
         cuboid_dims
-            Cuboid dimensions, in order of x, y, z *[batch_shape,num_cuboids,3]* (Default value = None)
+            Cuboid dimensions, in order of x, y, z *[batch_shape,num_cuboids,3]*
+            (Default value = None)
 
         """
         super(PrimitiveScene, self).__init__(
@@ -40,7 +43,8 @@ class PrimitiveScene(_Container):
 
     @staticmethod
     def as_identity(batch_shape):
-        """Return primitive scene object with array attributes as either zeros or identity matrices.
+        """Return primitive scene object with array attributes as either zeros or
+        identity matrices.
 
         Parameters
         ----------
@@ -50,7 +54,8 @@ class PrimitiveScene(_Container):
         Returns
         -------
         ret
-            New primitive scene object, with each entry as either zeros or identity matrices.
+            New primitive scene object, with each entry as either zeros or
+            identity matrices.
 
         """
         batch_shape = list(batch_shape)
@@ -74,7 +79,8 @@ class PrimitiveScene(_Container):
         Returns
         -------
         ret
-            The signed distance values for each of the query points in the scene *[batch_shape,num_points,1]*
+            The signed distance values for each of the query points in the scene
+            *[batch_shape,num_points,1]*
 
         """
 
@@ -129,7 +135,8 @@ class Intrinsics(_Container):
 
     @staticmethod
     def as_identity(batch_shape):
-        """Return camera intrinsics object with array attributes as either zeros or identity matrices.
+        """Return camera intrinsics object with array attributes as either zeros or
+        identity matrices.
 
         Parameters
         ----------
@@ -139,7 +146,8 @@ class Intrinsics(_Container):
         Returns
         -------
         ret
-            New camera intrinsics object, with each entry as either zeros or identity matrices.
+            New camera intrinsics object, with each entry as either zeros or
+            identity matrices.
 
         """
         batch_shape = list(batch_shape)
@@ -188,7 +196,8 @@ class Extrinsics(_Container):
 
     @staticmethod
     def as_identity(batch_shape):
-        """Return camera extrinsics object with array attributes as either zeros or identity matrices.
+        """Return camera extrinsics object with array attributes as either zeros or
+        identity matrices.
 
         Parameters
         ----------
@@ -198,7 +207,8 @@ class Extrinsics(_Container):
         Returns
         -------
         ret
-            New camera extrinsics object, with each entry as either zeros or identity matrices.
+            New camera extrinsics object, with each entry as either zeros or
+            identity matrices.
 
         """
         batch_shape = list(batch_shape)
@@ -243,7 +253,8 @@ class CameraGeometry(_Container):
 
     @staticmethod
     def as_identity(batch_shape):
-        """Return camera geometry object with array attributes as either zeros or identity matrices.
+        """Return camera geometry object with array attributes as either zeros or
+        identity matrices.
 
         Parameters
         ----------
@@ -253,7 +264,8 @@ class CameraGeometry(_Container):
         Returns
         -------
         ret
-            New camera geometry object, with each entry as either zeros or identity matrices.
+            New camera geometry object, with each entry as either zeros or
+            identity matrices.
 
         """
         intrinsics = Intrinsics.as_identity(batch_shape)

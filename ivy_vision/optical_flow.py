@@ -14,8 +14,9 @@ MIN_DENOMINATOR = 1e-12
 
 def depth_from_flow_and_cam_mats(flow, full_mats, inv_full_mats=None, camera_centers=None, uniform_pixel_coords=None,
                                  triangulation_method='cmp', batch_shape=None, image_dims=None, dev_str=None):
-    """Compute depth map :math:`\mathbf{X}\in\mathbb{R}^{h×w×1}` in frame 1 using optical flow
-    :math:`\mathbf{U}_{1→2}\in\mathbb{R}^{h×w×2}` from frame 1 to 2, and the camera geometry.\n
+    """Compute depth map :math:`\mathbf{X}\in\mathbb{R}^{h×w×1}` in frame 1 using
+    optical flow :math:`\mathbf{U}_{1→2}\in\mathbb{R}^{h×w×2}` from frame 1 to 2,
+    and the camera geometry.\n
 
     Parameters
     ----------
@@ -24,19 +25,24 @@ def depth_from_flow_and_cam_mats(flow, full_mats, inv_full_mats=None, camera_cen
     full_mats
         Full projection matrices *[batch_shape,2,3,4]*
     inv_full_mats
-        Inverse full projection matrices, inferred from full_mats if None and 'cmp' triangulation method *[batch_shape,2,3,4]* (Default value = None)
+        Inverse full projection matrices, inferred from full_mats if None and
+        'cmp' triangulation method *[batch_shape,2,3,4]* (Default value = None)
     camera_centers
-        Camera centers, inferred from inv_full_mats if None and 'cmp' triangulation method *[batch_shape,2,3,1]* (Default value = None)
+        Camera centers, inferred from inv_full_mats if None and
+        'cmp' triangulation method *[batch_shape,2,3,1]* (Default value = None)
     uniform_pixel_coords
-        Homogeneous uniform (integer) pixel co-ordinate images, inferred from image_dims if None *[batch_shape,h,w,3]* (Default value = None)
+        Homogeneous uniform (integer) pixel co-ordinate images,
+        inferred from image_dims if None *[batch_shape,h,w,3]* (Default value = None)
     triangulation_method
-        Triangulation method, one of [cmp|dlt], for closest mutual points or homogeneous dlt approach, closest_mutual_points by default
+        Triangulation method, one of [cmp|dlt], for closest mutual points or
+        homogeneous dlt approach, closest_mutual_points by default
     batch_shape
         Shape of batch. Inferred from inputs if None. (Default value = None)
     image_dims
         Image dimensions. Inferred from inputs in None. (Default value = None)
     dev_str
-        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
+        Same as x if None. (Default value = None)
 
     Returns
     -------
@@ -90,7 +96,8 @@ def flow_from_depth_and_cam_mats(pixel_coords1, cam1to2_full_mat, batch_shape=No
     Parameters
     ----------
     pixel_coords1
-        Depth scaled homogeneous pixel co-ordinates image in frame 1 *[batch_shape,image_shape,3]*
+        Depth scaled homogeneous pixel co-ordinates image in frame 1
+        *[batch_shape,image_shape,3]*
     cam1to2_full_mat
         Camera1-to-camera2 full projection matrix *[batch_shape,3,4]*
     batch_shape
@@ -130,8 +137,10 @@ def flow_from_depth_and_cam_mats(pixel_coords1, cam1to2_full_mat, batch_shape=No
 
 def project_flow_to_epipolar_line(flow, fund_mat, uniform_pixel_coords=None, batch_shape=None, image_dims=None,
                                   dev_str=None):
-    """Project optical flow :math:`\mathbf{U}_{1→2}\in\mathbb{R}^{h×w×2}` to epipolar line in frame 1.\n
-    `[reference] <https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_an_equation>`_
+    """Project optical flow :math:`\mathbf{U}_{1→2}\in\mathbb{R}^{h×w×2}` to epipolar
+    line in frame 1.\n `[reference]
+    <https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
+    #Line_defined_by_an_equation>`_
 
     Parameters
     ----------
@@ -140,18 +149,21 @@ def project_flow_to_epipolar_line(flow, fund_mat, uniform_pixel_coords=None, bat
     fund_mat
         Fundamental matrix connecting frames 1 and 2 *[batch_shape,3,3]*
     uniform_pixel_coords
-        Homogeneous uniform (integer) pixel co-ordinate images, inferred from image_dims if None *[batch_shape,h,w,3]* (Default value = None)
+        Homogeneous uniform (integer) pixel co-ordinate images,
+        inferred from image_dims if None *[batch_shape,h,w,3]* (Default value = None)
     batch_shape
         Shape of batch. Inferred from inputs if None. (Default value = None)
     image_dims
         Image dimensions. Inferred from inputs in None. (Default value = None)
     dev_str
-        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
+        Same as x if None. (Default value = None)
 
     Returns
     -------
     ret
-        Optical flow from frame 1 to 2, projected to frame 1 epipolar line *[batch_shape,h,w,2]*
+        Optical flow from frame 1 to 2, projected to frame 1 epipolar line
+        *[batch_shape,h,w,2]*
 
     """
 
@@ -202,9 +214,10 @@ def project_flow_to_epipolar_line(flow, fund_mat, uniform_pixel_coords=None, bat
 # noinspection PyUnresolvedReferences
 def pixel_cost_volume(image1, image2, search_range, batch_shape=None):
     """Compute cost volume from image feature patch comparisons between first image
-    :math:`\mathbf{X}_1\in\mathbb{R}^{h×w×d}` and second image :math:`\mathbf{X}_2\in\mathbb{R}^{h×w×d}`, as used in
-    FlowNet paper.\n
-    `[reference] <https://www.cv-foundation.org/openaccess/content_iccv_2015/papers/Dosovitskiy_FlowNet_Learning_Optical_ICCV_2015_paper.pdf>`_
+    :math:`\mathbf{X}_1\in\mathbb{R}^{h×w×d}` and second image :math:`\mathbf{
+    X}_2\in\mathbb{R}^{h×w×d}`, as used in FlowNet paper.\n `[reference]
+    <https://www.cv-foundation.org/openaccess/content_iccv_2015/papers
+    /Dosovitskiy_FlowNet_Learning_Optical_ICCV_2015_paper.pdf>`_
 
     Parameters
     ----------
@@ -265,7 +278,8 @@ def pixel_cost_volume(image1, image2, search_range, batch_shape=None):
 def velocity_from_flow_cam_coords_and_cam_mats(flow_t_to_tm1, cam_coords_t, cam_coords_tm1,
                                                cam_tm1_to_t_ext_mat, delta_t, uniform_pixel_coords=None,
                                                batch_shape=None, image_dims=None, dev_str=None):
-    """Compute relative cartesian velocity from optical flow, camera co-ordinates, and camera extrinsics.
+    """Compute relative cartesian velocity from optical flow, camera co-ordinates, and
+    camera extrinsics.
 
     Parameters
     ----------
@@ -280,13 +294,15 @@ def velocity_from_flow_cam_coords_and_cam_mats(flow_t_to_tm1, cam_coords_t, cam_
     delta_t
         Time difference between frame at timestep t-1 and t *[batch_shape,1]*
     uniform_pixel_coords
-        Homogeneous uniform (integer) pixel co-ordinate images, inferred from image_dims if None *[batch_shape,h,w,3]* (Default value = None)
+        Homogeneous uniform (integer) pixel co-ordinate images,
+        inferred from image_dims if None *[batch_shape,h,w,3]* (Default value = None)
     batch_shape
         Shape of batch. Inferred from inputs if None. (Default value = None)
     image_dims
         Image dimensions. Inferred from inputs in None. (Default value = None)
     dev_str
-        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
+        Same as x if None. (Default value = None)
 
     Returns
     -------
@@ -350,12 +366,14 @@ def velocity_from_flow_cam_coords_and_cam_mats(flow_t_to_tm1, cam_coords_t, cam_
 
 def project_cam_coords_with_object_transformations(cam_coords_1, id_image, obj_ids, obj_trans,
                                                    cam_1_to_2_ext_mat, batch_shape=None, image_shape=None):
-    """Compute velocity image from co-ordinate image, id image, and object transformations.
+    """Compute velocity image from co-ordinate image, id image, and object
+    transformations.
 
     Parameters
     ----------
     cam_coords_1
-        Camera-centric homogeneous co-ordinates image in frame t *[batch_shape,image_shape,4]*
+        Camera-centric homogeneous co-ordinates image in frame t
+        *[batch_shape,image_shape,4]*
     id_image
         Image containing per-pixel object ids *[batch_shape,h,w,1]*
     obj_ids
@@ -452,12 +470,14 @@ def project_cam_coords_with_object_transformations(cam_coords_1, id_image, obj_i
 
 def velocity_from_cam_coords_id_image_and_object_trans(cam_coords_t, id_image, obj_ids, obj_trans, delta_t,
                                                        batch_shape=None, image_shape=None, dev_str=None):
-    """Compute velocity image from co-ordinate image, id image, and object transformations.
+    """Compute velocity image from co-ordinate image, id image, and object
+    transformations.
 
     Parameters
     ----------
     cam_coords_t
-        Camera-centric homogeneous co-ordinates image in frame t *[batch_shape,image_shape,4]*
+        Camera-centric homogeneous co-ordinates image in frame t
+        *[batch_shape,image_shape,4]*
     id_image
         Image containing per-pixel object ids *[batch_shape,image_shape,1]*
     obj_ids
@@ -471,7 +491,8 @@ def velocity_from_cam_coords_id_image_and_object_trans(cam_coords_t, id_image, o
     image_shape
         Image dimensions. Inferred from inputs in None. (Default value = None)
     dev_str
-        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as x if None. (Default value = None)
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
+        Same as x if None. (Default value = None)
 
     Returns
     -------
@@ -520,12 +541,14 @@ def velocity_from_cam_coords_id_image_and_object_trans(cam_coords_t, id_image, o
 def flow_from_cam_coords_id_image_and_object_trans(cam_coords_f1, id_image, obj_ids, obj_trans,
                                                    calib_mat, cam_1_to_2_ext_mat, batch_shape=None,
                                                    image_shape=None):
-    """Compute optical flow from co-ordinate image, id image, and object transformations.
+    """Compute optical flow from co-ordinate image, id image, and object
+    transformations.
 
     Parameters
     ----------
     cam_coords_f1
-        Camera-centric homogeneous co-ordinates image in frame t *[batch_shape,image_shape,4]*
+        Camera-centric homogeneous co-ordinates image in frame t
+        *[batch_shape,image_shape,4]*
     id_image
         Image containing per-pixel object ids *[batch_shape,image_shape,1]*
     obj_ids

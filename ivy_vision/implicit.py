@@ -14,9 +14,10 @@ MIN_DENOMINATOR = 1e-12
 
 def downsampled_image_dims_from_desired_num_pixels(image_dims, num_pixels,
                                                    maximum=False):
-    """Compute the best downsampled image dimensions, given original image dimensions and the ideal total number of
-    pixels for the downsampled image. The final number of pixels in the downsampled image dimensions may not be exact,
-    but will best balance aspect ratio preservation and total number of pixels.
+    """Compute the best downsampled image dimensions, given original image dimensions
+    and the ideal total number of pixels for the downsampled image. The final number
+    of pixels in the downsampled image dimensions may not be exact, but will best
+    balance aspect ratio preservation and total number of pixels.
 
     Parameters
     ----------
@@ -46,14 +47,16 @@ def downsampled_image_dims_from_desired_num_pixels(image_dims, num_pixels,
 def create_sampled_pixel_coords_image(image_dims, samples_per_dim, batch_shape=None,
                                       normalized=False, randomize=True,
                                       homogeneous=False, dev_str=None):
-    """Create image of randomly sampled homogeneous integer :math:`xy` pixel co-ordinates :math:`\mathbf{X}\in\mathbb{Z}^{h×w×3}`,
-    stored as floating point values. The origin is at the top-left corner of the image, with :math:`+x` rightwards, and
-    :math:`+y` downwards. The final homogeneous dimension are all ones. In subsequent use of this image, the depth of
-    each pixel can be represented using this same homogeneous representation, by simply scaling each 3-vector by the
-    depth value. The final dimension therefore always holds the depth value, while the former two dimensions hold depth
-    scaled pixel co-ordinates.\n
-    `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=172>`_
-    deduction from top of page 154, section 6.1, equation 6.1
+    """Create image of randomly sampled homogeneous integer :math:`xy` pixel
+    co-ordinates :math:`\mathbf{X}\in\mathbb{Z}^{h×w×3}`, stored as floating point
+    values. The origin is at the top-left corner of the image, with :math:`+x`
+    rightwards, and :math:`+y` downwards. The final homogeneous dimension are all
+    ones. In subsequent use of this image, the depth of each pixel can be represented
+    using this same homogeneous representation, by simply scaling each 3-vector by
+    the depth value. The final dimension therefore always holds the depth value,
+    while the former two dimensions hold depth scaled pixel co-ordinates.\n `[
+    reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=172
+    >`_ deduction from top of page 154, section 6.1, equation 6.1
 
     Parameters
     ----------
@@ -66,11 +69,14 @@ def create_sampled_pixel_coords_image(image_dims, samples_per_dim, batch_shape=N
     normalized
         Whether to normalize x-y pixel co-ordinates to the range 0-1. Default is False.
     randomize
-        Whether to randomize the sampled co-ordiantes within their window. Default is True.
+        Whether to randomize the sampled co-ordiantes within their window.
+        Default is True.
     homogeneous
-        Whether the pixel co-ordinates should be 3D homogeneous or just 2D. Default is True.
+        Whether the pixel co-ordinates should be 3D homogeneous or just 2D.
+        Default is True.
     dev_str
-        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. (Default value = None)
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
+        (Default value = None)
 
     Returns
     -------
@@ -124,8 +130,8 @@ def create_sampled_pixel_coords_image(image_dims, samples_per_dim, batch_shape=N
 
 
 def sample_images(list_of_images, num_pixels, batch_shape, image_dims, dev_str=None):
-    """Samples each image in a list of aligned images at num_pixels random pixel co-ordinates, within a unifrom grid
-    over the image.
+    """Samples each image in a list of aligned images at num_pixels random pixel
+    co-ordinates, within a unifrom grid over the image.
 
     Parameters
     ----------
@@ -138,7 +144,8 @@ def sample_images(list_of_images, num_pixels, batch_shape, image_dims, dev_str=N
     image_dims
         Image dimensions. Inferred from inputs in None.
     dev_str
-        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc. Same as images if None. (Default value = None)
+        device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
+        Same as images if None. (Default value = None)
 
     """
 
@@ -198,7 +205,8 @@ def sample_images(list_of_images, num_pixels, batch_shape, image_dims, dev_str=N
 
 # noinspection PyUnresolvedReferences
 def sampled_volume_density_to_occupancy_probability(density, inter_sample_distance):
-    """Compute probability of occupancy, given sampled volume densities and their associated inter-sample distances
+    """Compute probability of occupancy, given sampled volume densities and their
+    associated inter-sample distances
 
     Parameters
     ----------
@@ -217,7 +225,8 @@ def sampled_volume_density_to_occupancy_probability(density, inter_sample_distan
 
 
 def ray_termination_probabilities(density, inter_sample_distance):
-    """Compute probability of occupancy, given sampled volume densities and their associated inter-sample distances
+    """Compute probability of occupancy, given sampled volume densities and their
+    associated inter-sample distances
 
     Parameters
     ----------
@@ -241,8 +250,9 @@ def ray_termination_probabilities(density, inter_sample_distance):
 
 # noinspection PyUnresolvedReferences
 def stratified_sample(starts, ends, num_samples, batch_shape=None):
-    """Perform stratified sampling, between start and end arrays. This operation divides the range into equidistant bins,
-    and uniformly samples value within the ranges for each of these bins.
+    """Perform stratified sampling, between start and end arrays. This operation
+    divides the range into equidistant bins, and uniformly samples value within the
+    ranges for each of these bins.
 
     Parameters
     ----------
@@ -258,7 +268,8 @@ def stratified_sample(starts, ends, num_samples, batch_shape=None):
     Returns
     -------
     ret
-        The stratified samples, with each randomly placed in uniformly spaced bins *[batch_shape,num_samples]*
+        The stratified samples, with each randomly placed in uniformly spaced bins
+        *[batch_shape,num_samples]*
 
     """
 
@@ -289,8 +300,8 @@ def stratified_sample(starts, ends, num_samples, batch_shape=None):
 # noinspection PyUnresolvedReferences
 def render_rays_via_termination_probabilities(ray_term_probs, features,
                                               render_variance=False):
-    """Render features onto the image plane, given rays sampled at radial depths with readings of
-    feature values and densities at these sample points.
+    """Render features onto the image plane, given rays sampled at radial depths with
+    readings of feature values and densities at these sample points.
 
     Parameters
     ----------
@@ -304,7 +315,8 @@ def render_rays_via_termination_probabilities(ray_term_probs, features,
     Returns
     -------
     ret
-        The feature renderings along the rays, computed via the termination probabilities *[batch_shape,feat_dim]*
+        The feature renderings along the rays, computed via the termination
+        probabilities *[batch_shape,feat_dim]*
 
     """
 
@@ -322,7 +334,8 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far,
                                        render_depth=True, render_feats=True,
                                        render_variance=False, inter_feat_fn=None,
                                        with_grads=True, v=None):
-    """Render an rgb-d image, given an implicit rgb and density function conditioned on xyz data.
+    """Render an rgb-d image, given an implicit rgb and density function conditioned
+    on xyz data.
 
     Parameters
     ----------
@@ -347,16 +360,20 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far,
     render_variance
         Whether to also render the feature variance. Default is False.
     inter_feat_fn
-        Function to extract interpolated features from world-coords *[batch_shape,ray_batch_shape,3]* (Default value = None)
+        Function to extract interpolated features from world-coords
+        *[batch_shape,ray_batch_shape,3]* (Default value = None)
     with_grads
-        Whether to track gradients during the network forward pass. Defualt is True. (Default value = True)
+        Whether to track gradients during the network forward pass. Defualt is True.
+        (Default value = True)
     v
-        The container of trainable variables for the implicit model. default is to use internal variables.
+        The container of trainable variables for the implicit model.
+        Default is to use internal variables.
 
     Returns
     -------
     ret
-        The rendered feature *[batch_shape,ray_batch_shape,feat]* and radial depth *[batch_shape,ray_batch_shape,1]*
+        The rendered feature *[batch_shape,ray_batch_shape,feat]* and radial depth
+        *[batch_shape,ray_batch_shape,1]*
 
     """
 
