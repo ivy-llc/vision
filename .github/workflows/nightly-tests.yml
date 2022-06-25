@@ -4,7 +4,7 @@ jobs:
   run-nightly-tests:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout 🛎️Ivy
+      - name: Checkout 🛎️Ivy Vision
         uses: actions/checkout@v2
         with:
           path: vision
