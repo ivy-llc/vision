@@ -12,4 +12,5 @@ jobs:
 
       - name: Run Tests
         run: |
-          docker run --rm -v `pwd`/vision:/vision unifyai/ivy-vision:latest python3 -m pytest ivy_vision_tests/
+          cd vision
+          docker run --rm -v `pwd`:/vision unifyai/vision:latest python3 -m pytest ivy_vision_tests/
