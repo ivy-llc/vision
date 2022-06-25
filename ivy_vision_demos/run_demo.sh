@@ -15,13 +15,13 @@ function main() {
   -v /home/"${USER}"/ivy_vision:/ivy_vision \
   \
   -v /home/"${USER}"/ivy/ivy:/ivy/ivy \
-  -v /home/"${USER}"/ivy_demo_utils/ivy_demo_utils:/demo-utils/ivy_demo_utils \
-  -v /home/"${USER}"/ivy_builder/ivy_builder:/builder/ivy_builder \
-  -v /home/"${USER}"/ivy_mech/ivy_mech:/mech/ivy_mech \
+  -v /home/"${USER}"/demo_utils/ivy_demo_utils:/demo-utils/ivy_demo_utils \
+  -v /home/"${USER}"/builder/ivy_builder:/builder/ivy_builder \
+  -v /home/"${USER}"/mech/ivy_mech:/mech/ivy_mech \
   \
   -v /home/"${USER}"/PyRep/pyrep:/PyRep/pyrep \
   \
-   unifyai/ivy-vision:latest python3 -m $demos"$1" "${@:2}"
+   unifyai/vision:latest python3 -m $demos"$1" "${@:2}"
 }
 
 main "$@" || cleanup
