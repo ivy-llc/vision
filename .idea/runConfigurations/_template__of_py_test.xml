@@ -3,7 +3,7 @@
     <module name="vision" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
-    <option name="SDK_HOME" value="docker://ivydl/ivy-vision:latest-headless/python3" />
+    <option name="SDK_HOME" value="docker://unifyai/vision:latest-headless/python3" />
     <option name="WORKING_DIRECTORY" value="/vision" />
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
