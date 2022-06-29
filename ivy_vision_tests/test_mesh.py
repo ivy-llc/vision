@@ -1,6 +1,6 @@
 # global
 import ivy
-import ivy_tests.helpers as helpers
+import ivy_tests.test_ivy.helpers as helpers
 import numpy as np
 import pytest
 

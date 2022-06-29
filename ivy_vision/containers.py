@@ -1,6 +1,6 @@
 # global
 import ivy as _ivy
-from ivy.core.container import Container as _Container
+from ivy.container import Container as _Container
 
 # local
 import ivy_vision.sdf as ivy_sdf

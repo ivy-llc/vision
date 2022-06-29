@@ -1,7 +1,7 @@
 # global
 import pytest
 import numpy as np
-import ivy_tests.helpers as helpers
+import ivy_tests.test_ivy.helpers as helpers
 
 # local
 from ivy_vision_tests.data import TestData

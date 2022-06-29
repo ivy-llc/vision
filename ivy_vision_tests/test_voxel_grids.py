@@ -1,8 +1,8 @@
 # global
 import pytest
-import ivy.numpy
+import ivy.functional.backends.numpy as ivy_np
 import numpy as np
-import ivy_tests.helpers as helpers
+import ivy_tests.test_ivy.helpers as helpers
 
 # local
 import ivy_vision.voxel_grids as ivy_vg
@@ -94,11 +94,11 @@ def test_world_coords_to_bounding_voxel_grid(dev_str, call):
     if call in [helpers.mx_call]:
         # MXNet cannot slice arrays with more than 6 dimensions
         return
-    with ivy.numpy.use:
+    with ivy_np.use:
         target = np.sum(ivy_vg.coords_to_voxel_grid(td.world_coords_flat, (32, 32, 32), 'DIMS')[0], -1) > 0
     assert np.allclose(np.sum(
         call(ivy_vg.coords_to_voxel_grid, td.world_coords_flat, (32, 32, 32), 'DIMS')[0], -1) > 0, target, atol=1e-6)
-    with ivy.numpy.use:
+    with ivy_np.use:
         target = np.sum(ivy_vg.coords_to_voxel_grid(td.world_coords_flat, (0.1, 0.1, 0.1), 'RES')[0], -1) > 0
     assert np.allclose(np.sum(
         call(ivy_vg.coords_to_voxel_grid, td.world_coords_flat, (0.1, 0.1, 0.1), 'RES')[0], -1) > 0, target, atol=1e-6)

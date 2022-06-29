@@ -2,7 +2,7 @@
 import os
 import cv2
 import ivy_mech
-import ivy.numpy
+import ivy.functional.backends.numpy as ivy_np
 import numpy as np
 import xml.etree.ElementTree as ETree
 
@@ -186,7 +186,7 @@ class TestData:
             (self.batch_size, self.num_cameras, self.image_dims[0], self.image_dims[1], 1))), -1)
 
         # projected sphere coords
-        with ivy.numpy.use:
+        with ivy_np.use:
             proj_cam_coords = ivy.concatenate((self.proj_cam_coords[..., 2:3],
                                                self.proj_cam_coords[..., 0:1],
                                                self.proj_cam_coords[..., 1:2]), -1)

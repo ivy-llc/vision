@@ -2,7 +2,7 @@
 import ivy
 import pytest
 import numpy as np
-from ivy_tests import helpers
+from ivy_tests.test_ivy import helpers
 
 # local
 from ivy_vision import implicit as ivy_imp

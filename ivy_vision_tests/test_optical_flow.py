@@ -2,12 +2,12 @@
 import ivy
 import pytest
 import numpy as np
-import ivy.numpy as ivy_np
+import ivy.functional.backends.numpy as ivy_np
 try:
     import tensorflow as tf
 except ImportError:
     pass
-import ivy_tests.helpers as helpers
+import ivy_tests.test_ivy.helpers as helpers
 
 # local
 from ivy_vision_tests.data import TestData

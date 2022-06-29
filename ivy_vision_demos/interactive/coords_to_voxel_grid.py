@@ -2,9 +2,9 @@
 import os
 import ivy
 import argparse
-import ivy.jax
+import ivy.functional.backends.jax as ivy_jax
 import ivy_mech
-import ivy.numpy
+import ivy.functional.backends.numpy as ivy_np
 import ivy_vision
 import numpy as np
 import matplotlib.pyplot as plt
@@ -116,7 +116,7 @@ def main(interactive=True, try_use_sim=True, f=None):
         voxels = [ivy.to_numpy(item) for item in ivy_vision.coords_to_voxel_grid(xyz, [100] * 3, features=rgb)]
         cuboid_inv_ext_mats = [ivy.to_numpy(ivy_mech.make_transformation_homogeneous(cam.get_inv_ext_mat()))
                                for cam in sim.cams]
-        with ivy.numpy.use:
+        with ivy_np.use:
             vis.show_voxel_grid(voxels, interactive,
                                 cuboid_inv_ext_mats=cuboid_inv_ext_mats,
                                 cuboid_dims=[np.array([0.045, 0.045, 0.112]) for _ in sim.cams])

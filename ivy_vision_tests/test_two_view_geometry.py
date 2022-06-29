@@ -1,7 +1,7 @@
 # global
 import ivy
 import numpy as np
-import ivy.numpy as ivy_np
+import ivy.functional.backends.numpy as ivy_np
 try:
     import tensorflow as tf
 except ImportError:

@@ -6,7 +6,7 @@ Collection of tests for ivy vision demos
 import os
 import pytest
 import shutil
-import ivy_tests.helpers as helpers
+import ivy_tests.test_ivy.helpers as helpers
 
 
 def test_demo_run_through(dev_str, f, call):
