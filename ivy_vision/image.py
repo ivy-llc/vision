@@ -252,25 +252,3 @@ def bilinear_resample(x, warp):
     resampled_flat = wa * Ia + wb * Ib + wc * Ic + wd * Id
     # B x NP x D
     return ivy.reshape(resampled_flat, batch_shape + [-1, num_feats])
-
-
-# to be completed
-def linear_resample(x, num_samples, axis=-1):
-    """Performs linear re-sampling on input image.
-    Parameters
-    ----------
-    x
-        Input image
-    num_samples
-        The number of interpolated samples to take.
-    axis
-        The axis along which to perform the resample. Default is last dimension.
-    out
-        optional output array, for writing the result to. It must have a shape that the
-        inputs broadcast to.
-    Returns
-    -------
-    ret
-        The array after the linear resampling.
-
-    """
