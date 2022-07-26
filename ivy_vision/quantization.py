@@ -13,7 +13,7 @@ MIN_DEPTH_DIFF = 1e-2
 def quantize_to_image(pixel_coords, final_image_dims, feat=None, feat_prior=None, with_db=False,
                       pixel_coords_var=1e-3, feat_var=1e-3, pixel_coords_prior_var=1e12,
                       feat_prior_var=1e12, var_threshold=(1e-3, 1e12), uniform_pixel_coords=None,
-                      batch_shape=None, dev_str=None):
+                      batch_shape=None, device=None):
     """Quantize pixel co-ordinates with d feature channels (for depth, rgb, normals
     etc.), from images :math:`\mathbf{X}\in\mathbb{R}^{input\_images\_shape×(2+d)}`,
     which may have been reprojected from a host of different cameras (leading to
@@ -52,7 +52,7 @@ def quantize_to_image(pixel_coords, final_image_dims, feat=None, feat_prior=None
         if None *[batch_shape,h,w,3]* (Default value = None)
     batch_shape
         Shape of batch. Assumed no batches if None. (Default value = None)
-    dev_str
+    device
         device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
         Same as x if None. (Default value = None)
 
@@ -72,14 +72,14 @@ def quantize_to_image(pixel_coords, final_image_dims, feat=None, feat_prior=None
     if batch_shape is None:
         batch_shape = pixel_coords.shape[:-2]
 
-    if dev_str is None:
-        dev_str = _ivy.dev_str(pixel_coords)
+    if device is None:
+        device = _ivy.device(pixel_coords)
 
     if feat is None:
         d = 0
     else:
         d = feat.shape[-1]
-    min_depth_diff = _ivy.array([MIN_DEPTH_DIFF], dev_str=dev_str)
+    min_depth_diff = _ivy.array([MIN_DEPTH_DIFF], device=device)
     red = 'min' if with_db else 'sum'
 
     # shapes as list
@@ -90,14 +90,14 @@ def quantize_to_image(pixel_coords, final_image_dims, feat=None, feat_prior=None
     # variance threshold
     if isinstance(var_threshold, tuple) or isinstance(var_threshold, list):
         ones = _ivy.ones(batch_shape + [1, 2 + d, 1])
-        var_threshold = _ivy.concatenate((ones * var_threshold[0], ones * var_threshold[1]), -1)
+        var_threshold = _ivy.concat([ones * var_threshold[0], ones * var_threshold[1]], -1)
     else:
         var_threshold = _ivy.reshape(var_threshold, batch_shape + [1, 2 + d, 2])
 
     # uniform pixel coords
     if uniform_pixel_coords is None:
         uniform_pixel_coords =\
-            _ivy_svg.create_uniform_pixel_coords_image(final_image_dims, batch_shape, dev_str=dev_str)
+            _ivy_svg.create_uniform_pixel_coords_image(final_image_dims, batch_shape, device=device)
     uniform_pixel_coords = uniform_pixel_coords[..., 0:2]
 
     # Extract Values #
@@ -119,18 +119,18 @@ def quantize_to_image(pixel_coords, final_image_dims, feat=None, feat_prior=None
     # Combine #
 
     # BS x N x (2+D)
-    pc_n_feat = _ivy.reshape(_ivy.concatenate((pixel_coords, feat), -1), batch_shape + [-1, 2+d])
-    pc_n_feat_var = _ivy.reshape(_ivy.concatenate((pixel_coords_var, feat_var), -1), batch_shape + [-1, 2+d])
+    pc_n_feat = _ivy.reshape(_ivy.concat([pixel_coords, feat], -1), batch_shape + [-1, 2+d])
+    pc_n_feat_var = _ivy.reshape(_ivy.concat([pixel_coords_var, feat_var], -1), batch_shape + [-1, 2+d])
 
     # BS x H x W x (2+D)
-    prior = _ivy.concatenate((uniform_pixel_coords, feat_prior), -1)
-    prior_var = _ivy.concatenate((pixel_coords_prior_var, feat_prior_var), -1)
+    prior = _ivy.concat([uniform_pixel_coords, feat_prior], -1)
+    prior_var = _ivy.concat([pixel_coords_prior_var, feat_prior_var], -1)
 
     # Validity Mask #
 
     # BS x N x 1
     var_validity_mask = \
-        _ivy.reduce_sum(_ivy.cast(pc_n_feat_var < var_threshold[..., 1], 'int32'), -1, keepdims=True) == 2+d
+        _ivy.sum(_ivy.cast(pc_n_feat_var < var_threshold[..., 1], 'int32'), -1, keepdims=True) == 2+d
     bounds_validity_mask = _ivy.logical_and(
         _ivy.logical_and(quantized_pixel_coords[..., 0:1] >= 0, quantized_pixel_coords[..., 1:2] >= 0),
         _ivy.logical_and(quantized_pixel_coords[..., 0:1] <= final_image_dims[1] - 1,
@@ -143,9 +143,9 @@ def quantize_to_image(pixel_coords, final_image_dims, feat=None, feat_prior=None
     num_valid_indices = validity_indices.shape[-2]
 
     if num_valid_indices == 0:
-        return _ivy.concatenate((uniform_pixel_coords[..., 0:2], feat_prior), -1), \
-               _ivy.concatenate((pixel_coords_prior_var, feat_prior_var), -1),\
-               _ivy.zeros_like(feat[..., 0:1], dev_str=dev_str)
+        return _ivy.concat([uniform_pixel_coords[..., 0:2], feat_prior], -1), \
+               _ivy.concat([pixel_coords_prior_var, feat_prior_var], -1),\
+               _ivy.zeros_like(feat[..., 0:1], device=device)
 
     # Depth Based Scaling #
 
@@ -162,8 +162,8 @@ def quantize_to_image(pixel_coords, final_image_dims, feat=None, feat_prior=None
         mean_depth = pc_n_feat[..., 2:3]
 
         # BS x 1 x 1
-        mean_depth_min = _ivy.reduce_min(mean_depth, -2, keepdims=True)
-        mean_depth_max = _ivy.reduce_max(mean_depth, -2, keepdims=True)
+        mean_depth_min = _ivy.min(mean_depth, -2, keepdims=True)
+        mean_depth_max = _ivy.max(mean_depth, -2, keepdims=True)
         mean_depth_range = mean_depth_max - mean_depth_min
 
         # BS x N x 1
@@ -172,20 +172,20 @@ def quantize_to_image(pixel_coords, final_image_dims, feat=None, feat_prior=None
         if d == 1:
 
             # BS x 1 x 1+D
-            pc_n_feat_wo_depth_min = _ivy.zeros(batch_shape + [1, 0], dev_str=dev_str)
-            pc_n_feat_wo_depth_range = _ivy.ones(batch_shape + [1, 0], dev_str=dev_str)
+            pc_n_feat_wo_depth_min = _ivy.zeros(batch_shape + [1, 0], device=device)
+            pc_n_feat_wo_depth_range = _ivy.ones(batch_shape + [1, 0], device=device)
 
         else:
             # feat without depth
 
             # BS x N x 1+D
-            pc_n_feat_wo_depth = _ivy.concatenate((pc_n_feat[..., 0:2], pc_n_feat[..., 3:]), -1)
+            pc_n_feat_wo_depth = _ivy.concat([pc_n_feat[..., 0:2], pc_n_feat[..., 3:]], -1)
 
             # find the min and max of each value
 
             # BS x 1 x 1+D
-            pc_n_feat_wo_depth_max = _ivy.reduce_max(pc_n_feat_wo_depth, -2, keepdims=True) + 1
-            pc_n_feat_wo_depth_min = _ivy.reduce_min(pc_n_feat_wo_depth, -2, keepdims=True) - 1
+            pc_n_feat_wo_depth_max = _ivy.max(pc_n_feat_wo_depth, -2, keepdims=True) + 1
+            pc_n_feat_wo_depth_min = _ivy.min(pc_n_feat_wo_depth, -2, keepdims=True) - 1
             pc_n_feat_wo_depth_range = pc_n_feat_wo_depth_max - pc_n_feat_wo_depth_min
 
             # BS x N x 1+D
@@ -198,14 +198,14 @@ def quantize_to_image(pixel_coords, final_image_dims, feat=None, feat_prior=None
             pc_n_feat_wo_depth_scaled = normed_pc_n_feat_wo_depth + scaled_depth
 
             # BS x N x (2+D)
-            pc_n_feat = _ivy.concatenate((pc_n_feat_wo_depth_scaled[..., 0:2], mean_depth,
-                                          pc_n_feat_wo_depth_scaled[..., 2:]), -1)
+            pc_n_feat = _ivy.concat([pc_n_feat_wo_depth_scaled[..., 0:2], mean_depth,
+                                          pc_n_feat_wo_depth_scaled[..., 2:]], -1)
 
         # scale variance
 
         # BS x 1 x (2+D)
-        var_vals_max = _ivy.reduce_max(pc_n_feat_var, -2, keepdims=True) + 1
-        var_vals_min = _ivy.reduce_min(pc_n_feat_var, -2, keepdims=True) - 1
+        var_vals_max = _ivy.max(pc_n_feat_var, -2, keepdims=True) + 1
+        var_vals_min = _ivy.min(pc_n_feat_var, -2, keepdims=True) - 1
         var_vals_range = var_vals_max - var_vals_min
 
         # BS x N x (2+D)
@@ -238,17 +238,17 @@ def quantize_to_image(pixel_coords, final_image_dims, feat=None, feat_prior=None
     # Scatter #
 
     # num_valid_indices x 1
-    counter = _ivy.ones_like(pc_n_feat[..., 0:1], dev_str=dev_str)
+    counter = _ivy.ones_like(pc_n_feat[..., 0:1], device=device)
     if with_db:
         counter *= -1
 
     # num_valid_indices x 2(2+D)+1
-    values_to_scatter = _ivy.concatenate((means_to_scatter, vars_to_scatter, counter), -1)
+    values_to_scatter = _ivy.concat([means_to_scatter, vars_to_scatter, counter], -1)
 
     # num_valid_indices x (num_batch_dims + 2)
     all_indices = _ivy.flip(quantized_pixel_coords, -1)
     if num_batch_dims > 0:
-        all_indices = _ivy.concatenate((validity_indices[..., :-2], all_indices), -1)
+        all_indices = _ivy.concat([validity_indices[..., :-2], all_indices], -1)
 
     # BS x H x W x (2(2+D) + 1)
     quantized_img = _ivy.scatter_nd(_ivy.reshape(all_indices, [-1, num_batch_dims + 2]),
@@ -283,17 +283,17 @@ def quantize_to_image(pixel_coords, final_image_dims, feat=None, feat_prior=None
         var_threshold = _ivy.expand_dims(var_threshold, -3)
 
         # BS x H x W x (1+D)
-        quantized_mean_wo_depth_scaled = _ivy.concatenate((quantized_mean_scaled[..., 0:2],
-                                                           quantized_mean_scaled[..., 3:]), -1)
+        quantized_mean_wo_depth_scaled = _ivy.concat([quantized_mean_scaled[..., 0:2],
+                                                           quantized_mean_scaled[..., 3:]], -1)
         quantized_mean_wo_depth_normed = quantized_mean_wo_depth_scaled - (quantized_depth_mean - mean_depth_min) / \
                                          (mean_depth_range * min_depth_diff + MIN_DENOMINATOR)
         quantized_mean_wo_depth = quantized_mean_wo_depth_normed * pc_n_feat_wo_depth_range + pc_n_feat_wo_depth_min
-        prior_wo_depth = _ivy.concatenate((prior[..., 0:2], prior[..., 3:]), -1)
+        prior_wo_depth = _ivy.concat([prior[..., 0:2], prior[..., 3:]], -1)
         quantized_mean_wo_depth = _ivy.where(invalidity_mask, prior_wo_depth, quantized_mean_wo_depth)
 
         # BS x H x W x (2+D)
-        quantized_mean = _ivy.concatenate((quantized_mean_wo_depth[..., 0:2], quantized_depth_mean,
-                                           quantized_mean_wo_depth[..., 2:]), -1)
+        quantized_mean = _ivy.concat([quantized_mean_wo_depth[..., 0:2], quantized_depth_mean,
+                                           quantized_mean_wo_depth[..., 2:]], -1)
 
         # BS x H x W x (2+D)
         quantized_var_normed = quantized_var_scaled - (quantized_depth_mean - mean_depth_min) / \

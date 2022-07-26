@@ -46,7 +46,7 @@ def downsampled_image_dims_from_desired_num_pixels(image_dims, num_pixels,
 
 def create_sampled_pixel_coords_image(image_dims, samples_per_dim, batch_shape=None,
                                       normalized=False, randomize=True,
-                                      homogeneous=False, dev_str=None):
+                                      homogeneous=False, device=None):
     """Create image of randomly sampled homogeneous integer :math:`xy` pixel
     co-ordinates :math:`\mathbf{X}\in\mathbb{Z}^{h×w×3}`, stored as floating point
     values. The origin is at the top-left corner of the image, with :math:`+x`
@@ -74,7 +74,7 @@ def create_sampled_pixel_coords_image(image_dims, samples_per_dim, batch_shape=N
     homogeneous
         Whether the pixel co-ordinates should be 3D homogeneous or just 2D.
         Default is True.
-    dev_str
+    device
         device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
         (Default value = None)
 
@@ -87,13 +87,13 @@ def create_sampled_pixel_coords_image(image_dims, samples_per_dim, batch_shape=N
 
     # BS x DH x DW x 2
     low_res_pix_coords = _ivy_svg.create_uniform_pixel_coords_image(
-        samples_per_dim, batch_shape, homogeneous=False, dev_str=dev_str)
+        samples_per_dim, batch_shape, homogeneous=False, device=device)
 
     # 2
     window_size = \
         ivy.array(list(reversed([img_dim / sam_per_dim for img_dim, sam_per_dim in
                                  zip(image_dims, samples_per_dim)])),
-                  dev_str=dev_str)
+                  device=device)
 
     # BS x DH x DW x 2
     downsam_pix_coords = low_res_pix_coords * window_size + window_size / 2 - 0.5
@@ -102,23 +102,23 @@ def create_sampled_pixel_coords_image(image_dims, samples_per_dim, batch_shape=N
         # BS x DH x DW x 1
         rand_x = ivy.random_uniform(
             -window_size[0] / 2, window_size[0] / 2,
-            list(downsam_pix_coords.shape[:-1]) + [1], dev_str=dev_str)
+            list(downsam_pix_coords.shape[:-1]) + [1], device=device)
         rand_y = ivy.random_uniform(
             -window_size[1] / 2, window_size[1] / 2,
-            list(downsam_pix_coords.shape[:-1]) + [1], dev_str=dev_str)
+            list(downsam_pix_coords.shape[:-1]) + [1], device=device)
 
         # BS x DH x DW x 2
-        rand_offsets = ivy.concatenate((rand_x, rand_y), -1)
+        rand_offsets = ivy.concat([rand_x, rand_y], -1)
         downsam_pix_coords += rand_offsets
     downsam_pix_coords = ivy.clip(ivy.round(downsam_pix_coords),
-                                  ivy.array([0.] * 2, dev_str=dev_str),
+                                  ivy.array([0.] * 2, device=device),
                                   ivy.array(list(reversed(image_dims)),
-                                            dtype_str='float32', dev_str=dev_str) - 1)
+                                            dtype='float32', device=device) - 1)
 
     if normalized:
         downsam_pix_coords /= \
-            ivy.array([image_dims[1], image_dims[0]], dtype_str='float32',
-                      dev_str=dev_str) + MIN_DENOMINATOR
+            ivy.array([image_dims[1], image_dims[0]], dtype='float32',
+                      device=device) + MIN_DENOMINATOR
 
     if homogeneous:
         # BS x DH x DW x 3
@@ -129,7 +129,7 @@ def create_sampled_pixel_coords_image(image_dims, samples_per_dim, batch_shape=N
     return downsam_pix_coords
 
 
-def sample_images(list_of_images, num_pixels, batch_shape, image_dims, dev_str=None):
+def sample_images(list_of_images, num_pixels, batch_shape, image_dims, device=None):
     """Samples each image in a list of aligned images at num_pixels random pixel
     co-ordinates, within a unifrom grid over the image.
 
@@ -143,7 +143,7 @@ def sample_images(list_of_images, num_pixels, batch_shape, image_dims, dev_str=N
         Shape of batch. Inferred from inputs if None.
     image_dims
         Image dimensions. Inferred from inputs in None.
-    dev_str
+    device
         device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
         Same as images if None. (Default value = None)
 
@@ -155,8 +155,8 @@ def sample_images(list_of_images, num_pixels, batch_shape, image_dims, dev_str=N
     if image_dims is None:
         image_dims = list_of_images[0].shape[-3:-1]
 
-    if dev_str is None:
-        dev_str = ivy.dev_str(list_of_images[0])
+    if device is None:
+        device = ivy.device(list_of_images[0])
 
     image_channels = [img.shape[-1] for img in list_of_images]
 
@@ -170,7 +170,7 @@ def sample_images(list_of_images, num_pixels, batch_shape, image_dims, dev_str=N
 
     # BS x DH x DW x 2
     sampled_pix_coords = ivy.cast(create_sampled_pixel_coords_image(
-        image_dims, new_img_dims, batch_shape, homogeneous=False, dev_str=dev_str),
+        image_dims, new_img_dims, batch_shape, homogeneous=False, device=device),
         'int32')
 
     # FBS x DH x DW x 2
@@ -179,13 +179,13 @@ def sample_images(list_of_images, num_pixels, batch_shape, image_dims, dev_str=N
 
     # FBS x DH x DW x 1
     batch_idxs = ivy.expand_dims(ivy.transpose(ivy.cast(ivy.linspace(
-        ivy.zeros(new_img_dims, dev_str=dev_str),
-        ivy.ones(new_img_dims, dev_str=dev_str) * (flat_batch_size - 1),
+        ivy.zeros(new_img_dims, device=device),
+        ivy.ones(new_img_dims, device=device) * (flat_batch_size - 1),
         flat_batch_size, -1),
         'int32'), (2, 0, 1)), -1)
 
     # FBS x DH x DW x 3
-    total_idxs = ivy.concatenate((batch_idxs, ivy.flip(sampled_pix_coords_flat, -1)),
+    total_idxs = ivy.concat([batch_idxs, ivy.flip(sampled_pix_coords_flat, -1)],
                                  -1)
 
     # list of FBS x H x W x D
@@ -193,7 +193,7 @@ def sample_images(list_of_images, num_pixels, batch_shape, image_dims, dev_str=N
                          in list_of_images]
 
     # FBS x H x W x sum(D)
-    combined_img = ivy.concatenate(flat_batch_images, -1)
+    combined_img = ivy.concat([flat_batch_images], -1)
 
     # BS x FID x sum(D)
     combined_img_sampled = ivy.reshape(ivy.gather_nd(combined_img, total_idxs),
@@ -288,7 +288,7 @@ def stratified_sample(starts, ends, num_samples, batch_shape=None):
 
     # BS x NS
     random_uniform = ivy.random_uniform(shape=batch_shape + [num_samples],
-                                        dev_str=ivy.dev_str(starts))
+                                        device=ivy.device(starts))
 
     # BS x NS
     random_offsets = random_uniform * ivy.expand_dims(bin_sizes, -1)
@@ -321,10 +321,10 @@ def render_rays_via_termination_probabilities(ray_term_probs, features,
     """
 
     # BS x NSPR
-    rendering = ivy.reduce_sum(ivy.expand_dims(ray_term_probs, -1) * features, -2)
+    rendering = ivy.sum(ivy.expand_dims(ray_term_probs, -1) * features, -2)
     if not render_variance:
         return rendering
-    var = ivy.reduce_sum(
+    var = ivy.sum(
         ray_term_probs * (ivy.expand_dims(rendering, -2) - features) ** 2, -2)
     return rendering, var
 
@@ -429,8 +429,8 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far,
     densities = ivy.reshape(densities, total_batch_shape + [samples_per_ray])
 
     # BS x RBS x (SPR+1)
-    z_vals_w_terminal = ivy.concatenate(
-        (z_vals[..., 0], ivy.ones_like(z_vals[..., -1:, 0]) * 1e10), -1)
+    z_vals_w_terminal = ivy.concat(
+        [z_vals[..., 0], ivy.ones_like(z_vals[..., -1:, 0]) * 1e10], -1)
 
     # BS x RBS x SPR
     depth_diffs = z_vals_w_terminal[..., 1:] - z_vals_w_terminal[..., :-1]

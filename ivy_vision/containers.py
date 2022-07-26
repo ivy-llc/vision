@@ -59,9 +59,9 @@ class PrimitiveScene(_Container):
 
         """
         batch_shape = list(batch_shape)
-        sphere_positions = _ivy.identity(4, batch_shape=batch_shape)[..., 0:3, :]
+        sphere_positions = _ivy.eye(4, batch_shape=batch_shape)[..., 0:3, :]
         sphere_radii = _ivy.ones(batch_shape + [1])
-        cuboid_ext_mats = _ivy.identity(4, batch_shape=batch_shape)[..., 0:3, :]
+        cuboid_ext_mats = _ivy.eye(4, batch_shape=batch_shape)[..., 0:3, :]
         cuboid_dims = _ivy.ones(batch_shape + [3])
         return __class__(sphere_positions, sphere_radii, cuboid_ext_mats, cuboid_dims)
 
@@ -94,8 +94,8 @@ class PrimitiveScene(_Container):
             cuboid_sdfs = ivy_sdf.cuboid_signed_distances(
                 self.cuboid_ext_mats, self.cuboid_dims, query_positions)
             all_sdfs_list.append(cuboid_sdfs)
-        sdfs_concatted = _ivy.concatenate(all_sdfs_list, -1) if len(all_sdfs_list) > 1 else all_sdfs_list[0]
-        return _ivy.reduce_min(sdfs_concatted, -1, keepdims=True)
+        sdfs_concatted = _ivy.concat(all_sdfs_list, -1) if len(all_sdfs_list) > 1 else all_sdfs_list[0]
+        return _ivy.min(sdfs_concatted, -1, keepdims=True)
 
 
 # noinspection PyMissingConstructor
@@ -154,8 +154,8 @@ class Intrinsics(_Container):
         focal_lengths = _ivy.ones(batch_shape + [2])
         persp_angles = _ivy.ones(batch_shape + [2])
         pp_offsets = _ivy.zeros(batch_shape + [2])
-        calib_mats = _ivy.identity(3, batch_shape=batch_shape)
-        inv_calib_mats = _ivy.identity(3, batch_shape=batch_shape)
+        calib_mats = _ivy.eye(3, batch_shape=batch_shape)
+        inv_calib_mats = _ivy.eye(3, batch_shape=batch_shape)
         return __class__(focal_lengths, persp_angles, pp_offsets, calib_mats, inv_calib_mats)
 
 
@@ -213,10 +213,10 @@ class Extrinsics(_Container):
         """
         batch_shape = list(batch_shape)
         cam_centers = _ivy.zeros(batch_shape + [3, 1])
-        Rs = _ivy.identity(3, batch_shape=batch_shape)
-        inv_Rs = _ivy.identity(3, batch_shape=batch_shape)
-        ext_mats_homo = _ivy.identity(4, batch_shape=batch_shape)
-        inv_ext_mats_homo = _ivy.identity(4, batch_shape=batch_shape)
+        Rs = _ivy.eye(3, batch_shape=batch_shape)
+        inv_Rs = _ivy.eye(3, batch_shape=batch_shape)
+        ext_mats_homo = _ivy.eye(4, batch_shape=batch_shape)
+        inv_ext_mats_homo = _ivy.eye(4, batch_shape=batch_shape)
         return __class__(cam_centers, Rs, inv_Rs, ext_mats_homo, inv_ext_mats_homo)
 
 
@@ -270,6 +270,6 @@ class CameraGeometry(_Container):
         """
         intrinsics = Intrinsics.as_identity(batch_shape)
         extrinsics = Extrinsics.as_identity(batch_shape)
-        full_mats_homo = _ivy.identity(4, batch_shape=batch_shape)
-        inv_full_mats_homo = _ivy.identity(4, batch_shape=batch_shape)
+        full_mats_homo = _ivy.eye(4, batch_shape=batch_shape)
+        inv_full_mats_homo = _ivy.eye(4, batch_shape=batch_shape)
         return __class__(intrinsics, extrinsics, full_mats_homo, inv_full_mats_homo)

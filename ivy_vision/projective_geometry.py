@@ -128,7 +128,7 @@ def projection_matrix_inverse(proj_mat):
     translation_inverses = -_ivy.matmul(rotation_matrix_inverses, translations)
 
     # BS x 3 x 4
-    return _ivy.concatenate((rotation_matrix_inverses, translation_inverses), -1)
+    return _ivy.concat([rotation_matrix_inverses, translation_inverses], -1)
 
 
 def solve_homogeneous_dlt(A):
