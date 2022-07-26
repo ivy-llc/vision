@@ -57,7 +57,7 @@ def test_focal_lengths_and_pp_offsets_to_calib_mats(device, call):
                             td.pp_offsets[0], device=device), td.calib_mats[0], atol=1e-6)
 
 
-def test_rot_mats_and_cam_centers_to_ext_mats(device=device, call):
+def test_rot_mats_and_cam_centers_to_ext_mats(device, call):
     assert np.allclose(call(ivy_svg.rot_mat_and_cam_center_to_ext_mat, td.Rs, td.C_hats), td.ext_mats, atol=1e-6)
     assert np.allclose(call(ivy_svg.rot_mat_and_cam_center_to_ext_mat, td.Rs[0], td.C_hats[0]),
                        td.ext_mats[0], atol=1e-6)
