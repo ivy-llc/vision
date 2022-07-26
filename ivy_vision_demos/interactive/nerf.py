@@ -8,22 +8,21 @@ import ivy_vision
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm_notebook as tqdm
-from ivy_demo_utils.framework_utils import choose_random_framework, get_framework_from_str
 
 
 class Model(ivy.Module):
 
-    def __init__(self, num_layers, layer_dim, embedding_length, dev_str=None):
+    def __init__(self, num_layers, layer_dim, embedding_length, device=None):
         self._num_layers = num_layers
         self._layer_dim = layer_dim
         self._embedding_length = embedding_length
         embedding_size = 3 + 3 * 2 * embedding_length
-        self._fc_layers = [ivy.Linear(embedding_size, layer_dim, dev_str=dev_str)]
+        self._fc_layers = [ivy.Linear(embedding_size, layer_dim, device=device)]
         self._fc_layers += [ivy.Linear(layer_dim + (embedding_size if i % 4 == 0 and i > 0 else 0), layer_dim,
-                                       dev_str=dev_str)
+                                       device=device)
                             for i in range(num_layers-2)]
-        self._fc_layers.append(ivy.Linear(layer_dim, 4, dev_str=dev_str))
-        super(Model, self).__init__(dev_str)
+        self._fc_layers.append(ivy.Linear(layer_dim, 4, device=device))
+        super(Model, self).__init__(device)
 
     def _forward(self, x, feat=None, timestamps=None):
         embedding = ivy.fourier_encode(x/math.pi, max_freq=2*math.exp(math.log(2) * (self._embedding_length-1)),
@@ -33,7 +32,7 @@ class Model(ivy.Module):
         for i in range(1, self._num_layers-1):
             x = ivy.relu(self._fc_layers[i](x))
             if i % 4 == 0 and i > 0:
-                x = ivy.concatenate([x, embedding], -1)
+                x = ivy.concat([x, embedding], -1)
         x = self._fc_layers[-1](x)
         rgb = ivy.sigmoid(x[..., 0:3])
         sigma_a = ivy.relu(x[..., -1])
@@ -43,13 +42,13 @@ class Model(ivy.Module):
 class NerfDemo:
 
     def __init__(self, num_iters, samples_per_ray, num_layers, layer_dim, with_tensor_splitting, compile_flag,
-                 interactive, dev_str, f):
+                 interactive, device, f):
 
         # ivy
         f = choose_random_framework() if f is None else f
         ivy.set_framework(f)
-        if dev_str:
-            ivy.set_default_device(dev_str)
+        if device:
+            ivy.set_default_device(device)
         ivy.seed(0)
 
         # Load input images and poses
@@ -96,7 +95,7 @@ class NerfDemo:
         # tensor splitting
         self._with_tensor_splitting = with_tensor_splitting
         if with_tensor_splitting:
-            self._dev_manager = ivy.DevManager(dev_strs=[ivy.default_device()])
+            self._dev_manager = ivy.DevManager(devices=[ivy.default_device()])
 
         # compile
         if compile_flag:
@@ -132,7 +131,7 @@ class NerfDemo:
         flat_ray_batch_size = int(np.prod(ray_batch_shape))
 
         # memory on device
-        memory_on_dev = ivy.cache_fn(ivy.total_mem_on_dev)(ivy.dev_str(rays_o))
+        memory_on_dev = ivy.cache_fn(ivy.total_mem_on_dev)(ivy.device(rays_o))
 
         # chunk size
         max_chunk_size = int(round(memory_on_dev * 10000 / (flat_batch_size * samples_per_ray)))
@@ -246,10 +245,10 @@ class NerfDemo:
 
 
 def main(num_iters, samples_per_ray, num_layers, layer_dim, with_tensor_splitting, compile_flag, interactive=True,
-         dev_str=None, f=None):
+         device=None, f=None, fw=None):
 
     nerf_demo = NerfDemo(num_iters, samples_per_ray, num_layers, layer_dim, with_tensor_splitting, compile_flag,
-                         interactive, dev_str, f)
+                         interactive, device, f, fw)
     nerf_demo.train()
     if interactive:
         nerf_demo.save_video()
@@ -273,10 +272,11 @@ if __name__ == '__main__':
                         help='whether to run the demo in non-interactive mode.')
     parser.add_argument('--device', type=str, default=None,
                         help='The device to run the demo with, as a string. Either gpu:idx or cpu.')
-    parser.add_argument('--framework', type=str, default=None,
-                        help='which framework to use. Chooses a random framework if unspecified.')
+    parser.add_argument('--backend', type=str, default=None,
+                        help='which backend to use. Chooses a random backend if unspecified.')
     parsed_args = parser.parse_args()
-    framework = None if parsed_args.framework is None else get_framework_from_str(parsed_args.framework)
+    fw = parsed_args.backend
+    f = None if fw is None else ivy.get_backend(fw)
     main(parsed_args.iterations, parsed_args.samples_per_ray, parsed_args.num_layers, parsed_args.layer_dim,
          not parsed_args.no_tensor_splitting, parsed_args.compile, not parsed_args.non_interactive, parsed_args.device,
-         framework)
+         f, fw)
