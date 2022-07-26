@@ -63,7 +63,7 @@ class VoxelGridsTestData(TestData):
 td = VoxelGridsTestData()
 
 
-def test_world_coords_to_bounding_voxel_grid(dev_str, call):
+def test_world_coords_to_bounding_voxel_grid(device, call):
     if call in [helpers.tf_graph_call]:
         # the need to dynamically infer array shapes for scatter makes this only valid in eager mode currently
         pytest.skip()

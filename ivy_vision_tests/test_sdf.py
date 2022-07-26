@@ -31,14 +31,14 @@ class SDFTestData(TestData):
 td = SDFTestData()
 
 
-def test_sphere_signed_distance(dev_str, call):
+def test_sphere_signed_distance(device, call):
     assert np.allclose(call(ivy_sdf.sphere_signed_distances, td.sphere_positions, td.sphere_radii,
                             td.sphere_query_positions), td.sphere_sdf_vals, atol=1e-6)
     assert np.allclose(call(ivy_sdf.sphere_signed_distances, td.sphere_positions[0], td.sphere_radii[0],
                             td.sphere_query_positions[0]), td.sphere_sdf_vals[0], atol=1e-6)
 
 
-def test_cuboid_signed_distance(dev_str, call):
+def test_cuboid_signed_distance(device, call):
     assert np.allclose(call(ivy_sdf.cuboid_signed_distances, td.cuboid_ext_mats, td.cuboid_dims,
                             td.cuboid_query_positions), td.cuboid_sdf_vals, atol=1e-6)
     assert np.allclose(call(ivy_sdf.cuboid_signed_distances, td.cuboid_ext_mats[0], td.cuboid_dims[0],

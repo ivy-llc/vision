@@ -27,5 +27,5 @@ class PaddingTestData(TestData):
 td = PaddingTestData()
 
 
-def test_pad_omni_image(dev_str, call):
+def test_pad_omni_image(device, call):
     assert np.allclose(call(ivy_pad.pad_omni_image, td.omni_image, 1), td.padded_omni_image, atol=1e-3)

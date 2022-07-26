@@ -103,7 +103,7 @@ class QuantizationTestData(TestData):
 td = QuantizationTestData()
 
 
-def test_quantize_pixel_coords(dev_str, call):
+def test_quantize_pixel_coords(device, call):
     if call in [helpers.mx_call]:
         # mxnet does not support sum for scatter nd, only non-deterministic replacement for duplicates
         pytest.skip()
@@ -115,7 +115,7 @@ def test_quantize_pixel_coords(dev_str, call):
     assert np.allclose(var[..., 2:], td.quantized_cov_values, atol=1e-3)
 
 
-def test_quantize_pixel_coordinates_with_var(dev_str, call):
+def test_quantize_pixel_coordinates_with_var(device, call):
     if call in [helpers.mx_call]:
         # mxnet does not support sum for scatter nd, only non-deterministic replacement for duplicates
         pytest.skip()
@@ -131,7 +131,7 @@ def test_quantize_pixel_coordinates_with_var(dev_str, call):
     assert np.allclose(var[..., 2:], td.quantized_cov_values_from_cov, atol=1e-3)
 
 
-def test_quantize_pixel_coords_with_var_db(dev_str, call):
+def test_quantize_pixel_coords_with_var_db(device, call):
     if call in [helpers.mx_call]:
         # mxnet does not support min for scatter nd, only non-deterministic replacement for duplicates
         pytest.skip()

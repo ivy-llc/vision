@@ -27,7 +27,7 @@ class SingleViewGeometryTestData(TestData):
 td = SingleViewGeometryTestData()
 
 
-def test_create_uniform_pixel_coords_image(dev_str, call):
+def test_create_uniform_pixel_coords_image(device, call):
     assert np.array_equal(
         call(ivy_svg.create_uniform_pixel_coords_image, td.image_dims, (td.batch_size, td.num_cameras)),
         td.uniform_pixel_coords)
@@ -36,34 +36,34 @@ def test_create_uniform_pixel_coords_image(dev_str, call):
     call(ivy_svg.create_uniform_pixel_coords_image, td.image_dims, (td.num_cameras,), True)
 
 
-def test_persp_angles_to_focal_lengths(dev_str, call):
-    assert np.allclose(call(ivy_svg.persp_angles_to_focal_lengths, td.persp_angles, td.image_dims, dev_str=dev_str),
+def test_persp_angles_to_focal_lengths(device, call):
+    assert np.allclose(call(ivy_svg.persp_angles_to_focal_lengths, td.persp_angles, td.image_dims, dice=device),
                        td.focal_lengths, atol=1e-6)
-    assert np.allclose(call(ivy_svg.persp_angles_to_focal_lengths, td.persp_angles[0], td.image_dims, dev_str=dev_str),
+    assert np.allclose(call(ivy_svg.persp_angles_to_focal_lengths, td.persp_angles[0], td.image_dims, device=device),
                        td.focal_lengths[0], atol=1e-6)
 
 
-def test_focal_lengths_to_persp_angles(dev_str, call):
-    assert np.allclose(call(ivy_svg.focal_lengths_to_persp_angles, td.focal_lengths, td.image_dims, dev_str=dev_str),
+def test_focal_lengths_to_persp_angles(device, call):
+    assert np.allclose(call(ivy_svg.focal_lengths_to_persp_angles, td.focal_lengths, td.image_dims, device=device),
                        td.persp_angles, atol=1e-6)
-    assert np.allclose(call(ivy_svg.focal_lengths_to_persp_angles, td.focal_lengths[0], td.image_dims, dev_str=dev_str),
+    assert np.allclose(call(ivy_svg.focal_lengths_to_persp_angles, td.focal_lengths[0], td.image_dims, device=device),
                        td.persp_angles[0], atol=1e-6)
 
 
-def test_focal_lengths_and_pp_offsets_to_calib_mats(dev_str, call):
+def test_focal_lengths_and_pp_offsets_to_calib_mats(device, call):
     assert np.allclose(call(ivy_svg.focal_lengths_and_pp_offsets_to_calib_mat, td.focal_lengths,
-                            td.pp_offsets, dev_str=dev_str), td.calib_mats, atol=1e-6)
+                            td.pp_offsets, device=device), td.calib_mats, atol=1e-6)
     assert np.allclose(call(ivy_svg.focal_lengths_and_pp_offsets_to_calib_mat, td.focal_lengths[0],
-                            td.pp_offsets[0], dev_str=dev_str), td.calib_mats[0], atol=1e-6)
+                            td.pp_offsets[0], device=device), td.calib_mats[0], atol=1e-6)
 
 
-def test_rot_mats_and_cam_centers_to_ext_mats(dev_str, call):
+def test_rot_mats_and_cam_centers_to_ext_mats(device=device, call):
     assert np.allclose(call(ivy_svg.rot_mat_and_cam_center_to_ext_mat, td.Rs, td.C_hats), td.ext_mats, atol=1e-6)
     assert np.allclose(call(ivy_svg.rot_mat_and_cam_center_to_ext_mat, td.Rs[0], td.C_hats[0]),
                        td.ext_mats[0], atol=1e-6)
 
 
-def test_depth_to_ds_pixel_coords(dev_str, call):
+def test_depth_to_ds_pixel_coords(device, call):
     assert (np.allclose(call(ivy_svg.depth_to_ds_pixel_coords, td.depth_maps, td.uniform_pixel_coords),
                         td.pixel_coords_to_scatter, atol=1e-4))
     assert (np.allclose(call(ivy_svg.depth_to_ds_pixel_coords, td.depth_maps), td.pixel_coords_to_scatter, atol=1e-4))
@@ -71,7 +71,7 @@ def test_depth_to_ds_pixel_coords(dev_str, call):
                         td.pixel_coords_to_scatter[0], atol=1e-4))
 
 
-def test_depth_to_radial_depth(dev_str, call):
+def test_depth_to_radial_depth(device, call):
     assert (np.allclose(call(ivy_svg.depth_to_radial_depth, td.depth_maps, td.inv_calib_mats),
                         td.radial_depth_maps, atol=1e-4))
     assert (np.allclose(call(ivy_svg.depth_to_radial_depth, td.depth_maps, td.inv_calib_mats),
@@ -80,7 +80,7 @@ def test_depth_to_radial_depth(dev_str, call):
                              td.inv_calib_mats[0]), td.radial_depth_maps[0], atol=1e-4))
 
 
-def test_ds_pixel_coords_to_radial_depth(dev_str, call):
+def test_ds_pixel_coords_to_radial_depth(device, call):
     assert (np.allclose(call(ivy_svg.ds_pixel_coords_to_radial_depth, td.pixel_coords_to_scatter, td.inv_calib_mats),
                         td.radial_depth_maps, atol=1e-4))
     assert (np.allclose(call(ivy_svg.ds_pixel_coords_to_radial_depth, td.pixel_coords_to_scatter, td.inv_calib_mats),
@@ -89,7 +89,7 @@ def test_ds_pixel_coords_to_radial_depth(dev_str, call):
                              td.inv_calib_mats[0]), td.radial_depth_maps[0], atol=1e-4))
 
 
-def test_cam_to_ds_pixel_coords(dev_str, call):
+def test_cam_to_ds_pixel_coords(device, call):
     assert (
         np.allclose(call(ivy_svg.cam_to_ds_pixel_coords, td.cam_coords, td.calib_mats), td.pixel_coords_to_scatter, atol=1e-4))
     assert (np.allclose(call(ivy_svg.cam_to_ds_pixel_coords, td.cam_coords[0], td.calib_mats[0]),

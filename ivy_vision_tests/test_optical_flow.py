@@ -48,7 +48,7 @@ class OpticalFlowTestData(TestData):
 td = OpticalFlowTestData()
 
 
-def test_depth_from_flow_and_cam_poses(dev_str, call):
+def test_depth_from_flow_and_cam_poses(device, call):
     assert np.allclose(call(ivy_flow.depth_from_flow_and_cam_mats, td.optical_flow, td.full_mats),
                        td.depth_maps[:, 0:1], atol=1e-6)
     assert np.allclose(
@@ -56,14 +56,14 @@ def test_depth_from_flow_and_cam_poses(dev_str, call):
         td.depth_maps[0, 0:1], atol=1e-6)
 
 
-def test_flow_from_depth_and_cam_poses(dev_str, call):
+def test_flow_from_depth_and_cam_poses(device, call):
     assert np.allclose(call(ivy_flow.flow_from_depth_and_cam_mats, td.pixel_coords_to_scatter[:, 0:1],
                             td.cam2cam_full_mats[:, 0:1]), td.optical_flow, atol=1e-3)
     assert np.allclose(call(ivy_flow.flow_from_depth_and_cam_mats, td.pixel_coords_to_scatter[0, 0:1],
                             td.cam2cam_full_mats[0, 0:1]), td.optical_flow[0], atol=1e-3)
 
 
-def test_project_flow_to_epipolar_line(dev_str, call):
+def test_project_flow_to_epipolar_line(device, call):
     assert np.allclose(
         call(ivy_flow.project_flow_to_epipolar_line, td.optical_flow, td.fund_mats[0]), td.optical_flow, atol=1e-3)
     assert np.allclose(
@@ -71,7 +71,7 @@ def test_project_flow_to_epipolar_line(dev_str, call):
         td.optical_flow[0], atol=1e-3)
 
 
-def test_pixel_cost_volume(dev_str, call):
+def test_pixel_cost_volume(device, call):
     if call in [helpers.mx_call]:
         # mxnet padding only supports inputs with 3 dimensions or smaller.
         pytest.skip()
@@ -79,12 +79,12 @@ def test_pixel_cost_volume(dev_str, call):
     assert np.allclose(call(ivy_flow.pixel_cost_volume, td.cv_image1[0], td.cv_image2[0], 1), td.cv[0], atol=1e-3)
 
 
-def test_velocity_from_flow_cam_coords_and_cam_mats(dev_str, call):
+def test_velocity_from_flow_cam_coords_and_cam_mats(device, call):
     assert call(ivy_flow.velocity_from_flow_cam_coords_and_cam_mats,
                 td.optical_flow, td.cam_coords[:, 0], td.cam_coords[:, 1], td.cam2cam_ext_mats[:, 1], td.delta_t)
 
 
-def test_project_cam_coords_with_object_transformations(dev_str, call):
+def test_project_cam_coords_with_object_transformations(device, call):
 
     # test data
     np.random.seed(0)
@@ -110,7 +110,7 @@ def test_project_cam_coords_with_object_transformations(dev_str, call):
                             obj_ids, obj_trans, cam2cam_mat)[0], true_reprojection, atol=1e-6)
 
 
-def test_velocity_from_cam_coords_id_image_and_object_trans(dev_str, call):
+def test_velocity_from_cam_coords_id_image_and_object_trans(device, call):
 
     # test data
     np.random.seed(0)
@@ -136,7 +136,7 @@ def test_velocity_from_cam_coords_id_image_and_object_trans(dev_str, call):
                             obj_ids, obj_trans, delta_t), true_vel, atol=1e-6)
 
 
-def test_flow_from_cam_coords_id_image_and_object_trans(dev_str, call):
+def test_flow_from_cam_coords_id_image_and_object_trans(device, call):
 
     # test data
     np.random.seed(0)

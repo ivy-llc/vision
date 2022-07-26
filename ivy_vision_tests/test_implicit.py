@@ -14,8 +14,8 @@ class ImplicitTestData(TestData):
     def __init__(self):
         super().__init__()
 
-        # set framework
-        ivy.set_framework('numpy')
+        # set backend
+        ivy.set_backend('numpy')
 
         # sampled pixel coords
         self.samples_per_dim = [9, 12]
@@ -69,14 +69,14 @@ class ImplicitTestData(TestData):
                                   rays_d.shape)
         self.query_points = rays_o + rays_d * self.z_vals
 
-        # unset framework
-        ivy.unset_framework()
+        # unset backend
+        ivy.unset_backend()
 
 
 td = ImplicitTestData()
 
 
-def test_downsampled_image_dims_from_desired_num_pixels(dev_str, call):
+def test_downsampled_image_dims_from_desired_num_pixels(device, call):
     new_img_dims, num_pixels = call(ivy_imp.downsampled_image_dims_from_desired_num_pixels, [32, 32], 256)
     assert new_img_dims == [16, 16]
     assert num_pixels == 256
@@ -88,7 +88,7 @@ def test_downsampled_image_dims_from_desired_num_pixels(dev_str, call):
     assert num_pixels == 108
 
 
-def test_create_sampled_pixel_coords_image(dev_str, call):
+def test_create_sampled_pixel_coords_image(device, call):
     if call is helpers.mx_call:
         # MXNet does not support clipping based on min or max specified as arrays
         pytest.skip()
@@ -110,7 +110,7 @@ def test_create_sampled_pixel_coords_image(dev_str, call):
     assert np.max(sampled_img).item() < 1
 
 
-def test_sample_images(dev_str, call):
+def test_sample_images(device, call):
     if call is helpers.mx_call:
         # MXNet does not support splitting based on section sizes,only number of sections as integer input is supported.
         pytest.skip()
@@ -120,19 +120,19 @@ def test_sample_images(dev_str, call):
     assert list(img1.shape) == [td.batch_size, td.num_cameras, 35, 3]
 
 
-def test_sampled_volume_density_to_occupancy_probability(dev_str, call):
+def test_sampled_volume_density_to_occupancy_probability(device, call):
     occ_prob = call(ivy_imp.sampled_volume_density_to_occupancy_probability, td.densities, td.inter_sample_distances)
     assert occ_prob.shape == td.densities.shape
     assert np.allclose(occ_prob, td.occ_probs)
 
 
-def test_ray_termination_probabilities(dev_str, call):
+def test_ray_termination_probabilities(device, call):
     ray_term_probs = call(ivy_imp.ray_termination_probabilities, td.densities, td.inter_sample_distances)
     assert ray_term_probs.shape == td.densities.shape
     assert np.allclose(ray_term_probs, td.ray_term_probs)
 
 
-def test_stratified_sample(dev_str, call):
+def test_stratified_sample(device, call):
     num = 10
     res = call(ivy_imp.stratified_sample, td.start_vals, td.end_vals, num)
     assert res.shape == (3, num)
@@ -141,7 +141,7 @@ def test_stratified_sample(dev_str, call):
             assert res[i][j] < res[i][j + 1]
 
 
-def test_render_rays_via_termination_probabilities(dev_str, call):
+def test_render_rays_via_termination_probabilities(device, call):
     rendering, var = call(ivy_imp.render_rays_via_termination_probabilities, td.ray_term_probs, td.features,
                           render_variance=True)
     assert rendering.shape == td.radial_depths.shape[:-1] + (3,)
@@ -154,7 +154,7 @@ def test_render_rays_via_termination_probabilities(dev_str, call):
     "with_features", [True, False])
 @pytest.mark.parametrize(
     "with_timestamps", [True, False])
-def test_render_implicit_features_and_depth(dev_str, call, with_features, with_timestamps):
+def test_render_implicit_features_and_depth(device, call, with_features, with_timestamps):
     if call is helpers.mx_call:
         # MXNet does not support splitting with remainder
         pytest.skip()

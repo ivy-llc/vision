@@ -135,10 +135,10 @@ class TestData:
             (self.batch_size, self.num_cameras, self.image_dims[0], self.image_dims[1], 1))), -1)
 
         # sphere coords
-        with ivy.numpy.use:
-            cam_coords_not_homo = ivy.concatenate((self.cam_coords_not_homo[..., 2:3],
+        with ivy_np.use:
+            cam_coords_not_homo = ivy.concat([self.cam_coords_not_homo[..., 2:3],
                                                    self.cam_coords_not_homo[..., 0:1],
-                                                   self.cam_coords_not_homo[..., 1:2]), -1)
+                                                   self.cam_coords_not_homo[..., 1:2]], -1)
             self.sphere_coords = ivy_mech.cartesian_to_polar_coords(cam_coords_not_homo)
 
         # radial depth
@@ -187,9 +187,9 @@ class TestData:
 
         # projected sphere coords
         with ivy_np.use:
-            proj_cam_coords = ivy.concatenate((self.proj_cam_coords[..., 2:3],
+            proj_cam_coords = ivy.concat([self.proj_cam_coords[..., 2:3],
                                                self.proj_cam_coords[..., 0:1],
-                                               self.proj_cam_coords[..., 1:2]), -1)
+                                               self.proj_cam_coords[..., 1:2]], -1)
             self.proj_sphere_coords = \
                 np.reshape(ivy_mech.cartesian_to_polar_coords(
                     np.reshape(proj_cam_coords, (-1, 3))),
