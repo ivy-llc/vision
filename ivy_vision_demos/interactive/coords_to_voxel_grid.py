@@ -10,9 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from ivy_demo_utils.open3d_utils import Visualizer
-from ivy.framework_handler import set_framework, unset_framework
 from ivy_demo_utils.ivy_scene.scene_utils import SimCam, BaseSimulator
-from ivy_demo_utils.framework_utils import choose_random_framework, get_framework_from_str
 
 
 class DummyCam:
