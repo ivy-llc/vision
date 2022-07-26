@@ -7,8 +7,7 @@ import argparse
 import ivy_vision
 import numpy as np
 import matplotlib.pyplot as plt
-from ivy.framework_handler import set_framework
-from ivy_demo_utils.framework_utils import choose_random_framework, get_framework_from_str
+
 
 b = 12
 bo2 = int(b/2)
@@ -274,7 +273,7 @@ def show_forward_warped_images(dep1, col1, f1_f_warp_no_db, f1_f_warp_w_db, dep_
     plt.show()
 
 
-def main(interactive=True, f=None):
+def main(interactive=True, f=None, fw=None):
 
     global INTERACTIVE
     INTERACTIVE = interactive
@@ -283,8 +282,9 @@ def main(interactive=True, f=None):
     # ----------------#
 
     # choose random framework
-    f = choose_random_framework() if f is None else f
-    set_framework(f)
+    fw = ivy.choose_random_backend() if fw is None else fw
+    ivy.set_backend(fw)
+    f = ivy.get_backend(fw)
 
     # Camera Geometry #
     # ----------------#
@@ -360,8 +360,8 @@ def main(interactive=True, f=None):
     ds_pixel_coords2 = u_pix_coords * depth2
 
     # depth limits
-    depth_min = ivy.reduce_min(ivy.concatenate((depth1, depth2), 0))
-    depth_max = ivy.reduce_max(ivy.concatenate((depth1, depth2), 0))
+    depth_min = ivy.min(ivy.concat([depth1, depth2], 0))
+    depth_max = ivy.max(ivy.concat([depth1, depth2], 0))
     depth_limits = [depth_min, depth_max]
 
     # show images
@@ -373,8 +373,8 @@ def main(interactive=True, f=None):
     # required mat formats
     cam1to2_full_mat_homo = ivy.matmul(cam2_geom.full_mats_homo, cam1_geom.inv_full_mats_homo)
     cam1to2_full_mat = cam1to2_full_mat_homo[..., 0:3, :]
-    full_mats_homo = ivy.concatenate((ivy.expand_dims(cam1_geom.full_mats_homo, 0),
-                                      ivy.expand_dims(cam2_geom.full_mats_homo, 0)), 0)
+    full_mats_homo = ivy.concat([ivy.expand_dims(cam1_geom.full_mats_homo, 0),
+                                      ivy.expand_dims(cam2_geom.full_mats_homo, 0)], 0)
     full_mats = full_mats_homo[..., 0:3, :]
 
     # flow
@@ -391,7 +391,7 @@ def main(interactive=True, f=None):
 
     # inverse warp rendering
     warp = u_pix_coords[..., 0:2] + flow1to2
-    color2_warp_to_f1 = ivy.reshape(ivy.bilinear_resample(color2, warp), color1.shape)
+    color2_warp_to_f1 = ivy.reshape(ivy_vision.bilinear_resample(color2, warp), color1.shape)
 
     # projected depth scaled pixel coords 2
     ds_pixel_coords1_wrt_f2 = ivy_vision.ds_pixel_to_ds_pixel_coords(ds_pixel_coords1, cam1to2_full_mat)
@@ -400,7 +400,7 @@ def main(interactive=True, f=None):
     depth1_wrt_f2 = ds_pixel_coords1_wrt_f2[..., -1:]
 
     # inverse warp depth
-    depth2_warp_to_f1 = ivy.reshape(ivy.bilinear_resample(depth2, warp), depth1.shape)
+    depth2_warp_to_f1 = ivy.reshape(ivy_vision.bilinear_resample(depth2, warp), depth1.shape)
 
     # depth validity
     depth_validity = ivy.abs(depth1_wrt_f2 - depth2_warp_to_f1) < 0.01
@@ -420,7 +420,7 @@ def main(interactive=True, f=None):
         ds_pixel_coords2, ivy.inv(cam1to2_full_mat_homo)[..., 0:3, :])
     depth1_proj = ds_pixel_coords1_proj[..., -1:]
     ds_pixel_coords1_proj = ds_pixel_coords1_proj[..., 0:2] / depth1_proj
-    features_to_render = ivy.concatenate((depth1_proj, color2), -1)
+    features_to_render = ivy.concat([depth1_proj, color2], -1)
 
     # without depth buffer
     f1_forward_warp_no_db, _, _ = ivy_vision.quantize_to_image(
@@ -430,7 +430,7 @@ def main(interactive=True, f=None):
     # with depth buffer
     f1_forward_warp_w_db, _, _ = ivy_vision.quantize_to_image(
         ivy.reshape(ds_pixel_coords1_proj, (-1, 2)), img_dims, ivy.reshape(features_to_render, (-1, 4)),
-        ivy.zeros_like(features_to_render), with_db=False if ivy.get_framework() == 'mxnet' else True)
+        ivy.zeros_like(features_to_render), with_db=False if ivy.get_backend() == 'mxnet' else True)
 
     # show images
     show_forward_warped_images(depth1, color1, f1_forward_warp_no_db, f1_forward_warp_w_db, depth_limits)
@@ -443,8 +443,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--non_interactive', action='store_true',
                         help='whether to run the demo in non-interactive mode.')
-    parser.add_argument('--framework', type=str, default=None,
-                        help='which framework to use. Chooses a random framework if unspecified.')
+    parser.add_argument('--backend', type=str, default=None,
+                        help='which backend to use. Chooses a random backend if unspecified.')
     parsed_args = parser.parse_args()
-    framework = None if parsed_args.framework is None else get_framework_from_str(parsed_args.framework)
-    main(not parsed_args.non_interactive, framework)
+    fw = parsed_args.backend
+    f = None if fw is None else ivy.get_backend(fw)
+    main(not parsed_args.non_interactive, f, fw)
