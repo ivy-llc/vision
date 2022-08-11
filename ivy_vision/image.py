@@ -1,8 +1,7 @@
 """Collection of Image Functions"""
 
 # global
-import ivy as _ivy
-import ivy_mech as _ivy_mech
+import ivy
 
 
 def stack_images(images, desired_aspect_ratio):
