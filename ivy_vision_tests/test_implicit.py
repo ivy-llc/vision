@@ -15,7 +15,7 @@ class ImplicitTestData(TestData):
         super().__init__()
 
         # set framework
-        ivy.set_framework('numpy')
+        ivy.set_backend('numpy')
 
         # sampled pixel coords
         self.samples_per_dim = [9, 12]
@@ -63,14 +63,14 @@ class ImplicitTestData(TestData):
         num_batch_dims = len(batch_shape)
         ray_batch_shape = list(self.rays_d.shape[num_batch_dims:-1])
         num_ray_batch_dims = len(ray_batch_shape)
-        self.z_vals = ivy.expand_dims(ivy_imp.stratified_sample(self.near, self.far, 3), -1)
-        rays_d = ivy.expand_dims(self.rays_d, -2)
+        self.z_vals = ivy.expand_dims(ivy_imp.stratified_sample(self.near, self.far, 3), axis=-1)
+        rays_d = ivy.expand_dims(self.rays_d, axis=-2)
         rays_o = ivy.broadcast_to(ivy.reshape(self.rays_o, batch_shape + [1] * (num_ray_batch_dims + 1) + [3]),
                                   rays_d.shape)
         self.query_points = rays_o + rays_d * self.z_vals
 
         # unset framework
-        ivy.unset_framework()
+        ivy.unset_backend()
 
 
 td = ImplicitTestData()

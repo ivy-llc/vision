@@ -2,12 +2,12 @@
 import ivy
 import pytest
 import numpy as np
-import ivy.functional.backends.numpy as ivy_np
+import ivy_tests.test_ivy.helpers as helpers
+
 try:
     import tensorflow as tf
 except ImportError:
     pass
-import ivy_tests.test_ivy.helpers as helpers
 
 # local
 from ivy_vision_tests.data import TestData
@@ -22,7 +22,7 @@ class OpticalFlowTestData(TestData):
         # fundamental matrix
         e2 = np.matmul(self.full_mats[:, 1:2], np.concatenate((self.C_hats[:, 0:1],
                                                                np.ones((self.batch_size, 1, 1, 1))), 2))[..., -1]
-        e2_skew_matrices = ivy.linalg.vector_to_skew_symmetric_matrix(e2, f=ivy_np)
+        e2_skew_matrices = ivy.vector_to_skew_symmetric_matrix(e2)
         self.fund_mats = np.matmul(e2_skew_matrices, np.matmul(self.full_mats[:, 1:2], self.pinv_full_mats[:, 0:1]))
 
         # closest mutual point
