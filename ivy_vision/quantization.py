@@ -238,7 +238,7 @@ def quantize_to_image(pixel_coords, final_image_dims, feat=None, feat_prior=None
     # Scatter #
 
     # num_valid_indices x 1
-    counter = _ivy.ones_like(pc_n_feat[..., 0:1], dev_str=dev_str)
+    counter = _ivy.ones_like(pc_n_feat[..., 0:1], device=dev_str)
     if with_db:
         counter *= -1
 
