@@ -101,10 +101,10 @@ def create_sampled_pixel_coords_image(image_dims, samples_per_dim, batch_shape=N
     if randomize:
         # BS x DH x DW x 1
         rand_x = ivy.random_uniform(
-            low=-window_size[0] / 2, high=window_size[0] / 2,
+            low=ivy.to_scalar(-window_size[0] / 2), high=ivy.to_scalar(window_size[0] / 2),
             shape=list(downsam_pix_coords.shape[:-1]) + [1], device=dev_str)
         rand_y = ivy.random_uniform(
-            low=-window_size[1] / 2, high=window_size[1] / 2,
+            low=ivy.to_scalar(-window_size[1] / 2), high=ivy.to_scalar(window_size[1] / 2),
             shape=list(downsam_pix_coords.shape[:-1]) + [1], device=dev_str)
 
         # BS x DH x DW x 2
@@ -178,11 +178,11 @@ def sample_images(list_of_images, num_pixels, batch_shape, image_dims, dev_str=N
                                           [flat_batch_size] + new_img_dims + [2])
 
     # FBS x DH x DW x 1
-    batch_idxs = ivy.expand_dims(ivy.matrix_transpose(ivy.astype(ivy.linspace(
+    batch_idxs = ivy.expand_dims(ivy.permute_dims(ivy.astype(ivy.linspace(
         ivy.zeros(new_img_dims, device=dev_str),
         ivy.ones(new_img_dims, device=dev_str) * (flat_batch_size - 1),
         flat_batch_size, axis=-1),
-        'int32'), (2, 0, 1)), axis=-1)
+        'int32'), axes=(2, 0, 1)), axis=-1)
 
     # FBS x DH x DW x 3
     total_idxs = ivy.concat((batch_idxs, ivy.flip(sampled_pix_coords_flat, axis=-1)),

@@ -414,8 +414,8 @@ def project_cam_coords_with_object_transformations(cam_coords_1, id_image, obj_i
     obj_trans = _ivy.reshape(obj_trans, batch_shape + [-1, 4])
 
     # BS x 4 x IS
-    cam_coords_1_ = _ivy.matrix_transpose(
-        cam_coords_1, list(range(num_batch_dims)) + [i + num_batch_dims
+    cam_coords_1_ = _ivy.permute_dims(
+        cam_coords_1, axes=list(range(num_batch_dims)) + [i + num_batch_dims
                                                      for i in ([num_image_dims] + list(range(num_image_dims)))])
 
     # BS x 4 x (IS)

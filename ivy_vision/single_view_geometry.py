@@ -69,7 +69,7 @@ def create_uniform_pixel_coords_image(image_dims, batch_shape=None, normalized=F
                                              (image_dims[1], image_dims[0], 1)), 'float32')
 
     # H x W x 1
-    pixel_y_coords = _ivy.matrix_transpose(pixel_y_coords_, (1, 0, 2))
+    pixel_y_coords = _ivy.permute_dims(pixel_y_coords_, axes=(1, 0, 2))
     if normalized:
         pixel_y_coords = pixel_y_coords / (float(image_dims[0]) + MIN_DENOMINATOR)
 

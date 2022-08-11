@@ -90,7 +90,7 @@ def projection_matrix_pseudo_inverse(proj_mat, batch_shape=None):
     transpose_idxs = list(range(num_batch_dims)) + [num_batch_dims + 1, num_batch_dims]
 
     # BS x 4 x 3
-    matrix_transposed = _ivy.matrix_transpose(proj_mat, transpose_idxs)
+    matrix_transposed = _ivy.permute_dims(proj_mat, axes=transpose_idxs)
 
     # BS x 4 x 3
     return _ivy.matmul(matrix_transposed, _ivy.inv(_ivy.matmul(proj_mat, matrix_transposed)))
