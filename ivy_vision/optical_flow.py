@@ -76,7 +76,7 @@ def depth_from_flow_and_cam_mats(flow, full_mats, inv_full_mats=None, camera_cen
         uniform_pixel_coords = _ivy_svg.create_uniform_pixel_coords_image(image_dims, batch_shape, dev_str=dev_str)
 
     # BS x H x W x 3
-    flow_homo = _ivy.concat((flow, _ivy.zeros(batch_shape + image_dims + [1], dev_str=dev_str)), axis=-1)
+    flow_homo = _ivy.concat((flow, _ivy.zeros(batch_shape + image_dims + [1], device=dev_str)), axis=-1)
 
     # BS x H x W x 3
     transformed_pixel_coords = uniform_pixel_coords + flow_homo
