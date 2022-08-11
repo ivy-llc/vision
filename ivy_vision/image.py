@@ -44,7 +44,7 @@ def stack_images(images, desired_aspect_ratio):
         ] * (stack_height_int - len(images_to_concat))
         image_rows.append(ivy.concat(images_to_concat, num_batch_dims))
 
-    return ivy.concat(image_rows, num_batch_dims + 1)
+    return ivy.concat(image_rows, axis=num_batch_dims + 1)
 
 
 def gradient_image(x):
@@ -75,10 +75,10 @@ def gradient_image(x):
     dx = x[..., :, 1:, :] - x[..., :, :-1, :]
     # BS x H x W x D
     dy = ivy.concat(
-        (dy, ivy.zeros(batch_shape + [1, image_dims[1], num_dims], device=device)), -3
+        (dy, ivy.zeros(batch_shape + [1, image_dims[1], num_dims], device=device)), axis=-3
     )
     dx = ivy.concat(
-        (dx, ivy.zeros(batch_shape + [image_dims[0], 1, num_dims], device=device)), -2
+        (dx, ivy.zeros(batch_shape + [image_dims[0], 1, num_dims], device=device)), axis=-2
     )
     # BS x H x W x D,    BS x H x W x D
     return dx, dy
@@ -168,11 +168,11 @@ def random_crop(x, crop_size, batch_shape=None, image_dims=None, seed: int = Non
     # list of 1 x NH x NW x F
     cropped_list = [
         img[..., xo : xo + crop_size[0], yo : yo + crop_size[1], :]
-        for img, xo, yo in zip(ivy.unstack(x_flat, 0, True), x_offsets, y_offsets)
+        for img, xo, yo in zip(ivy.unstack(x_flat, axis=0, keepdims=True), x_offsets, y_offsets)
     ]
 
     # FBS x NH x NW x F
-    flat_cropped = ivy.concat(cropped_list, 0)
+    flat_cropped = ivy.concat(cropped_list, axis=0)
 
     # BS x NH x NW x F
     return ivy.reshape(
@@ -209,7 +209,7 @@ def bilinear_resample(x, warp):
     # B
     batch_offsets = ivy.arange(batch_shape_flat) * height * width
     # B x (HxW)
-    base_grid = ivy.tile(ivy.expand_dims(batch_offsets, 1), [1, idx_size])
+    base_grid = ivy.tile(ivy.expand_dims(batch_offsets, axis=1), [1, idx_size])
     # (BxHxW)
     base = ivy.reshape(base_grid, [-1])
     # (BxHxW) x D
@@ -235,19 +235,19 @@ def bilinear_resample(x, warp):
     idx_d = base_y1 + x1
 
     # (BxHxW) x D
-    Ia = ivy.gather(data_flat, idx_a, 0)
-    Ib = ivy.gather(data_flat, idx_b, 0)
-    Ic = ivy.gather(data_flat, idx_c, 0)
-    Id = ivy.gather(data_flat, idx_d, 0)
+    Ia = ivy.gather(data_flat, idx_a, axis=0)
+    Ib = ivy.gather(data_flat, idx_b, axis=0)
+    Ic = ivy.gather(data_flat, idx_c, axis=0)
+    Id = ivy.gather(data_flat, idx_d, axis=0)
 
     # (BxHxW)
     xw = bilinear_weights[:, 0]
     yw = bilinear_weights[:, 1]
     # (BxHxW) x 1
-    wa = ivy.expand_dims((1 - xw) * (1 - yw), 1)
-    wb = ivy.expand_dims((1 - xw) * yw, 1)
-    wc = ivy.expand_dims(xw * (1 - yw), 1)
-    wd = ivy.expand_dims(xw * yw, 1)
+    wa = ivy.expand_dims((1 - xw) * (1 - yw), axis=1)
+    wb = ivy.expand_dims((1 - xw) * yw, axis=1)
+    wc = ivy.expand_dims(xw * (1 - yw), axis=1)
+    wd = ivy.expand_dims(xw * yw, axis=1)
     # (BxNP) x D
     resampled_flat = wa * Ia + wb * Ib + wc * Ic + wd * Id
     # B x NP x D

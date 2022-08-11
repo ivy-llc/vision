@@ -39,7 +39,7 @@ def weighted_image_smooth(mean, weights, kernel_dim):
     kernel = _ivy.ones(kernel_shape + [dim])
 
     # D
-    kernel_sum = _ivy.reduce_sum(kernel, [0, 1])[0]
+    kernel_sum = _ivy.sum(kernel, axis=[0, 1])[0]
 
     # BS x H x W x D
     mean_x_weights = mean * weights
@@ -80,7 +80,7 @@ def smooth_image_fom_var_image(mean, var, kernel_dim, kernel_scale, dev_str=None
     """
 
     if dev_str is None:
-        dev_str = _ivy.dev_str(mean)
+        dev_str = _ivy.dev(mean)
 
     # shapes as list
     kernel_shape = [kernel_dim, kernel_dim]
@@ -92,20 +92,20 @@ def smooth_image_fom_var_image(mean, var, kernel_dim, kernel_scale, dev_str=None
 
     # 2
     kernel_central_pixel_coord = _ivy.array([float(_math.floor(kernel_shape[0] / 2)),
-                                             float(_math.floor(kernel_shape[1] / 2))], dev_str=dev_str)
+                                             float(_math.floor(kernel_shape[1] / 2))], device=dev_str)
 
     # KH x KW x 2
     kernel_xy_dists = kernel_central_pixel_coord - uniform_pixel_coords
     kernel_xy_dists_sqrd = kernel_xy_dists ** 2
 
     # KW x KW x D x D
-    unit_kernel = _ivy.tile(_ivy.reduce_sum(kernel_xy_dists_sqrd, -1, keepdims=True) ** 0.5, (1, 1, dims))
+    unit_kernel = _ivy.tile(_ivy.sum(kernel_xy_dists_sqrd, axis=-1, keepdims=True) ** 0.5, (1, 1, dims))
     kernel = 1 + unit_kernel * kernel_scale
     recip_kernel = 1 / (kernel + MIN_DENOMINATOR)
 
     # D
-    kernel_sum = _ivy.reduce_sum(kernel, [0, 1])[0]
-    recip_kernel_sum = _ivy.reduce_sum(recip_kernel, [0, 1])
+    kernel_sum = _ivy.sum(kernel, axis=[0, 1])[0]
+    recip_kernel_sum = _ivy.sum(recip_kernel, axis=[0, 1])
 
     # BS x H x W x D
     recip_var = 1 / (var + MIN_DENOMINATOR)

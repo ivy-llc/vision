@@ -31,21 +31,21 @@ def pad_omni_image(image, pad_size, image_dims=None):
     top_right = image[..., 0:pad_size, 0:int(image_dims[1] / 2), :]
 
     # BS x PS x W x D
-    top_border = _ivy.flip(_ivy.concatenate((top_left, top_right), -2), -3)
+    top_border = _ivy.flip(_ivy.concat((top_left, top_right), axis=-2), axis=-3)
 
     # BS x PS x W/2 x D
     bottom_left = image[..., -pad_size:, int(image_dims[1] / 2):, :]
     bottom_right = image[..., -pad_size:, 0:int(image_dims[1] / 2), :]
 
     # BS x PS x W x D
-    bottom_border = _ivy.flip(_ivy.concatenate((bottom_left, bottom_right), -2), -3)
+    bottom_border = _ivy.flip(_ivy.concat((bottom_left, bottom_right), axis=-2), axis=-3)
 
     # BS x H+2PS x W x D
-    image_expanded = _ivy.concatenate((top_border, image, bottom_border), -3)
+    image_expanded = _ivy.concat((top_border, image, bottom_border), axis=-3)
 
     # BS x H+2PS x PS x D
     left_border = image_expanded[..., -pad_size:, :]
     right_border = image_expanded[..., 0:pad_size, :]
 
     # BS x H+2PS x W+2PS x D
-    return _ivy.concatenate((left_border, image_expanded, right_border), -2)
+    return _ivy.concat((left_border, image_expanded, right_border), axis=-2)

@@ -5,6 +5,7 @@ import ivy as _ivy
 import ivy_mech as _ivy_mech
 
 # local
+from ivy_vision import image as _ivy_img
 from ivy_vision import two_view_geometry as _ivy_tvg
 from ivy_vision import projective_geometry as _ivy_pg
 from ivy_vision import single_view_geometry as _ivy_svg
@@ -62,7 +63,7 @@ def depth_from_flow_and_cam_mats(flow, full_mats, inv_full_mats=None, camera_cen
     image_dims = list(image_dims)
 
     if dev_str is None:
-        dev_str = _ivy.dev_str(flow)
+        dev_str = _ivy.dev(flow)
 
     if inv_full_mats is None:
         inv_full_mats = _ivy.inv(_ivy_mech.make_transformation_homogeneous(
@@ -75,14 +76,14 @@ def depth_from_flow_and_cam_mats(flow, full_mats, inv_full_mats=None, camera_cen
         uniform_pixel_coords = _ivy_svg.create_uniform_pixel_coords_image(image_dims, batch_shape, dev_str=dev_str)
 
     # BS x H x W x 3
-    flow_homo = _ivy.concatenate((flow, _ivy.zeros(batch_shape + image_dims + [1], dev_str=dev_str)), -1)
+    flow_homo = _ivy.concat((flow, _ivy.zeros(batch_shape + image_dims + [1], dev_str=dev_str)), axis=-1)
 
     # BS x H x W x 3
     transformed_pixel_coords = uniform_pixel_coords + flow_homo
 
     # BS x 2 x H x W x 3
-    pixel_coords = _ivy.concatenate((_ivy.expand_dims(uniform_pixel_coords, -4),
-                                     _ivy.expand_dims(transformed_pixel_coords, -4)), -4)
+    pixel_coords = _ivy.concat((_ivy.expand_dims(uniform_pixel_coords, axis=-4),
+                                     _ivy.expand_dims(transformed_pixel_coords, axis=-4)), axis=-4)
 
     # BS x H x W x 1
     return _ivy_tvg.triangulate_depth(pixel_coords, full_mats, inv_full_mats, camera_centers, triangulation_method,
@@ -206,7 +207,7 @@ def project_flow_to_epipolar_line(flow, fund_mat, uniform_pixel_coords=None, bat
     y = (a * (-bx0 + ay0) - bc) / (a_sqrd_plus_b_sqrd + MIN_DENOMINATOR)
 
     # BS x H x W x 2
-    projected_pixels = _ivy.concatenate((x, y), -1)
+    projected_pixels = _ivy.concat((x, y), axis=-1)
     projected_flow = projected_pixels - uniform_pixel_coords[..., 0:2]
     return projected_flow
 
@@ -265,13 +266,13 @@ def pixel_cost_volume(image1, image2, search_range, batch_shape=None):
             tensor_slice = padded_lvl[..., y:y + h, x:x + w, :]
 
             # BS x H x W x 1
-            cost = _ivy.reduce_mean(image1 * tensor_slice, axis=-1, keepdims=True)
+            cost = _ivy.mean(image1 * tensor_slice, axis=-1, keepdims=True)
 
             # append to list
             cost_vol.append(cost)
 
     # BS x H x W x (max_offset^2)
-    return _ivy.concatenate(cost_vol, -1)
+    return _ivy.concat(cost_vol, axis=-1)
 
 
 # noinspection PyUnresolvedReferences
@@ -322,7 +323,7 @@ def velocity_from_flow_cam_coords_and_cam_mats(flow_t_to_tm1, cam_coords_t, cam_
     image_dims = list(image_dims)
 
     if dev_str is None:
-        dev_str = _ivy.dev_str(flow_t_to_tm1)
+        dev_str = _ivy.dev(flow_t_to_tm1)
 
     if uniform_pixel_coords is None:
         uniform_pixel_coords = _ivy_svg.create_uniform_pixel_coords_image(image_dims, batch_shape, dev_str)
@@ -333,7 +334,7 @@ def velocity_from_flow_cam_coords_and_cam_mats(flow_t_to_tm1, cam_coords_t, cam_
     warp = uniform_pixel_coords[..., 0:2] + flow_t_to_tm1
 
     # BS x H x W x 4
-    cam_coords_tm1_interp = _ivy.image.bilinear_resample(cam_coords_tm1, warp)
+    cam_coords_tm1_interp = _ivy_img.bilinear_resample(cam_coords_tm1, warp)
 
     # Project to frame t
 
@@ -355,13 +356,13 @@ def velocity_from_flow_cam_coords_and_cam_mats(flow_t_to_tm1, cam_coords_t, cam_
 
     # BS x H x W x 1
     validity_mask = \
-        _ivy.reduce_sum(_ivy.cast(warp < _ivy.array([image_dims[1], image_dims[0]], 'float32', dev_str=dev_str),
-                                  'int32'), -1, keepdims=True) == 2
+        _ivy.sum(_ivy.astype(warp < _ivy.array([image_dims[1], image_dims[0]], dtype='float32', device=dev_str),
+                                  'int32'), axis=-1, keepdims=True) == 2
 
     # pruned
 
     # BS x H x W x 3,    BS x H x W x 1
-    return _ivy.where(validity_mask, vel, _ivy.zeros_like(vel, dev_str=dev_str)), validity_mask
+    return _ivy.where(validity_mask, vel, _ivy.zeros_like(vel, device=dev_str)), validity_mask
 
 
 def project_cam_coords_with_object_transformations(cam_coords_1, id_image, obj_ids, obj_trans,
@@ -413,7 +414,7 @@ def project_cam_coords_with_object_transformations(cam_coords_1, id_image, obj_i
     obj_trans = _ivy.reshape(obj_trans, batch_shape + [-1, 4])
 
     # BS x 4 x IS
-    cam_coords_1_ = _ivy.transpose(
+    cam_coords_1_ = _ivy.matrix_transpose(
         cam_coords_1, list(range(num_batch_dims)) + [i + num_batch_dims
                                                      for i in ([num_image_dims] + list(range(num_image_dims)))])
 
@@ -435,12 +436,12 @@ def project_cam_coords_with_object_transformations(cam_coords_1, id_image, obj_i
     obj_ids = _ivy.reshape(obj_ids, batch_shape + [1]*num_image_dims + [-1])
 
     # BS x IS x num_obj x 1
-    multiplier = _ivy.cast(_ivy.expand_dims(obj_ids == id_image, -1), 'float32')
+    multiplier = _ivy.astype(_ivy.expand_dims(obj_ids == id_image, axis=-1), 'float32')
 
     # compute validity mask, for pixels which are on moving objects
 
     # BS x IS x 1
-    motion_mask = _ivy.reduce_sum(multiplier, -2) > 0
+    motion_mask = _ivy.sum(multiplier, axis=-2) > 0
 
     # make invalid transformations equal to zero
 
@@ -450,7 +451,7 @@ def project_cam_coords_with_object_transformations(cam_coords_1, id_image, obj_i
     # reduce to get only valid transformations
 
     # BS x IS x 3
-    cam_coords_2_all_obj_trans = _ivy.reduce_sum(cam_coords_2_all_obj_trans_w_zeros, -2)
+    cam_coords_2_all_obj_trans = _ivy.sum(cam_coords_2_all_obj_trans_w_zeros, axis=-2)
 
     # find cam coords to for zero motion pixels
 
@@ -509,7 +510,7 @@ def velocity_from_cam_coords_id_image_and_object_trans(cam_coords_t, id_image, o
         image_shape = cam_coords_t.shape[num_batch_dims:-1]
 
     if dev_str is None:
-        dev_str = _ivy.dev_str(cam_coords_t)
+        dev_str = _ivy.dev(cam_coords_t)
 
     # shapes as list
     batch_shape = list(batch_shape)
@@ -520,12 +521,12 @@ def velocity_from_cam_coords_id_image_and_object_trans(cam_coords_t, id_image, o
     # BS x IS x 4
     cam_coords_t_all_trans, motion_mask =\
         project_cam_coords_with_object_transformations(cam_coords_t, id_image, obj_ids, obj_trans,
-                                                       _ivy.identity(4, batch_shape=batch_shape)[..., 0:3, :],
+                                                       _ivy.eye(4, batch_shape=batch_shape)[..., 0:3, :],
                                                        batch_shape, image_shape)
 
     # BS x IS x 4
     cam_coords_t_all_trans = \
-        _ivy.where(motion_mask, cam_coords_t_all_trans, _ivy.zeros_like(cam_coords_t_all_trans, dev_str=dev_str))
+        _ivy.where(motion_mask, cam_coords_t_all_trans, _ivy.zeros_like(cam_coords_t_all_trans, device=dev_str))
 
     # compute velocities
 
@@ -535,7 +536,7 @@ def velocity_from_cam_coords_id_image_and_object_trans(cam_coords_t, id_image, o
     # prune velocities
 
     # BS x IS x 3
-    return _ivy.where(motion_mask, vel, _ivy.zeros_like(vel, dev_str=dev_str))
+    return _ivy.where(motion_mask, vel, _ivy.zeros_like(vel, device=dev_str))
 
 
 def flow_from_cam_coords_id_image_and_object_trans(cam_coords_f1, id_image, obj_ids, obj_trans,
