@@ -2,7 +2,6 @@
 import os
 import ivy
 import argparse
-import ivy.functional.backends.jax as ivy_jax
 import ivy_mech
 import ivy.functional.backends.numpy as ivy_np
 import ivy_vision
@@ -10,9 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from ivy_demo_utils.open3d_utils import Visualizer
-from ivy.framework_handler import set_framework, unset_framework
 from ivy_demo_utils.ivy_scene.scene_utils import SimCam, BaseSimulator
-from ivy_demo_utils.framework_utils import choose_random_framework, get_framework_from_str
 
 
 class DummyCam:
@@ -45,7 +42,7 @@ class Simulator(BaseSimulator):
             self._spherical_vision_sensor.remove()
             self._default_camera.set_position(np.array([-2.3518, 4.3953, 2.8949]))
             self._default_camera.set_orientation(np.array([i*np.pi/180 for i in [112.90, 27.329, -10.978]]))
-            inv_ext_mat = ivy.array(self._default_vision_sensor.get_matrix()[0:3].tolist(), 'float32')
+            inv_ext_mat = ivy.array(self._default_vision_sensor.get_matrix()[0:3].tolist(), dtype='float32')
             self.default_camera_ext_mat_homo = ivy.inv(ivy_mech.make_transformation_homogeneous(inv_ext_mat))
 
             # public objects
@@ -76,7 +73,7 @@ class Simulator(BaseSimulator):
             cam_quaternions = [ivy.array([-0.5,  0.5,  0.5, -0.5]), ivy.array([0.707, 0, 0,  0.707]),
                                ivy.array([1., 0., 0., 0.]), ivy.array([0.5, 0.5, 0.5, 0.5]),
                                ivy.array([0, 0.707, 0.707, 0]), ivy.array([0., 0., 0., 1.])]
-            cam_quat_poses = [ivy.concatenate((pos, eul), -1) for pos, eul in zip(cam_positions, cam_quaternions)]
+            cam_quat_poses = [ivy.concat((pos, eul), axis=-1) for pos, eul in zip(cam_positions, cam_quaternions)]
             cam_inv_ext_mats = [ivy_mech.quaternion_pose_to_mat_pose(qp) for qp in cam_quat_poses]
             self.cams = [DummyCam(inv_calib_mat, iem, n) for iem, n in zip(cam_inv_ext_mats, cam_names)]
             self.default_camera_ext_mat_homo = ivy.array(
@@ -97,9 +94,11 @@ class Simulator(BaseSimulator):
                 plt.show()
 
 
-def main(interactive=True, try_use_sim=True, f=None):
-    f = choose_random_framework() if f is None else f
-    set_framework(f)
+def main(interactive=True, try_use_sim=True, f=None, fw=None):
+    fw = ivy.choose_random_backend() if fw is None else fw
+    ivy.set_backend(fw)
+    f = ivy.get_backend(backend=fw) if f is None else f
+
     sim = Simulator(interactive, try_use_sim)
     vis = Visualizer(ivy.to_numpy(sim.default_camera_ext_mat_homo))
     xyzs = list()
@@ -111,8 +110,8 @@ def main(interactive=True, try_use_sim=True, f=None):
             xyz = sim.depth_to_xyz(depth, cam.get_inv_ext_mat(), cam.inv_calib_mat, [128]*2)
             xyzs.append(xyz)
             rgbs.append(rgb)
-        xyz = ivy.reshape(ivy.concatenate(xyzs, 1), (-1, 3))
-        rgb = ivy.reshape(ivy.concatenate(rgbs, 1), (-1, 3))
+        xyz = ivy.reshape(ivy.concat(xyzs, 1), axis=(-1, 3))
+        rgb = ivy.reshape(ivy.concat(rgbs, 1), axis=(-1, 3))
         voxels = [ivy.to_numpy(item) for item in ivy_vision.coords_to_voxel_grid(xyz, [100] * 3, features=rgb)]
         cuboid_inv_ext_mats = [ivy.to_numpy(ivy_mech.make_transformation_homogeneous(cam.get_inv_ext_mat()))
                                for cam in sim.cams]
@@ -123,7 +122,7 @@ def main(interactive=True, try_use_sim=True, f=None):
         xyzs.clear()
         rgbs.clear()
     sim.close()
-    unset_framework()
+    ivy.unset_backend()
 
 
 if __name__ == '__main__':
@@ -132,8 +131,9 @@ if __name__ == '__main__':
                         help='whether to run the demo in non-interactive mode.')
     parser.add_argument('--no_sim', action='store_true',
                         help='whether to run the demo without attempt to use the PyRep simulator.')
-    parser.add_argument('--framework', type=str, default=None,
-                        help='which framework to use. Chooses a random framework if unspecified.')
+    parser.add_argument('--backend', type=str, default=None,
+                        help='which backend to use. Chooses a random backend if unspecified.')
     parsed_args = parser.parse_args()
-    framework = None if parsed_args.framework is None else get_framework_from_str(parsed_args.framework)
-    main(not parsed_args.non_interactive, not parsed_args.no_sim, framework)
+    fw = parsed_args.backend
+    f = None if fw is None else ivy.get_backend(backend=fw)
+    main(not parsed_args.non_interactive, not parsed_args.no_sim, f=f, fw=fw)

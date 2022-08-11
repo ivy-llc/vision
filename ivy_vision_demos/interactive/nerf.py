@@ -8,7 +8,6 @@ import ivy_vision
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm_notebook as tqdm
-from ivy_demo_utils.framework_utils import choose_random_framework, get_framework_from_str
 
 
 class Model(ivy.Module):
@@ -18,22 +17,22 @@ class Model(ivy.Module):
         self._layer_dim = layer_dim
         self._embedding_length = embedding_length
         embedding_size = 3 + 3 * 2 * embedding_length
-        self._fc_layers = [ivy.Linear(embedding_size, layer_dim, dev_str=dev_str)]
+        self._fc_layers = [ivy.Linear(embedding_size, layer_dim, device=dev_str)]
         self._fc_layers += [ivy.Linear(layer_dim + (embedding_size if i % 4 == 0 and i > 0 else 0), layer_dim,
-                                       dev_str=dev_str)
+                                       device=dev_str)
                             for i in range(num_layers-2)]
-        self._fc_layers.append(ivy.Linear(layer_dim, 4, dev_str=dev_str))
+        self._fc_layers.append(ivy.Linear(layer_dim, 4, device=dev_str))
         super(Model, self).__init__(dev_str)
 
     def _forward(self, x, feat=None, timestamps=None):
-        embedding = ivy.fourier_encode(x/math.pi, max_freq=2*math.exp(math.log(2) * (self._embedding_length-1)),
+        embedding = ivy.fourier_encode(x/math.pi, 2*math.exp(math.log(2) * (self._embedding_length-1)),
                                        num_bands=self._embedding_length)
         embedding = ivy.reshape(embedding, list(x.shape[:-1]) + [-1])
         x = ivy.relu(self._fc_layers[0](embedding))
         for i in range(1, self._num_layers-1):
             x = ivy.relu(self._fc_layers[i](x))
             if i % 4 == 0 and i > 0:
-                x = ivy.concatenate([x, embedding], -1)
+                x = ivy.concat([x, embedding], axis=-1)
         x = self._fc_layers[-1](x)
         rgb = ivy.sigmoid(x[..., 0:3])
         sigma_a = ivy.relu(x[..., -1])
@@ -43,23 +42,25 @@ class Model(ivy.Module):
 class NerfDemo:
 
     def __init__(self, num_iters, samples_per_ray, num_layers, layer_dim, with_tensor_splitting, compile_flag,
-                 interactive, dev_str, f):
+                 interactive, dev_str, f, fw):
 
         # ivy
-        f = choose_random_framework() if f is None else f
-        ivy.set_framework(f)
+        fw = ivy.choose_random_backend() if fw is None else fw
+        ivy.set_backend(fw)
+        f = ivy.get_backend(backend=fw) if f is None else f
+
         if dev_str:
             ivy.set_default_device(dev_str)
-        ivy.seed(0)
+        ivy.seed(seed_value=0)
 
         # Load input images and poses
         this_dir = os.path.dirname(os.path.realpath(__file__))
         data = np.load(os.path.join(this_dir, 'nerf_data/tiny_nerf_data.npz'))
-        images = ivy.array(data['images'], 'float32')
-        inv_ext_mats = ivy.array(data['poses'], 'float32')
+        images = ivy.array(data['images'], dtype='float32')
+        inv_ext_mats = ivy.array(data['poses'], dtype='float32')
 
         # intrinsics
-        focal_lengths = ivy.array(np.tile(np.reshape(data['focal'], (1, 1)), [100, 2]), 'float32')
+        focal_lengths = ivy.array(np.tile(np.reshape(data['focal'], (1, 1)), [100, 2]), dtype='float32')
         self._img_dims = images.shape[1:3]
         pp_offsets = ivy.tile(ivy.array([[dim/2 - 0.5 for dim in self._img_dims]]), [100, 1])
 
@@ -95,14 +96,14 @@ class NerfDemo:
 
         # tensor splitting
         self._with_tensor_splitting = with_tensor_splitting
-        if with_tensor_splitting:
-            self._dev_manager = ivy.DevManager(dev_strs=[ivy.default_device()])
+        # if with_tensor_splitting:
+        #     self._dev_manager = ivy.DevManager(dev_strs=[ivy.default_device()])
 
         # compile
         if compile_flag:
             rays_o, rays_d = self._get_rays(self._cam_geoms[0])
             target = self._images[0]
-            self._loss_fn = ivy.compile_fn(self._loss_fn, False,
+            self._loss_fn = ivy.compile(self._loss_fn, dynamic=False,
                                            example_inputs=[self._model, rays_o, rays_d, target, self._model.v])
 
     # Private #
@@ -132,7 +133,7 @@ class NerfDemo:
         flat_ray_batch_size = int(np.prod(ray_batch_shape))
 
         # memory on device
-        memory_on_dev = ivy.cache_fn(ivy.total_mem_on_dev)(ivy.dev_str(rays_o))
+        memory_on_dev = ivy.cache_fn(ivy.total_mem_on_dev)(ivy.dev(rays_o))
 
         # chunk size
         max_chunk_size = int(round(memory_on_dev * 10000 / (flat_batch_size * samples_per_ray)))
@@ -155,7 +156,7 @@ class NerfDemo:
         rgb, depth = self._render_implicit_features_and_depth_with_splitting(
             model, rays_o, rays_d, near=ivy.ones(self._img_dims) * 2,
             far=ivy.ones(self._img_dims) * 6, samples_per_ray=self._samples_per_ray, v=v)
-        return ivy.reduce_mean((rgb - target) ** 2)[0]
+        return ivy.mean((rgb - target) ** 2)[0]
 
     # Public #
     # -------#
@@ -163,8 +164,8 @@ class NerfDemo:
     def train(self):
         optimizer = ivy.Adam(self._lr)
 
-        if self._with_tensor_splitting and not self._dev_manager.tuned:
-            print('tuning tensor splitting for device allocation, the first few iterations may be slow...')
+        # if self._with_tensor_splitting and not self._dev_manager.tuned:
+        #     print('tuning tensor splitting for device allocation, the first few iterations may be slow...')
 
         for i in range(self._num_iters + 1):
 
@@ -190,11 +191,11 @@ class NerfDemo:
                 plt.imsave(os.path.join(self._vis_log_dir, 'img_{}.png'.format(str(i).zfill(3))), ivy.to_numpy(rgb))
 
             # tune the tensor splitting for keeping within device memory
-            if self._with_tensor_splitting and not self._dev_manager.tuned:
-                print('tuning step...')
-                self._dev_manager.ds_tune_step()
-                if self._dev_manager.tuned:
-                    print('device splitting tuning complete!')
+            # if self._with_tensor_splitting and not self._dev_manager.tuned:
+            #     print('tuning step...')
+            #     self._dev_manager.ds_tune_step()
+            #     if self._dev_manager.tuned:
+            #         print('device splitting tuning complete!')
 
         print('Completed Training')
 
@@ -206,33 +207,33 @@ class NerfDemo:
             [0, 1, 0, 0],
             [0, 0, 1, t],
             [0, 0, 0, 1],
-        ], 'float32')
+        ], dtype='float32')
 
         rot_phi = lambda phi: ivy.array([
             [1, 0, 0, 0],
             [0, np.cos(phi), -np.sin(phi), 0],
             [0, np.sin(phi), np.cos(phi), 0],
             [0, 0, 0, 1],
-        ], 'float32')
+        ], dtype='float32')
 
         rot_theta = lambda th_: ivy.array([
             [np.cos(th_), 0, -np.sin(th_), 0],
             [0, 1, 0, 0],
             [np.sin(th_), 0, np.cos(th_), 0],
             [0, 0, 0, 1],
-        ], 'float32')
+        ], dtype='float32')
 
         def pose_spherical(theta, phi, radius):
             c2w_ = trans_t(radius)
             c2w_ = rot_phi(phi / 180. * np.pi) @ c2w_
             c2w_ = rot_theta(theta / 180. * np.pi) @ c2w_
-            c2w_ = ivy.array([[-1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]], 'float32') @ c2w_
-            c2w_ = c2w_ @ ivy.array([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]], 'float32')
+            c2w_ = ivy.array([[-1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]], dtype='float32') @ c2w_
+            c2w_ = c2w_ @ ivy.array([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]], dtype='float32')
             return c2w_
 
         frames = []
         for th in tqdm(np.linspace(0., 360., 120, endpoint=False)):
-            c2w = ivy.to_dev(pose_spherical(th, -30., 4.))
+            c2w = ivy.to_device(pose_spherical(th, -30., 4.), ivy.default_device())
             cam_geom = ivy_vision.inv_ext_mat_and_intrinsics_to_cam_geometry_object(
                 c2w[0:3], self._intrinsics[0])
             rays_o, rays_d = self._get_rays(cam_geom)
@@ -246,10 +247,10 @@ class NerfDemo:
 
 
 def main(num_iters, samples_per_ray, num_layers, layer_dim, with_tensor_splitting, compile_flag, interactive=True,
-         dev_str=None, f=None):
+         dev_str=None, f=None, fw=None):
 
     nerf_demo = NerfDemo(num_iters, samples_per_ray, num_layers, layer_dim, with_tensor_splitting, compile_flag,
-                         interactive, dev_str, f)
+                         interactive, dev_str, f, fw)
     nerf_demo.train()
     if interactive:
         nerf_demo.save_video()
@@ -273,10 +274,11 @@ if __name__ == '__main__':
                         help='whether to run the demo in non-interactive mode.')
     parser.add_argument('--device', type=str, default=None,
                         help='The device to run the demo with, as a string. Either gpu:idx or cpu.')
-    parser.add_argument('--framework', type=str, default=None,
-                        help='which framework to use. Chooses a random framework if unspecified.')
+    parser.add_argument('--backend', type=str, default=None,
+                        help='which backend to use. Chooses a random backend if unspecified.')
     parsed_args = parser.parse_args()
-    framework = None if parsed_args.framework is None else get_framework_from_str(parsed_args.framework)
+    fw = parsed_args.backend
+    f = None if fw is None else ivy.get_backend(backend=fw)
     main(parsed_args.iterations, parsed_args.samples_per_ray, parsed_args.num_layers, parsed_args.layer_dim,
          not parsed_args.no_tensor_splitting, parsed_args.compile, not parsed_args.non_interactive, parsed_args.device,
-         framework)
+         f, fw)

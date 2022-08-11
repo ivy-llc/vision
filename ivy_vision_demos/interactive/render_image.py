@@ -5,9 +5,7 @@ import argparse
 import ivy_mech
 import ivy_vision
 import numpy as np
-from ivy.framework_handler import set_framework, unset_framework
 from ivy_demo_utils.ivy_scene.scene_utils import SimCam, BaseSimulator
-from ivy_demo_utils.framework_utils import choose_random_framework, get_framework_from_str
 
 
 class DummyCam:
@@ -123,7 +121,7 @@ class Simulator(BaseSimulator):
                                ivy.array([0.44628197, 0.68734518, 0.56583211, 0.09068139]),
                                ivy.array([-0.00698829,  0.70860066,  0.70552395, -0.00850271])]
 
-            cam_quat_poses = [ivy.concatenate((pos, eul), -1) for pos, eul in zip(cam_positions, cam_quaternions)]
+            cam_quat_poses = [ivy.concat((pos, eul), axis=-1) for pos, eul in zip(cam_positions, cam_quaternions)]
             cam_inv_ext_mats = [ivy_mech.quaternion_pose_to_mat_pose(qp) for qp in cam_quat_poses]
             cam_ext_mats = [ivy.inv(ivy_mech.make_transformation_homogeneous(iem))[..., 0:3, :]
                             for iem in cam_inv_ext_mats]
@@ -148,10 +146,12 @@ class Simulator(BaseSimulator):
                 plt.show()
 
 
-def main(interactive=True, try_use_sim=True, f=None):
-    f = choose_random_framework() if f is None else f
-    set_framework(f)
-    with_mxnet = ivy.current_framework_str() == 'mxnet'
+def main(interactive=True, try_use_sim=True, f=None, fw=None):
+    fw = ivy.choose_random_backend() if fw is None else fw
+    ivy.set_backend(fw)
+    f = ivy.get_backend(backend=fw) if f is None else f
+
+    with_mxnet = ivy.current_backend_str() == 'mxnet'
     if with_mxnet:
         print('\nMXnet does not support "sum" or "min" reductions for scatter_nd,\n'
               'instead it only supports non-deterministic replacement for duplicates.\n'
@@ -168,15 +168,15 @@ def main(interactive=True, try_use_sim=True, f=None):
             xyz = sim.depth_to_xyz(depth, cam.get_inv_ext_mat(), cam.inv_calib_mat, [1024]*2)
             xyzs.append(xyz)
             rgbs.append(rgb)
-        xyz = ivy.reshape(ivy.concatenate(xyzs, 1), (-1, 3))
-        rgb = ivy.reshape(ivy.concatenate(rgbs, 1), (-1, 3))
-        cam_coords = ivy_vision.world_to_cam_coords(ivy_mech.make_coordinates_homogeneous(ivy.expand_dims(xyz, 1)),
+        xyz = ivy.reshape(ivy.concat(xyzs, axis=1), (-1, 3))
+        rgb = ivy.reshape(ivy.concat(rgbs, axis=1), (-1, 3))
+        cam_coords = ivy_vision.world_to_cam_coords(ivy_mech.make_coordinates_homogeneous(ivy.expand_dims(xyz, axis=1)),
                                                     sim.target_cam.get_ext_mat())
         ds_pix_coords = ivy_vision.cam_to_ds_pixel_coords(cam_coords, sim.target_cam.calib_mat)
         depth = ds_pix_coords[..., -1]
         pix_coords = ds_pix_coords[..., 0, 0:2] / depth
         final_image_dims = [512]*2
-        feat = ivy.concatenate((depth, rgb), -1)
+        feat = ivy.concat((depth, rgb), axis=-1)
         rendered_img_no_db, _, _ = ivy_vision.quantize_to_image(
             pix_coords, final_image_dims, feat, ivy.zeros(final_image_dims + [4]), with_db=False)
         with_db = not with_mxnet
@@ -228,7 +228,7 @@ def main(interactive=True, try_use_sim=True, f=None):
         xyzs.clear()
         rgbs.clear()
     sim.close()
-    unset_framework()
+    ivy.unset_backend()
 
 
 if __name__ == '__main__':
@@ -237,8 +237,9 @@ if __name__ == '__main__':
                         help='whether to run the demo in non-interactive mode.')
     parser.add_argument('--no_sim', action='store_true',
                         help='whether to run the demo without attempt to use the PyRep simulator.')
-    parser.add_argument('--framework', type=str, default=None,
-                        help='which framework to use. Chooses a random framework if unspecified.')
+    parser.add_argument('--backend', type=str, default=None,
+                        help='which backend to use. Chooses a random backend if unspecified.')
     parsed_args = parser.parse_args()
-    framework = None if parsed_args.framework is None else get_framework_from_str(parsed_args.framework)
-    main(not parsed_args.non_interactive, not parsed_args.no_sim, framework)
+    fw = parsed_args.backend
+    f = None if fw is None else ivy.get_backend(backend=fw)
+    main(not parsed_args.non_interactive, not parsed_args.no_sim, f, fw)
