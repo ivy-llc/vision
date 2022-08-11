@@ -9,19 +9,19 @@ RUN rm -rf ivy && \
     python3 -m pip install --user -e .
 
 # Install Ivy Mech
-RUN git clone --recurse-submodules https://github.com/unifyai/mech && \
+RUN git clone https://github.com/unifyai/mech && \
     cd mech && \
     cat requirements.txt | grep -v "ivy-" | pip3 install --no-cache-dir -r /dev/stdin && \
     python3 -m pip install --user -e .
 
 # Install Ivy Vision
-RUN git clone --recurse-submodules https://github.com/unifyai/vision && \
+RUN git clone https://github.com/unifyai/vision && \
     cd vision && \
     cat requirements.txt | grep -v "ivy-" | pip3 install --no-cache-dir -r /dev/stdin && \
     python3 -m pip install --user -e .
 
 # Install Ivy Demo Utils
-RUN git clone --recurse-submodules https://github.com/unifyai/demo-utils && \
+RUN git clone https://github.com/unifyai/demo-utils && \
     cd demo-utils && \
     cat requirements.txt | grep -v "ivy-" | pip3 install --no-cache-dir -r /dev/stdin && \
     python3 -m pip install --user -e .
@@ -29,8 +29,8 @@ RUN git clone --recurse-submodules https://github.com/unifyai/demo-utils && \
 COPY requirements.txt /
 RUN cat requirements.txt | grep -v "ivy-" | pip3 install --no-cache-dir -r /dev/stdin
 
-COPY ivy_vision_demos/requirements.txt /
-RUN cat requirements.txt | grep -v "ivy-" | pip3 install --no-cache-dir -r /dev/stdin
+COPY ivy_vision_demos/requirements.txt /demo_requirements.txt
+RUN cat demo_requirements.txt | grep -v "ivy-" | pip3 install --no-cache-dir -r /dev/stdin
 
 # RUN python3 test_dependencies.py -fp requirements.txt,demo_requirements.txt && \
 #    rm -rf requirements.txt && \
