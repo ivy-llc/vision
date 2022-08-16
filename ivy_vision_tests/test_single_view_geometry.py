@@ -1,4 +1,5 @@
 # global
+import ivy
 import numpy as np
 
 # local
@@ -174,13 +175,15 @@ def test_pixel_coords_to_world_rays(dev_str, call):
         td.world_rays[0], atol=1e-6)
 
 
-def test_sphere_coords_to_world_ray_vectors(dev_str, call):
+def test_sphere_coords_to_world_ray_vectors(dev_str, call, fw):
+    ivy.set_backend(fw)
     assert np.allclose(
-        call(ivy_svg.sphere_coords_to_world_ray_vectors, td.sphere_coords, td.inv_Rs),
+        ivy_svg.sphere_coords_to_world_ray_vectors(ivy.array(td.sphere_coords.data), ivy.array(td.inv_Rs)),
         td.world_rays, atol=1e-6)
     assert np.allclose(
-        call(ivy_svg.sphere_coords_to_world_ray_vectors, td.sphere_coords[0], td.inv_Rs[0]),
+        ivy_svg.sphere_coords_to_world_ray_vectors(ivy.array(td.sphere_coords[0]), ivy.array(td.inv_Rs[0])),
         td.world_rays[0], atol=1e-6)
+    ivy.unset_backend()
 
 
 def test_bilinearly_interpolate_image(dev_str, call):
