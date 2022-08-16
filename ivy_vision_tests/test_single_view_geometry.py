@@ -225,10 +225,11 @@ def test_angular_pixel_to_sphere_coords(dev_str, call):
                             td.pixels_per_degree), td.sphere_coords[0], atol=1e-3)
 
 
-def test_sphere_to_cam_coords(dev_str, call):
-    assert np.allclose(call(ivy_svg.sphere_to_cam_coords, td.sphere_coords, dev_str=dev_str), td.cam_coords, atol=1e-3)
-    assert np.allclose(call(ivy_svg.sphere_to_cam_coords, td.sphere_coords[0], dev_str=dev_str),
-                       td.cam_coords[0], atol=1e-3)
+def test_sphere_to_cam_coords(dev_str, call, fw):
+    ivy.set_backend(fw)
+    assert np.allclose(ivy_svg.sphere_to_cam_coords(ivy.array(td.sphere_coords.data), dev_str=dev_str), td.cam_coords, atol=1e-3)
+    assert np.allclose(ivy_svg.sphere_to_cam_coords(ivy.array(td.sphere_coords[0]), dev_str=dev_str), td.cam_coords[0], atol=1e-3)
+    ivy.unset_backend()
 
 
 def test_sphere_to_ds_pixel_coords(dev_str, call):
