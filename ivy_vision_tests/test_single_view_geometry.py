@@ -176,14 +176,12 @@ def test_pixel_coords_to_world_rays(dev_str, call):
 
 
 def test_sphere_coords_to_world_ray_vectors(dev_str, call, fw):
-    ivy.set_backend(fw)
     assert np.allclose(
         ivy_svg.sphere_coords_to_world_ray_vectors(ivy.array(td.sphere_coords.data), ivy.array(td.inv_Rs)),
         td.world_rays, atol=1e-6)
     assert np.allclose(
         ivy_svg.sphere_coords_to_world_ray_vectors(ivy.array(td.sphere_coords[0]), ivy.array(td.inv_Rs[0])),
         td.world_rays[0], atol=1e-6)
-    ivy.unset_backend()
 
 
 def test_bilinearly_interpolate_image(dev_str, call):
@@ -226,10 +224,8 @@ def test_angular_pixel_to_sphere_coords(dev_str, call):
 
 
 def test_sphere_to_cam_coords(dev_str, call, fw):
-    ivy.set_backend(fw)
     assert np.allclose(ivy_svg.sphere_to_cam_coords(ivy.array(td.sphere_coords.data), dev_str=dev_str), td.cam_coords, atol=1e-3)
     assert np.allclose(ivy_svg.sphere_to_cam_coords(ivy.array(td.sphere_coords[0]), dev_str=dev_str), td.cam_coords[0], atol=1e-3)
-    ivy.unset_backend()
 
 
 def test_sphere_to_ds_pixel_coords(dev_str, call):
@@ -240,7 +236,5 @@ def test_sphere_to_ds_pixel_coords(dev_str, call):
 
 
 def test_sphere_to_angular_pixel_coords(dev_str, call):
-    assert np.allclose(call(ivy_svg.sphere_to_angular_pixel_coords, td.sphere_coords,
-                            td.pixels_per_degree), td.angular_pixel_coords, atol=1e-3)
-    assert np.allclose(call(ivy_svg.sphere_to_angular_pixel_coords, td.sphere_coords[0],
-                            td.pixels_per_degree), td.angular_pixel_coords[0], atol=1e-3)
+    assert np.allclose(ivy_svg.sphere_to_angular_pixel_coords(ivy.array(td.sphere_coords.data), td.pixels_per_degree), td.angular_pixel_coords, atol=1e-3)
+    assert np.allclose(ivy_svg.sphere_to_angular_pixel_coords(ivy.array(td.sphere_coords[0]), td.pixels_per_degree), td.angular_pixel_coords[0], atol=1e-3)
