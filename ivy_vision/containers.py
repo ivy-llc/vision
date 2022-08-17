@@ -1,12 +1,12 @@
 # global
-import ivy as _ivy
+import ivy 
 
 # local
 import ivy_vision.sdf as ivy_sdf
 
 
 # noinspection PyMissingConstructor
-class PrimitiveScene(_ivy.Container):
+class PrimitiveScene(ivy.Container):
 
     def __init__(self,
                  sphere_positions=None,
@@ -58,10 +58,10 @@ class PrimitiveScene(_ivy.Container):
 
         """
         batch_shape = list(batch_shape)
-        sphere_positions = _ivy.eye(4, batch_shape=batch_shape)[..., 0:3, :]
-        sphere_radii = _ivy.ones(batch_shape + [1])
-        cuboid_ext_mats = _ivy.eye(4, batch_shape=batch_shape)[..., 0:3, :]
-        cuboid_dims = _ivy.ones(batch_shape + [3])
+        sphere_positions = ivy.eye(4, batch_shape=batch_shape)[..., 0:3, :]
+        sphere_radii = ivy.ones(batch_shape + [1])
+        cuboid_ext_mats = ivy.eye(4, batch_shape=batch_shape)[..., 0:3, :]
+        cuboid_dims = ivy.ones(batch_shape + [3])
         return __class__(sphere_positions, sphere_radii, cuboid_ext_mats, cuboid_dims)
 
     # Public Methods #
@@ -93,12 +93,12 @@ class PrimitiveScene(_ivy.Container):
             cuboid_sdfs = ivy_sdf.cuboid_signed_distances(
                 self.cuboid_ext_mats, self.cuboid_dims, query_positions)
             all_sdfs_list.append(cuboid_sdfs)
-        sdfs_concatted = _ivy.concat(all_sdfs_list, axis=-1) if len(all_sdfs_list) > 1 else all_sdfs_list[0]
-        return _ivy.min(sdfs_concatted, axis=-1, keepdims=True)
+        sdfs_concatted = ivy.concat(all_sdfs_list, axis=-1) if len(all_sdfs_list) > 1 else all_sdfs_list[0]
+        return ivy.min(sdfs_concatted, axis=-1, keepdims=True)
 
 
 # noinspection PyMissingConstructor
-class Intrinsics(_ivy.Container):
+class Intrinsics(ivy.Container):
 
     def __init__(self,
                  focal_lengths,
@@ -150,16 +150,16 @@ class Intrinsics(_ivy.Container):
 
         """
         batch_shape = list(batch_shape)
-        focal_lengths = _ivy.ones(batch_shape + [2])
-        persp_angles = _ivy.ones(batch_shape + [2])
-        pp_offsets = _ivy.zeros(batch_shape + [2])
-        calib_mats = _ivy.eye(3, batch_shape=batch_shape)
-        inv_calib_mats = _ivy.eye(3, batch_shape=batch_shape)
+        focal_lengths = ivy.ones(batch_shape + [2])
+        persp_angles = ivy.ones(batch_shape + [2])
+        pp_offsets = ivy.zeros(batch_shape + [2])
+        calib_mats = ivy.eye(3, batch_shape=batch_shape)
+        inv_calib_mats = ivy.eye(3, batch_shape=batch_shape)
         return __class__(focal_lengths, persp_angles, pp_offsets, calib_mats, inv_calib_mats)
 
 
 # noinspection PyMissingConstructor
-class Extrinsics(_ivy.Container):
+class Extrinsics(ivy.Container):
 
     def __init__(self,
                  cam_centers,
@@ -211,16 +211,16 @@ class Extrinsics(_ivy.Container):
 
         """
         batch_shape = list(batch_shape)
-        cam_centers = _ivy.zeros(batch_shape + [3, 1])
-        Rs = _ivy.eye(3, batch_shape=batch_shape)
-        inv_Rs = _ivy.eye(3, batch_shape=batch_shape)
-        ext_mats_homo = _ivy.eye(4, batch_shape=batch_shape)
-        inv_ext_mats_homo = _ivy.eye(4, batch_shape=batch_shape)
+        cam_centers = ivy.zeros(batch_shape + [3, 1])
+        Rs = ivy.eye(3, batch_shape=batch_shape)
+        inv_Rs = ivy.eye(3, batch_shape=batch_shape)
+        ext_mats_homo = ivy.eye(4, batch_shape=batch_shape)
+        inv_ext_mats_homo = ivy.eye(4, batch_shape=batch_shape)
         return __class__(cam_centers, Rs, inv_Rs, ext_mats_homo, inv_ext_mats_homo)
 
 
 # noinspection PyMissingConstructor
-class CameraGeometry(_ivy.Container):
+class CameraGeometry(ivy.Container):
 
     def __init__(self,
                  intrinsics,
@@ -269,6 +269,6 @@ class CameraGeometry(_ivy.Container):
         """
         intrinsics = Intrinsics.as_identity(batch_shape)
         extrinsics = Extrinsics.as_identity(batch_shape)
-        full_mats_homo = _ivy.eye(4, batch_shape=batch_shape)
-        inv_full_mats_homo = _ivy.eye(4, batch_shape=batch_shape)
+        full_mats_homo = ivy.eye(4, batch_shape=batch_shape)
+        inv_full_mats_homo = ivy.eye(4, batch_shape=batch_shape)
         return __class__(intrinsics, extrinsics, full_mats_homo, inv_full_mats_homo)

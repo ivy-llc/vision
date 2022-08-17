@@ -7,7 +7,7 @@ from operator import mul
 from functools import reduce
 
 # local
-from ivy_vision import single_view_geometry as _ivy_svg
+from ivy_vision import single_view_geometry as ivy_svg
 
 MIN_DENOMINATOR = 1e-12
 
@@ -86,7 +86,7 @@ def create_sampled_pixel_coords_image(image_dims, samples_per_dim, batch_shape=N
     """
 
     # BS x DH x DW x 2
-    low_res_pix_coords = _ivy_svg.create_uniform_pixel_coords_image(
+    low_res_pix_coords = ivy_svg.create_uniform_pixel_coords_image(
         samples_per_dim, batch_shape, homogeneous=False, dev_str=dev_str)
 
     # 2

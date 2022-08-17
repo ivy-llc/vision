@@ -1,14 +1,14 @@
 """Collection of Two-View-Geometry Functions"""
 
 # global
-import ivy as _ivy
-import ivy_mech as _ivy_mech
-from operator import mul as _mul
-from functools import reduce as _reduce
+import ivy 
+import ivy_mech 
+from operator import mul 
+from functools import reduce 
 
 # local
-from ivy_vision import projective_geometry as _ivy_pg
-from ivy_vision import single_view_geometry as _ivy_svg
+from ivy_vision import projective_geometry as ivy_pg
+from ivy_vision import single_view_geometry as ivy_svg
 
 MIN_DENOMINATOR = 1e-12
 
@@ -50,17 +50,17 @@ def ds_pixel_to_ds_pixel_coords(ds_pixel_coords1, cam1to2_full_mat, batch_shape=
         image_shape = ds_pixel_coords1.shape[num_batch_dims:-1]
 
     if dev_str is None:
-        dev_str = _ivy.dev(ds_pixel_coords1)
+        dev_str = ivy.dev(ds_pixel_coords1)
 
     # shapes as list
     batch_shape = list(batch_shape)
     image_shape = list(image_shape)
 
     # BS x IS x 4
-    pixel_coords_homo = _ivy_mech.make_coordinates_homogeneous(ds_pixel_coords1)
+    pixel_coords_homo = ivy_mech.make_coordinates_homogeneous(ds_pixel_coords1)
 
     # BS x IS x 3
-    return _ivy_pg.transform(pixel_coords_homo, cam1to2_full_mat, batch_shape, image_shape)
+    return ivy_pg.transform(pixel_coords_homo, cam1to2_full_mat, batch_shape, image_shape)
 
 
 def cam_to_cam_coords(cam_coords1, cam1to2_ext_mat, batch_shape=None, image_shape=None, dev_str=None):
@@ -97,17 +97,17 @@ def cam_to_cam_coords(cam_coords1, cam1to2_ext_mat, batch_shape=None, image_shap
         image_shape = cam_coords1.shape[num_batch_dims:-1]
 
     if dev_str is None:
-        dev_str = _ivy.dev(cam_coords1)
+        dev_str = ivy.dev(cam_coords1)
 
     # shapes as list
     batch_shape = list(batch_shape)
     image_shape = list(image_shape)
 
     # BS x IS x 3
-    cam_coords2 = _ivy_pg.transform(cam_coords1, cam1to2_ext_mat, batch_shape, image_shape)
+    cam_coords2 = ivy_pg.transform(cam_coords1, cam1to2_ext_mat, batch_shape, image_shape)
 
     # BS x IS x 4
-    return _ivy_mech.make_coordinates_homogeneous(cam_coords2)
+    return ivy_mech.make_coordinates_homogeneous(cam_coords2)
 
 
 def sphere_to_sphere_coords(sphere_coords1, cam1to2_ext_mat, batch_shape=None, image_shape=None):
@@ -147,11 +147,11 @@ def sphere_to_sphere_coords(sphere_coords1, cam1to2_ext_mat, batch_shape=None, i
     image_shape = list(image_shape)
 
     # BS x IS x 4
-    cam_coords1 = _ivy_svg.sphere_to_cam_coords(sphere_coords1, batch_shape=batch_shape + image_shape)
+    cam_coords1 = ivy_svg.sphere_to_cam_coords(sphere_coords1, batch_shape=batch_shape + image_shape)
     cam_coords2 = cam_to_cam_coords(cam_coords1, cam1to2_ext_mat, batch_shape, image_shape)
 
     # BS x IS x 3
-    return _ivy_svg.cam_to_sphere_coords(cam_coords2)
+    return ivy_svg.cam_to_sphere_coords(cam_coords2)
 
 
 def angular_pixel_to_angular_pixel_coords(angular_pixel_coords1, cam1to2_ext_mat, pixels_per_degree, batch_shape=None,
@@ -193,13 +193,13 @@ def angular_pixel_to_angular_pixel_coords(angular_pixel_coords1, cam1to2_ext_mat
     image_shape = list(image_shape)
 
     # BS x IS x 3
-    sphere_coords1 = _ivy_svg.angular_pixel_to_sphere_coords(angular_pixel_coords1, pixels_per_degree)
+    sphere_coords1 = ivy_svg.angular_pixel_to_sphere_coords(angular_pixel_coords1, pixels_per_degree)
 
     # BS x IS x 3
     sphere_coords2 = sphere_to_sphere_coords(sphere_coords1, cam1to2_ext_mat, batch_shape, image_shape)
 
     # BS x IS x 3
-    return _ivy_svg.sphere_to_angular_pixel_coords(sphere_coords2, pixels_per_degree)
+    return ivy_svg.sphere_to_angular_pixel_coords(sphere_coords2, pixels_per_degree)
 
 
 def get_fundamental_matrix(full_mat1, full_mat2, camera_center1=None, pinv_full_mat1=None, batch_shape=None,
@@ -238,29 +238,29 @@ def get_fundamental_matrix(full_mat1, full_mat2, camera_center1=None, pinv_full_
         batch_shape = full_mat1.shape[:-2]
 
     if dev_str is None:
-        dev_str = _ivy.dev(full_mat1)
+        dev_str = ivy.dev(full_mat1)
 
     # shapes as list
     batch_shape = list(batch_shape)
 
     if camera_center1 is None:
-        inv_full_mat1 = _ivy.inv(_ivy_mech.make_transformation_homogeneous(full_mat1, batch_shape, dev_str))[..., 0:3, :]
-        camera_center1 = _ivy_svg.inv_ext_mat_to_camera_center(inv_full_mat1)
+        inv_full_mat1 = ivy.inv(ivy_mech.make_transformation_homogeneous(full_mat1, batch_shape, dev_str))[..., 0:3, :]
+        camera_center1 = ivy_svg.inv_ext_mat_to_camera_center(inv_full_mat1)
 
     if pinv_full_mat1 is None:
-        pinv_full_mat1 = _ivy.pinv(full_mat1)
+        pinv_full_mat1 = ivy.pinv(full_mat1)
 
     # BS x 4 x 1
-    camera_center1_homo = _ivy.concat((camera_center1, _ivy.ones(batch_shape + [1, 1], device=dev_str)), axis=-2)
+    camera_center1_homo = ivy.concat((camera_center1, ivy.ones(batch_shape + [1, 1], device=dev_str)), axis=-2)
 
     # BS x 3
-    e2 = _ivy.matmul(full_mat2, camera_center1_homo)[..., -1]
+    e2 = ivy.matmul(full_mat2, camera_center1_homo)[..., -1]
 
     # BS x 3 x 3
-    e2_skew_symmetric = _ivy.vector_to_skew_symmetric_matrix(e2)
+    e2_skew_symmetric = ivy.vector_to_skew_symmetric_matrix(e2)
 
     # BS x 3 x 3
-    return _ivy.matmul(e2_skew_symmetric, _ivy.matmul(full_mat2, pinv_full_mat1))
+    return ivy.matmul(e2_skew_symmetric, ivy.matmul(full_mat2, pinv_full_mat1))
 
 
 # noinspection PyUnresolvedReferences
@@ -307,7 +307,7 @@ def closest_mutual_points_along_two_skew_rays(camera_centers, world_ray_vectors,
     num_image_dims = len(image_shape)
 
     if dev_str is None:
-        dev_str = _ivy.dev(camera_centers)
+        dev_str = ivy.dev(camera_centers)
 
     # shapes as list
     batch_shape = list(batch_shape)
@@ -318,8 +318,8 @@ def closest_mutual_points_along_two_skew_rays(camera_centers, world_ray_vectors,
     camera_center1 = camera_centers[..., 1, :, :]
 
     # BS x [1]*NID x 3
-    cam1_to_cam2 = _ivy.reshape(camera_center1 - camera_center0, batch_shape + [1]*num_image_dims + [3])
-    cam2_to_cam1 = _ivy.reshape(camera_center0 - camera_center1, batch_shape + [1]*num_image_dims + [3])
+    cam1_to_cam2 = ivy.reshape(camera_center1 - camera_center0, batch_shape + [1]*num_image_dims + [3])
+    cam2_to_cam1 = ivy.reshape(camera_center0 - camera_center1, batch_shape + [1]*num_image_dims + [3])
 
     # BS x 2 x IS x 3
     ds = world_ray_vectors
@@ -327,25 +327,25 @@ def closest_mutual_points_along_two_skew_rays(camera_centers, world_ray_vectors,
     # BS x IS x 3
     ds0 = ds[tuple([slice(None)]*num_batch_dims + [0])]
     ds1 = ds[tuple([slice(None)]*num_batch_dims + [1])]
-    n = _ivy.cross(ds0, ds1)
-    n1 = _ivy.cross(ds0, n)
-    n2 = _ivy.cross(ds1, n)
+    n = ivy.cross(ds0, ds1)
+    n1 = ivy.cross(ds0, n)
+    n2 = ivy.cross(ds1, n)
 
     # BS x 1 x IS
-    t1 = _ivy.expand_dims(_ivy.sum(cam1_to_cam2 * n2, axis=-1) / (
-            _ivy.sum(ds0 * n2, axis=-1) + MIN_DENOMINATOR), axis=num_batch_dims)
-    t2 = _ivy.expand_dims(_ivy.sum(cam2_to_cam1 * n1, axis=-1) / (
-            _ivy.sum(ds1 * n1, axis=-1) + MIN_DENOMINATOR), axis=num_batch_dims)
+    t1 = ivy.expand_dims(ivy.sum(cam1_to_cam2 * n2, axis=-1) / (
+            ivy.sum(ds0 * n2, axis=-1) + MIN_DENOMINATOR), axis=num_batch_dims)
+    t2 = ivy.expand_dims(ivy.sum(cam2_to_cam1 * n1, axis=-1) / (
+            ivy.sum(ds1 * n1, axis=-1) + MIN_DENOMINATOR), axis=num_batch_dims)
 
     # BS x 2 x IS x 1
-    ts = _ivy.expand_dims(_ivy.concat((t1, t2), axis=num_batch_dims), axis=-1)
+    ts = ivy.expand_dims(ivy.concat((t1, t2), axis=num_batch_dims), axis=-1)
 
     # BS x 2 x IS x 3
-    world_coords = _ivy.reshape(camera_centers[..., 0], batch_shape + [2] + [1]*num_image_dims + [3])\
+    world_coords = ivy.reshape(camera_centers[..., 0], batch_shape + [2] + [1]*num_image_dims + [3])\
                    + ts * world_ray_vectors
 
     # BS x 2 x IS x 4
-    return _ivy_mech.make_coordinates_homogeneous(world_coords, batch_shape + [2] + image_shape)
+    return ivy_mech.make_coordinates_homogeneous(world_coords, batch_shape + [2] + image_shape)
 
 
 def _triangulate_depth_by_closest_mutual_points(ds_pixel_coords, full_mats, inv_full_mats, camera_centers, batch_shape,
@@ -373,17 +373,17 @@ def _triangulate_depth_by_closest_mutual_points(ds_pixel_coords, full_mats, inv_
     num_batch_dims = len(batch_shape)
 
     # BS x 2 x IS x 3
-    world_rays_flat = _ivy_svg.pixel_coords_to_world_ray_vectors(inv_full_mats, ds_pixel_coords, camera_centers,
+    world_rays_flat = ivy_svg.pixel_coords_to_world_ray_vectors(inv_full_mats, ds_pixel_coords, camera_centers,
                                                                  svg_batch_shape, image_shape)
 
     # BS x 2 x IS x 3
-    world_rays = _ivy.reshape(world_rays_flat, svg_batch_shape + image_shape + [3])
+    world_rays = ivy.reshape(world_rays_flat, svg_batch_shape + image_shape + [3])
 
     # BS x 2 x IS x 4
     world_points = closest_mutual_points_along_two_skew_rays(camera_centers, world_rays, batch_shape, image_shape)
 
     # BS x IS x 3
-    return _ivy_svg.world_to_ds_pixel_coords(
+    return ivy_svg.world_to_ds_pixel_coords(
         world_points[tuple([slice(None)]*num_batch_dims + [0])], full_mats[..., 0, :, :], batch_shape, image_shape)
 
 
@@ -409,7 +409,7 @@ def _triangulate_depth_by_homogeneous_dlt(ds_pixel_coords, full_mats, _, _1, bat
     # num batch dims
     num_batch_dims = len(batch_shape)
     num_image_dims = len(image_shape)
-    image_size = _reduce(_mul, image_shape)
+    image_size = reduce(mul, image_shape)
 
     # BS x 2 x IS x 3
     pixel_coords_normalized = ds_pixel_coords / (ds_pixel_coords[..., -1:] + MIN_DENOMINATOR)
@@ -419,42 +419,42 @@ def _triangulate_depth_by_homogeneous_dlt(ds_pixel_coords, full_mats, _, _1, bat
     P_dash = full_mats[..., 1, :, :]
 
     # BS x (IS) x 4
-    p1T = _ivy.tile(P[..., 0:1, :], [1] * num_batch_dims + [image_size, 1])
-    p2T = _ivy.tile(P[..., 1:2, :], [1] * num_batch_dims + [image_size, 1])
-    p3T = _ivy.tile(P[..., 2:3, :], [1] * num_batch_dims + [image_size, 1])
+    p1T = ivy.tile(P[..., 0:1, :], [1] * num_batch_dims + [image_size, 1])
+    p2T = ivy.tile(P[..., 1:2, :], [1] * num_batch_dims + [image_size, 1])
+    p3T = ivy.tile(P[..., 2:3, :], [1] * num_batch_dims + [image_size, 1])
 
-    p_dash_1T = _ivy.tile(P_dash[..., 0:1, :], [1] * num_batch_dims + [image_size, 1])
-    p_dash_2T = _ivy.tile(P_dash[..., 1:2, :], [1] * num_batch_dims + [image_size, 1])
-    p_dash_3T = _ivy.tile(P_dash[..., 2:3, :], [1] * num_batch_dims + [image_size, 1])
+    p_dash_1T = ivy.tile(P_dash[..., 0:1, :], [1] * num_batch_dims + [image_size, 1])
+    p_dash_2T = ivy.tile(P_dash[..., 1:2, :], [1] * num_batch_dims + [image_size, 1])
+    p_dash_3T = ivy.tile(P_dash[..., 2:3, :], [1] * num_batch_dims + [image_size, 1])
 
     # BS x (IS) x 1
-    x = _ivy.reshape(pixel_coords_normalized[tuple(
+    x = ivy.reshape(pixel_coords_normalized[tuple(
         [slice(None)]*num_batch_dims + [0] + [slice(None)]*num_image_dims + [0])], batch_shape + [image_size, 1])
-    y = _ivy.reshape(pixel_coords_normalized[tuple(
+    y = ivy.reshape(pixel_coords_normalized[tuple(
         [slice(None)]*num_batch_dims + [0] + [slice(None)]*num_image_dims + [1])], batch_shape + [image_size, 1])
-    x_dash = _ivy.reshape(pixel_coords_normalized[tuple(
+    x_dash = ivy.reshape(pixel_coords_normalized[tuple(
         [slice(None)]*num_batch_dims + [1] + [slice(None)]*num_image_dims + [0])], batch_shape + [image_size, 1])
-    y_dash = _ivy.reshape(pixel_coords_normalized[tuple(
+    y_dash = ivy.reshape(pixel_coords_normalized[tuple(
         [slice(None)]*num_batch_dims + [1] + [slice(None)]*num_image_dims + [1])], batch_shape + [image_size, 1])
 
     # BS x (IS) x 1 x 4
-    A_row1 = _ivy.expand_dims(x * p3T - p1T, axis=-2)
-    A_row2 = _ivy.expand_dims(y * p3T - p2T, axis=-2)
-    A_row3 = _ivy.expand_dims(x_dash * p_dash_3T - p_dash_1T, axis=-2)
-    A_row4 = _ivy.expand_dims(y_dash * p_dash_3T - p_dash_2T, axis=-2)
+    A_row1 = ivy.expand_dims(x * p3T - p1T, axis=-2)
+    A_row2 = ivy.expand_dims(y * p3T - p2T, axis=-2)
+    A_row3 = ivy.expand_dims(x_dash * p_dash_3T - p_dash_1T, axis=-2)
+    A_row4 = ivy.expand_dims(y_dash * p_dash_3T - p_dash_2T, axis=-2)
 
     # BS x (IS) x 4 x 4
-    A = _ivy.concat((A_row1, A_row2, A_row3, A_row4), axis=-2)
+    A = ivy.concat((A_row1, A_row2, A_row3, A_row4), axis=-2)
 
     # BS x (IS) x 4
-    X = _ivy_pg.solve_homogeneous_dlt(A)
+    X = ivy_pg.solve_homogeneous_dlt(A)
 
     # BS x IS x 4
-    coords_wrt_world_homo_unscaled = _ivy.reshape(X, batch_shape + image_shape + [4])
+    coords_wrt_world_homo_unscaled = ivy.reshape(X, batch_shape + image_shape + [4])
     coords_wrt_world = coords_wrt_world_homo_unscaled / (coords_wrt_world_homo_unscaled[..., -1:] + MIN_DENOMINATOR)
 
     # BS x IS x 3
-    return _ivy_svg.world_to_ds_pixel_coords(coords_wrt_world, full_mats[..., 0, :, :], batch_shape, image_shape)
+    return ivy_svg.world_to_ds_pixel_coords(coords_wrt_world, full_mats[..., 0, :, :], batch_shape, image_shape)
 
 
 TRI_METHODS = {'cmp': _triangulate_depth_by_closest_mutual_points,
@@ -507,11 +507,11 @@ def triangulate_depth(ds_pixel_coords, full_mats, inv_full_mats=None, camera_cen
     if method == 'cmt':
 
         if inv_full_mats is None:
-            inv_full_mats = _ivy.inv(_ivy_mech.make_transformation_homogeneous(
+            inv_full_mats = ivy.inv(ivy_mech.make_transformation_homogeneous(
                 full_mats, batch_shape + [2]))[..., 0:3, :]
 
         if camera_centers is None:
-            camera_centers = _ivy_svg.inv_ext_mat_to_camera_center(inv_full_mats)
+            camera_centers = ivy_svg.inv_ext_mat_to_camera_center(inv_full_mats)
 
     try:
         return TRI_METHODS[method](ds_pixel_coords, full_mats, inv_full_mats, camera_centers, batch_shape, image_shape)

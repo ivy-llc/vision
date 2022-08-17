@@ -1,12 +1,12 @@
 """Collection of Mesh Functions"""
 
 # global
-import ivy as _ivy
-from functools import reduce as _reduce
-from operator import mul as _mul
+import ivy 
+from functools import reduce 
+from operator import mul 
 
 # local
-from ivy_vision import single_view_geometry as _ivy_svg
+from ivy_vision import single_view_geometry as ivy_svg
 
 MIN_DENOMINATOR = 1e-12
 
@@ -42,14 +42,14 @@ def rasterize_triangles(pixel_coords_triangles, image_dims, batch_shape=None, de
         batch_shape = []
 
     if dev_str is None:
-        dev_str = _ivy.dev(pixel_coords_triangles)
+        dev_str = ivy.dev(pixel_coords_triangles)
 
     # shapes as list
     batch_shape = list(batch_shape)
     num_batch_dims = len(batch_shape)
     image_dims = list(image_dims)
     input_image_dims = pixel_coords_triangles.shape[num_batch_dims:-2]
-    input_image_dims_prod = _reduce(_mul, input_image_dims, 1)
+    input_image_dims_prod = reduce(mul, input_image_dims, 1)
 
     # BS x 3 x 2
     pixel_xy_coords = pixel_coords_triangles[..., 0:2]
@@ -59,16 +59,16 @@ def rasterize_triangles(pixel_coords_triangles, image_dims, batch_shape=None, de
     pixel_y_coords = pixel_coords_triangles[..., 1:2]
 
     # 1
-    x_min = _ivy.reshape(_ivy.min(pixel_x_coords, keepdims=True), (-1,))
-    x_max = _ivy.reshape(_ivy.max(pixel_x_coords, keepdims=True), (-1,))
+    x_min = ivy.reshape(ivy.min(pixel_x_coords, keepdims=True), (-1,))
+    x_max = ivy.reshape(ivy.max(pixel_x_coords, keepdims=True), (-1,))
     x_range = x_max - x_min
-    y_min = _ivy.reshape(_ivy.min(pixel_y_coords, keepdims=True), (-1,))
-    y_max = _ivy.reshape(_ivy.max(pixel_y_coords, keepdims=True), (-1,))
+    y_min = ivy.reshape(ivy.min(pixel_y_coords, keepdims=True), (-1,))
+    y_max = ivy.reshape(ivy.max(pixel_y_coords, keepdims=True), (-1,))
     y_range = y_max - y_min
 
     # 2
-    bbox = _ivy.concat((x_range, y_range), axis=0)
-    img_bbox_list = [int(item) for item in _ivy.to_list(_ivy.concat((y_range + 1, x_range + 1), axis=0))]
+    bbox = ivy.concat((x_range, y_range), axis=0)
+    img_bbox_list = [int(item) for item in ivy.to_list(ivy.concat((y_range + 1, x_range + 1), axis=0))]
 
     # BS x 2
     v0 = pixel_xy_coords[..., 0, :]
@@ -85,8 +85,8 @@ def rasterize_triangles(pixel_coords_triangles, image_dims, batch_shape=None, de
     v2y = v2[..., 1:2]
 
     # BS x BBX x BBY x 2
-    uniform_sample_coords = _ivy_svg.create_uniform_pixel_coords_image(img_bbox_list, batch_shape)[..., 0:2]
-    P = _ivy.round(uniform_sample_coords + tri_centres - bbox / 2)
+    uniform_sample_coords = ivy_svg.create_uniform_pixel_coords_image(img_bbox_list, batch_shape)[..., 0:2]
+    P = ivy.round(uniform_sample_coords + tri_centres - bbox / 2)
 
     # BS x BBX x BBY x 1
     Px = P[..., 0:1]
@@ -94,7 +94,7 @@ def rasterize_triangles(pixel_coords_triangles, image_dims, batch_shape=None, de
     v0v1_edge_func = ((Px - v0x) * (v1y - v0y) - (Py - v0y) * (v1x - v0x)) >= 0
     v1v2_edge_func = ((Px - v1x) * (v2y - v1y) - (Py - v1y) * (v2x - v1x)) >= 0
     v2v0_edge_func = ((Px - v2x) * (v0y - v2y) - (Py - v2y) * (v0x - v2x)) >= 0
-    edge_func = _ivy.logical_and(_ivy.logical_and(v0v1_edge_func, v1v2_edge_func), v2v0_edge_func)
+    edge_func = ivy.logical_and(ivy.logical_and(v0v1_edge_func, v1v2_edge_func), v2v0_edge_func)
 
     batch_indices_list = list()
     for i, batch_dim in enumerate(batch_shape):
@@ -105,27 +105,27 @@ def rasterize_triangles(pixel_coords_triangles, image_dims, batch_shape=None, de
         num_batch_dims_after = len(batch_dims_after)
 
         # [batch_dim]
-        batch_indices = _ivy.arange(batch_dim, dtype='int32', device=dev_str)
+        batch_indices = ivy.arange(batch_dim, dtype='int32', device=dev_str)
 
         # [1]*num_batch_dims_before x batch_dim x [1]*num_batch_dims_after x 1 x 1
-        reshaped_batch_indices = _ivy.reshape(batch_indices, [1] * num_batch_dims_before + [batch_dim] +
+        reshaped_batch_indices = ivy.reshape(batch_indices, [1] * num_batch_dims_before + [batch_dim] +
                                               [1] * num_batch_dims_after + [1, 1])
 
         # BS x N x 1
-        tiled_batch_indices = _ivy.tile(reshaped_batch_indices, batch_dims_before + [1] + batch_dims_after +
+        tiled_batch_indices = ivy.tile(reshaped_batch_indices, batch_dims_before + [1] + batch_dims_after +
                                         [input_image_dims_prod * 9, 1])
         batch_indices_list.append(tiled_batch_indices)
 
     # BS x N x (num_batch_dims + 2)
-    all_indices = _ivy.concat(
-        batch_indices_list + [_ivy.astype(_ivy.flip(_ivy.reshape(P, batch_shape + [-1, 2]), axis=-1),
+    all_indices = ivy.concat(
+        batch_indices_list + [ivy.astype(ivy.flip(ivy.reshape(P, batch_shape + [-1, 2]), axis=-1),
                                         'int32')], axis=-1)
 
     # offset uniform images
-    return _ivy.astype(_ivy.flip(_ivy.scatter_nd(_ivy.reshape(all_indices, [-1, num_batch_dims + 2]),
-                                               _ivy.reshape(_ivy.astype(edge_func, 'int32'), (-1, 1)),
+    return ivy.astype(ivy.flip(ivy.scatter_nd(ivy.reshape(all_indices, [-1, num_batch_dims + 2]),
+                                               ivy.reshape(ivy.astype(edge_func, 'int32'), (-1, 1)),
                                                shape=batch_shape + image_dims + [1],
-                                               reduction='replace' if _ivy.backend == 'mxnet' else 'sum'), axis=-3), 'bool')
+                                               reduction='replace' if ivy.backend == 'mxnet' else 'sum'), axis=-3), 'bool')
 
 
 def create_trimesh_indices_for_image(batch_shape, image_dims, dev_str=None):
@@ -159,17 +159,17 @@ def create_trimesh_indices_for_image(batch_shape, image_dims, dev_str=None):
     tile_shape = batch_shape + [1] * 2
 
     # 1 x W-1
-    t00_ = _ivy.reshape(_ivy.arange(image_dims[1] - 1, dtype='float32', device=dev_str), (1, -1))
+    t00_ = ivy.reshape(ivy.arange(image_dims[1] - 1, dtype='float32', device=dev_str), (1, -1))
 
     # H-1 x 1
-    k_ = _ivy.reshape(_ivy.arange(image_dims[0] - 1, dtype='float32', device=dev_str), (-1, 1)) * image_dims[1]
+    k_ = ivy.reshape(ivy.arange(image_dims[0] - 1, dtype='float32', device=dev_str), (-1, 1)) * image_dims[1]
 
     # H-1 x W-1
-    t00_ = _ivy.matmul(_ivy.ones((image_dims[0] - 1, 1), device=dev_str), t00_)
-    k_ = _ivy.matmul(k_, _ivy.ones((1, image_dims[1] - 1), device=dev_str))
+    t00_ = ivy.matmul(ivy.ones((image_dims[0] - 1, 1), device=dev_str), t00_)
+    k_ = ivy.matmul(k_, ivy.ones((1, image_dims[1] - 1), device=dev_str))
 
     # (H-1xW-1) x 1
-    t00 = _ivy.expand_dims(t00_ + k_, axis=-1)
+    t00 = ivy.expand_dims(t00_ + k_, axis=-1)
     t01 = t00 + 1
     t02 = t00 + image_dims[1]
     t10 = t00 + image_dims[1] + 1
@@ -177,11 +177,11 @@ def create_trimesh_indices_for_image(batch_shape, image_dims, dev_str=None):
     t12 = t02
 
     # (H-1xW-1) x 3
-    t0 = _ivy.concat((t00, t01, t02), axis=-1)
-    t1 = _ivy.concat((t10, t11, t12), axis=-1)
+    t0 = ivy.concat((t00, t01, t02), axis=-1)
+    t1 = ivy.concat((t10, t11, t12), axis=-1)
 
     # BS x 2x(H-1xW-1) x 3
-    return _ivy.tile(_ivy.reshape(_ivy.concat((t0, t1), axis=0),
+    return ivy.tile(ivy.reshape(ivy.concat((t0, t1), axis=0),
                                   flat_shape), tile_shape)
 
 
@@ -211,20 +211,20 @@ def coord_image_to_trimesh(coord_img, validity_mask=None, batch_shape=None, imag
     """
 
     if dev_str is None:
-        dev_str = _ivy.dev(coord_img)
+        dev_str = ivy.dev(coord_img)
 
     if batch_shape is None:
-        batch_shape = _ivy.shape(coord_img)[:-3]
+        batch_shape = ivy.shape(coord_img)[:-3]
 
     if image_dims is None:
-        image_dims = _ivy.shape(coord_img)[-3:-1]
+        image_dims = ivy.shape(coord_img)[-3:-1]
 
     # shapes as lists
     batch_shape = list(batch_shape)
     image_dims = list(image_dims)
 
     # BS x (HxW) x 3
-    vertices = _ivy.reshape(coord_img, batch_shape + [image_dims[0] * image_dims[1], 3])
+    vertices = ivy.reshape(coord_img, batch_shape + [image_dims[0] * image_dims[1], 3])
 
     if validity_mask is not None:
 
@@ -237,24 +237,24 @@ def coord_image_to_trimesh(coord_img, validity_mask=None, batch_shape=None, imag
         t12_validity = t02_validity
 
         # BS x H-1 x W-1 x 1
-        t0_validity = _ivy.logical_and(t00_validity, _ivy.logical_and(t01_validity, t02_validity))
-        t1_validity = _ivy.logical_and(t10_validity, _ivy.logical_and(t11_validity, t12_validity))
+        t0_validity = ivy.logical_and(t00_validity, ivy.logical_and(t01_validity, t02_validity))
+        t1_validity = ivy.logical_and(t10_validity, ivy.logical_and(t11_validity, t12_validity))
 
         # BS x (H-1xW-1)
-        t0_validity_flat = _ivy.reshape(t0_validity, batch_shape + [-1])
-        t1_validity_flat = _ivy.reshape(t1_validity, batch_shape + [-1])
+        t0_validity_flat = ivy.reshape(t0_validity, batch_shape + [-1])
+        t1_validity_flat = ivy.reshape(t1_validity, batch_shape + [-1])
 
         # BS x 2x(H-1xW-1)
-        trimesh_index_validity = _ivy.concat((t0_validity_flat, t1_validity_flat), axis=-1)
+        trimesh_index_validity = ivy.concat((t0_validity_flat, t1_validity_flat), axis=-1)
 
         # BS x N
-        trimesh_valid_indices = _ivy.indices_where(trimesh_index_validity)
+        trimesh_valid_indices = ivy.indices_where(trimesh_index_validity)
 
         # BS x 2x(H-1xW-1) x 3
         all_trimesh_indices = create_trimesh_indices_for_image(batch_shape, image_dims, dev_str)
 
         # BS x N x 3
-        trimesh_indices = _ivy.gather_nd(all_trimesh_indices, trimesh_valid_indices)
+        trimesh_indices = ivy.gather_nd(all_trimesh_indices, trimesh_valid_indices)
 
     else:
 

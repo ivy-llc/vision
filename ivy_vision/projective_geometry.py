@@ -1,9 +1,9 @@
 """Collection of General Projective-Geometry Functions"""
 
 # global
-import ivy as _ivy
-from operator import mul as _mul
-from functools import reduce as _reduce
+import ivy 
+from operator import mul 
+from functools import reduce 
 
 
 def transform(coords, trans, batch_shape=None, image_shape=None):
@@ -37,26 +37,26 @@ def transform(coords, trans, batch_shape=None, image_shape=None):
 
     if image_shape is None:
         image_shape = coords.shape[num_batch_dims:-1]
-    image_shape_flat = _reduce(_mul, image_shape)
+    image_shape_flat = reduce(mul, image_shape)
 
     # shapes as list
     batch_shape = list(batch_shape)
     image_shape = list(image_shape)
 
     # BS x ISF x N
-    coords_flattened = _ivy.reshape(coords, batch_shape + [image_shape_flat, -1])
+    coords_flattened = ivy.reshape(coords, batch_shape + [image_shape_flat, -1])
 
     # BS x N x ISF
-    coords_reshaped = _ivy.swapaxes(coords_flattened, -1, -2)
+    coords_reshaped = ivy.swapaxes(coords_flattened, -1, -2)
 
     # BS x M x ISF
-    transformed_coords_vector = _ivy.matmul(trans, coords_reshaped)
+    transformed_coords_vector = ivy.matmul(trans, coords_reshaped)
 
     # BS x ISF x M
-    transformed_coords_vector_transposed = _ivy.swapaxes(transformed_coords_vector, -1, -2)
+    transformed_coords_vector_transposed = ivy.swapaxes(transformed_coords_vector, -1, -2)
 
     # BS x IS x M
-    return _ivy.reshape(transformed_coords_vector_transposed, batch_shape + image_shape + [-1])
+    return ivy.reshape(transformed_coords_vector_transposed, batch_shape + image_shape + [-1])
 
 
 def projection_matrix_pseudo_inverse(proj_mat, batch_shape=None):
@@ -90,10 +90,10 @@ def projection_matrix_pseudo_inverse(proj_mat, batch_shape=None):
     transpose_idxs = list(range(num_batch_dims)) + [num_batch_dims + 1, num_batch_dims]
 
     # BS x 4 x 3
-    matrix_transposed = _ivy.permute_dims(proj_mat, axes=transpose_idxs)
+    matrix_transposed = ivy.permute_dims(proj_mat, axes=transpose_idxs)
 
     # BS x 4 x 3
-    return _ivy.matmul(matrix_transposed, _ivy.inv(_ivy.matmul(proj_mat, matrix_transposed)))
+    return ivy.matmul(matrix_transposed, ivy.inv(ivy.matmul(proj_mat, matrix_transposed)))
 
 
 def projection_matrix_inverse(proj_mat):
@@ -119,16 +119,16 @@ def projection_matrix_inverse(proj_mat):
     rotation_matrix = proj_mat[..., 0:3]
 
     # BS x 3 x 3
-    rotation_matrix_inverses = _ivy.inv(rotation_matrix)
+    rotation_matrix_inverses = ivy.inv(rotation_matrix)
 
     # BS x 3 x 1
     translations = proj_mat[..., 3:4]
 
     # BS x 3 x 1
-    translation_inverses = -_ivy.matmul(rotation_matrix_inverses, translations)
+    translation_inverses = -ivy.matmul(rotation_matrix_inverses, translations)
 
     # BS x 3 x 4
-    return _ivy.concat((rotation_matrix_inverses, translation_inverses), axis=-1)
+    return ivy.concat((rotation_matrix_inverses, translation_inverses), axis=-1)
 
 
 def solve_homogeneous_dlt(A):
@@ -152,7 +152,7 @@ def solve_homogeneous_dlt(A):
     """
 
     # BS x D x D,    BS x D,    BS x D x D
-    U, D, VT = _ivy.svd(A)
+    U, D, VT = ivy.svd(A)
 
     # BS x D
     return VT[..., -1, :]
