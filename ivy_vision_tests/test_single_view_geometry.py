@@ -233,9 +233,9 @@ def test_sphere_to_cam_coords(dev_str, call, fw):
 
 
 def test_sphere_to_ds_pixel_coords(dev_str, call):
-    assert np.allclose(call(ivy_svg.sphere_to_ds_pixel_coords, td.sphere_coords, td.calib_mats),
+    assert np.allclose(ivy_svg.sphere_to_ds_pixel_coords(ivy.array(td.sphere_coords.data), ivy.array(td.calib_mats)),
                        td.pixel_coords_to_scatter, atol=1e-3)
-    assert np.allclose(call(ivy_svg.sphere_to_ds_pixel_coords, td.sphere_coords[0], td.calib_mats[0]),
+    assert np.allclose(ivy_svg.sphere_to_ds_pixel_coords(ivy.array(td.sphere_coords[0]), ivy.array(td.calib_mats[0])),
                        td.pixel_coords_to_scatter[0], atol=1e-3)
 
 
