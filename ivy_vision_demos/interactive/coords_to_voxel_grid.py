@@ -110,8 +110,8 @@ def main(interactive=True, try_use_sim=True, f=None, fw=None):
             xyz = sim.depth_to_xyz(depth, cam.get_inv_ext_mat(), cam.inv_calib_mat, [128]*2)
             xyzs.append(xyz)
             rgbs.append(rgb)
-        xyz = ivy.reshape(ivy.concat(xyzs, 1), axis=(-1, 3))
-        rgb = ivy.reshape(ivy.concat(rgbs, 1), axis=(-1, 3))
+        xyz = ivy.reshape(ivy.concat(xyzs, axis=1), (-1, 3))
+        rgb = ivy.reshape(ivy.concat(rgbs, axis=1), (-1, 3))
         voxels = [ivy.to_numpy(item) for item in ivy_vision.coords_to_voxel_grid(xyz, [100] * 3, features=rgb)]
         cuboid_inv_ext_mats = [ivy.to_numpy(ivy_mech.make_transformation_homogeneous(cam.get_inv_ext_mat()))
                                for cam in sim.cams]
