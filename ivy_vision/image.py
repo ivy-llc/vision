@@ -208,14 +208,15 @@ def bilinear_resample(x, warp):
     # B
     batch_offsets = ivy.arange(batch_shape_flat) * height * width
     # B x (HxW)
-    base_grid = ivy.tile(ivy.expand_dims(batch_offsets, axis=1), [1, idx_size])
+    # base_grid = ivy.tile(ivy.expand_dims(batch_offsets, axis=1), [1, idx_size])
+    base_grid = ivy.tile(ivy.expand_dims(batch_offsets, axis=1), [1, height * width])
     # (BxHxW)
     base = ivy.reshape(base_grid, [-1])
     # (BxHxW) x D
     data_flat = ivy.reshape(x, [batch_shape_flat * height * width, -1])
     # (BxHxW) x 2
     warp_flat = ivy.reshape(warp, [-1, 2])
-    warp_floored = (ivy.floor(warp_flat)).astype(ivy.int32)
+    warp_floored = (ivy.floor(warp_flat)).astype('int32')
     bilinear_weights = warp_flat - ivy.floor(warp_flat)
     # (BxHxW)
     x0 = warp_floored[:, 0]
@@ -234,10 +235,10 @@ def bilinear_resample(x, warp):
     idx_d = base_y1 + x1
 
     # (BxHxW) x D
-    Ia = ivy.gather(data_flat, idx_a, axis=0)
-    Ib = ivy.gather(data_flat, idx_b, axis=0)
-    Ic = ivy.gather(data_flat, idx_c, axis=0)
-    Id = ivy.gather(data_flat, idx_d, axis=0)
+    Ia = ivy.gather(data_flat, ivy.reshape(idx_a, [-1, 1]), axis=0)
+    Ib = ivy.gather(data_flat, ivy.reshape(idx_b, [-1, 1]), axis=0)
+    Ic = ivy.gather(data_flat, ivy.reshape(idx_c, [-1, 1]), axis=0)
+    Id = ivy.gather(data_flat, ivy.reshape(idx_d, [-1, 1]), axis=0)
 
     # (BxHxW)
     xw = bilinear_weights[:, 0]
@@ -251,3 +252,4 @@ def bilinear_resample(x, warp):
     resampled_flat = wa * Ia + wb * Ib + wc * Ic + wd * Id
     # B x NP x D
     return ivy.reshape(resampled_flat, batch_shape + [-1, num_feats])
+    # return ivy.reshape(resampled_flat, [batch_shape[0], -1, num_feats])
