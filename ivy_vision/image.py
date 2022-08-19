@@ -208,7 +208,6 @@ def bilinear_resample(x, warp):
     # B
     batch_offsets = ivy.arange(batch_shape_flat) * height * width
     # B x (HxW)
-    # base_grid = ivy.tile(ivy.expand_dims(batch_offsets, axis=1), [1, idx_size])
     base_grid = ivy.tile(ivy.expand_dims(batch_offsets, axis=1), [1, height * width])
     # (BxHxW)
     base = ivy.reshape(base_grid, [-1])
@@ -252,4 +251,3 @@ def bilinear_resample(x, warp):
     resampled_flat = wa * Ia + wb * Ib + wc * Ic + wd * Id
     # B x NP x D
     return ivy.reshape(resampled_flat, batch_shape + [-1, num_feats])
-    # return ivy.reshape(resampled_flat, [batch_shape[0], -1, num_feats])
