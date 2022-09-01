@@ -1,4 +1,5 @@
 # global
+import ivy
 import numpy as np
 
 # local
@@ -25,22 +26,30 @@ class ProjectiveGeometryTestData(TestData):
 td = ProjectiveGeometryTestData()
 
 
-def test_transform(dev_str, call):
-    assert np.allclose(call(ivy_pg.transform, td.world_coords, td.ext_mats), td.cam_coords[:, :, :, :, 0:3], atol=1e-6)
-    assert np.allclose(call(ivy_pg.transform, td.world_coords[0], td.ext_mats[0]),
+def test_transform(dev_str, fw):
+    ivy.set_backend(fw)
+    assert np.allclose(ivy_pg.transform(ivy.array(td.world_coords), ivy.array(td.ext_mats)), td.cam_coords[:, :, :, :, 0:3], atol=1e-6)
+    assert np.allclose(ivy_pg.transform(ivy.array(td.world_coords[0]), ivy.array(td.ext_mats[0])),
                        td.cam_coords[0, :, :, :, 0:3], atol=1e-6)
+    ivy.unset_backend()
 
 
-def test_projection_matrix_pseudo_inverse(dev_str, call):
-    assert np.allclose(call(ivy_pg.projection_matrix_pseudo_inverse, td.ext_mats), td.pinv_ext_mats, atol=1e-6)
-    assert np.allclose(call(ivy_pg.projection_matrix_pseudo_inverse, td.ext_mats[0]), td.pinv_ext_mats[0], atol=1e-6)
+def test_projection_matrix_pseudo_inverse(dev_str, fw):
+    ivy.set_backend(fw)
+    assert np.allclose(ivy_pg.projection_matrix_pseudo_inverse(ivy.array(td.ext_mats)), td.pinv_ext_mats, atol=1e-6)
+    assert np.allclose(ivy_pg.projection_matrix_pseudo_inverse(ivy.array(td.ext_mats[0])), td.pinv_ext_mats[0], atol=1e-6)
+    ivy.unset_backend()
 
 
-def test_projection_matrix_inverse(dev_str, call):
-    assert np.allclose(call(ivy_pg.projection_matrix_inverse, td.ext_mats), td.inv_ext_mats, atol=1e-6)
-    assert np.allclose(call(ivy_pg.projection_matrix_inverse, td.ext_mats[0]), td.inv_ext_mats[0], atol=1e-6)
+def test_projection_matrix_inverse(dev_str, fw):
+    ivy.set_backend(fw)
+    assert np.allclose(ivy_pg.projection_matrix_inverse(ivy.array(td.ext_mats)), td.inv_ext_mats, atol=1e-6)
+    assert np.allclose(ivy_pg.projection_matrix_inverse(ivy.array(td.ext_mats[0])), td.inv_ext_mats[0], atol=1e-6)
+    ivy.unset_backend()
 
 
-def test_solve_homogeneous_dlt(dev_str, call):
-    assert np.allclose(call(ivy_pg.solve_homogeneous_dlt, td.A), td.X, atol=1e-6)
-    assert np.allclose(call(ivy_pg.solve_homogeneous_dlt, td.A[0]), td.X[0], atol=1e-6)
+def test_solve_homogeneous_dlt(dev_str, fw):
+    ivy.set_backend(fw)
+    assert np.allclose(ivy_pg.solve_homogeneous_dlt(ivy.array(td.A)), td.X, atol=1e-6)
+    assert np.allclose(ivy_pg.solve_homogeneous_dlt(ivy.array(td.A[0])), td.X[0], atol=1e-6)
+    ivy.unset_backend()
