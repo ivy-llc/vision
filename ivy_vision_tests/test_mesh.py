@@ -68,33 +68,39 @@ class MeshTestData(TestData):
 td = MeshTestData()
 
 
-def test_rasterize_triangles(dev_str, call):
-    if call in [helpers.tf_graph_call]:
+def test_rasterize_triangles(dev_str, fw):
+    if fw == 'tensorflow_graph':
         # the need to dynamically infer array shapes for scatter makes this only valid in eager mode currently
         pytest.skip()
-    assert np.allclose(call(ivy_mesh.rasterize_triangles, td.mesh_triangle, [3, 3]), td.rasterized_image, atol=1e-3)
-    assert np.allclose(call(ivy_mesh.rasterize_triangles, np.expand_dims(td.mesh_triangle, 0), [3, 3],
+    ivy.set_backend(fw)
+    assert np.allclose(ivy_mesh.rasterize_triangles(ivy.array(td.mesh_triangle), [3, 3]), td.rasterized_image, atol=1e-3)
+    assert np.allclose(ivy_mesh.rasterize_triangles(ivy.expand_dims(ivy.array(td.mesh_triangle), axis=0), [3, 3],
                             batch_shape=[1])[0], td.rasterized_image, atol=1e-3)
+    ivy.unset_backend()
 
 
-def test_create_trimesh_indices_for_image(dev_str, call):
-    if call in [helpers.mx_call]:
+def test_create_trimesh_indices_for_image(dev_str, fw):
+    if fw == 'mxnet':
         # mxnet matmul only support N-D*N-D array (N >= 3)
         pytest.skip()
-    assert np.allclose(call(ivy_mesh.create_trimesh_indices_for_image, [1], [4, 3]),
+    ivy.set_backend(fw)
+    assert np.allclose(ivy_mesh.create_trimesh_indices_for_image([1], [4, 3]),
                        td.tri_mesh_4x3_indices, atol=1e-3)
+    ivy.unset_backend()
 
 
-def test_coord_image_to_trimesh(dev_str, call):
-    if call in [helpers.mx_call]:
+def test_coord_image_to_trimesh(dev_str, fw):
+    if fw == 'mxnet':
         # mxnet matmul only support N-D*N-D array (N >= 3)
         pytest.skip()
+    ivy.set_backend(fw)
     coord_img = ivy.array(td.coord_img.tolist())
-    vertices, trimesh_indices = call(ivy_mesh.coord_image_to_trimesh, coord_img,
+    vertices, trimesh_indices = ivy_mesh.coord_image_to_trimesh(coord_img,
                                      batch_shape=[1], image_dims=[4, 3], dev_str=dev_str)
     assert np.allclose(vertices, td.tri_mesh_4x3_vertices, atol=1e-3)
     assert np.allclose(trimesh_indices, td.tri_mesh_4x3_indices, atol=1e-3)
-    vertices, trimesh_indices = call(ivy_mesh.coord_image_to_trimesh, td.coord_img, td.coord_validity_img,
+    vertices, trimesh_indices = ivy_mesh.coord_image_to_trimesh(ivy.array(td.coord_img), ivy.array(td.coord_validity_img),
                                      batch_shape=[1], image_dims=[4, 3], dev_str=dev_str)
     assert np.allclose(vertices, td.tri_mesh_4x3_vertices, atol=1e-3)
     assert np.allclose(trimesh_indices, td.tri_mesh_4x3_valid_indices, atol=1e-3)
+    ivy.unset_backend()
