@@ -76,90 +76,106 @@ class ImplicitTestData(TestData):
 td = ImplicitTestData()
 
 
-def test_downsampled_image_dims_from_desired_num_pixels(dev_str, call):
-    new_img_dims, num_pixels = call(ivy_imp.downsampled_image_dims_from_desired_num_pixels, [32, 32], 256)
+def test_downsampled_image_dims_from_desired_num_pixels(dev_str, fw):
+    ivy.set_backend(fw)
+    new_img_dims, num_pixels = ivy_imp.downsampled_image_dims_from_desired_num_pixels([32, 32], 256)
     assert new_img_dims == [16, 16]
     assert num_pixels == 256
-    new_img_dims, num_pixels = call(ivy_imp.downsampled_image_dims_from_desired_num_pixels, [14, 18], 125)
+    new_img_dims, num_pixels = ivy_imp.downsampled_image_dims_from_desired_num_pixels([14, 18], 125)
     assert new_img_dims == [10, 13]
     assert num_pixels == 130
-    new_img_dims, num_pixels = call(ivy_imp.downsampled_image_dims_from_desired_num_pixels, [14, 18], 125, maximum=True)
+    new_img_dims, num_pixels = ivy_imp.downsampled_image_dims_from_desired_num_pixels([14, 18], 125, maximum=True)
     assert new_img_dims == [9, 12]
     assert num_pixels == 108
+    ivy.unset_backend()
 
 
-def test_create_sampled_pixel_coords_image(dev_str, call):
-    if call is helpers.mx_call:
+def test_create_sampled_pixel_coords_image(dev_str, fw):
+    if fw == 'mxnet':
         # MXNet does not support clipping based on min or max specified as arrays
         pytest.skip()
-    sampled_img = call(ivy_imp.create_sampled_pixel_coords_image, td.image_dims, td.samples_per_dim,
+    ivy.set_backend(fw)
+    sampled_img = ivy_imp.create_sampled_pixel_coords_image(td.image_dims, td.samples_per_dim,
                        (td.batch_size, td.num_cameras), normalized=False, randomize=False)
-    assert np.min(sampled_img).item() == 26
-    assert np.max(sampled_img).item() == 613
-    sampled_img = call(ivy_imp.create_sampled_pixel_coords_image, td.image_dims, td.samples_per_dim,
+    assert ivy.min(sampled_img).to_scalar() == 26
+    assert ivy.max(sampled_img).to_scalar() == 613
+    sampled_img = ivy_imp.create_sampled_pixel_coords_image(td.image_dims, td.samples_per_dim,
                        (td.batch_size, td.num_cameras), normalized=False, randomize=True)
-    assert np.min(sampled_img).item() >= 0
-    assert np.max(sampled_img).item() < max(td.image_dims)
-    sampled_img = call(ivy_imp.create_sampled_pixel_coords_image, td.image_dims, td.samples_per_dim,
+    assert ivy.min(sampled_img).to_scalar() >= 0
+    assert ivy.max(sampled_img).to_scalar() < max(td.image_dims)
+    sampled_img = ivy_imp.create_sampled_pixel_coords_image(td.image_dims, td.samples_per_dim,
                        (td.batch_size, td.num_cameras), normalized=True, randomize=False)
-    assert np.allclose(np.min(sampled_img).item(), 0.040625)
-    assert np.allclose(np.max(sampled_img).item(), 0.9578125)
-    sampled_img = call(ivy_imp.create_sampled_pixel_coords_image, td.image_dims, td.samples_per_dim,
+    assert np.allclose(ivy.min(sampled_img).to_scalar(), 0.040625)
+    assert np.allclose(ivy.max(sampled_img).to_scalar(), 0.9578125)
+    sampled_img = ivy_imp.create_sampled_pixel_coords_image(td.image_dims, td.samples_per_dim,
                        (td.batch_size, td.num_cameras), normalized=True, randomize=True)
-    assert np.min(sampled_img).item() >= 0
-    assert np.max(sampled_img).item() < 1
+    assert ivy.min(sampled_img).to_scalar() >= 0
+    assert ivy.max(sampled_img).to_scalar() < 1
+    ivy.unset_backend()
 
 
-def test_sample_images(dev_str, call):
-    if call is helpers.mx_call:
+def test_sample_images(dev_str, fw):
+    if fw == 'mxnet':
         # MXNet does not support splitting based on section sizes,only number of sections as integer input is supported.
         pytest.skip()
-    img0, img1 = call(ivy_imp.sample_images, [td.pixel_coords_to_scatter]*2, 32,
+    ivy.set_backend(fw)
+    img0, img1 = ivy_imp.sample_images([ivy.array(td.pixel_coords_to_scatter)]*2, 32,
                       (td.batch_size, td.num_cameras), td.image_dims)
     assert list(img0.shape) == [td.batch_size, td.num_cameras, 35, 3]
     assert list(img1.shape) == [td.batch_size, td.num_cameras, 35, 3]
+    ivy.unset_backend()
 
 
-def test_sampled_volume_density_to_occupancy_probability(dev_str, call):
-    occ_prob = call(ivy_imp.sampled_volume_density_to_occupancy_probability, td.densities, td.inter_sample_distances)
+def test_sampled_volume_density_to_occupancy_probability(dev_str, fw):
+    ivy.set_backend(fw)
+    occ_prob = ivy_imp.sampled_volume_density_to_occupancy_probability(ivy.array(td.densities), ivy.array(td.inter_sample_distances))
     assert occ_prob.shape == td.densities.shape
     assert np.allclose(occ_prob, td.occ_probs)
+    ivy.unset_backend()
 
 
-def test_ray_termination_probabilities(dev_str, call):
-    ray_term_probs = call(ivy_imp.ray_termination_probabilities, td.densities, td.inter_sample_distances)
+def test_ray_termination_probabilities(dev_str, fw):
+    ivy.set_backend(fw)
+    ray_term_probs = ivy_imp.ray_termination_probabilities(ivy.array(td.densities), ivy.array(td.inter_sample_distances))
     assert ray_term_probs.shape == td.densities.shape
     assert np.allclose(ray_term_probs, td.ray_term_probs)
+    ivy.unset_backend()
 
 
-def test_stratified_sample(dev_str, call):
+def test_stratified_sample(dev_str, fw):
+    ivy.set_backend(fw)
     num = 10
-    res = call(ivy_imp.stratified_sample, td.start_vals, td.end_vals, num)
+    res = ivy_imp.stratified_sample(ivy.array(td.start_vals), ivy.array(td.end_vals), num)
     assert res.shape == (3, num)
     for i in range(3):
         for j in range(num - 1):
             assert res[i][j] < res[i][j + 1]
+    ivy.unset_backend()
 
 
-def test_render_rays_via_termination_probabilities(dev_str, call):
-    rendering, var = call(ivy_imp.render_rays_via_termination_probabilities, td.ray_term_probs, td.features,
+def test_render_rays_via_termination_probabilities(dev_str, fw):
+    ivy.set_backend(fw)
+    rendering, var = ivy_imp.render_rays_via_termination_probabilities(ivy.array(td.ray_term_probs), ivy.array(td.features),
                           render_variance=True)
     assert rendering.shape == td.radial_depths.shape[:-1] + (3,)
     assert var.shape == td.radial_depths.shape[:-1] + (3,)
     assert np.allclose(rendering, td.term_prob_feature_rendering)
     assert np.allclose(var, td.term_prob_var_rendering)
+    ivy.unset_backend()
 
 
 @pytest.mark.parametrize(
     "with_features", [True, False])
 @pytest.mark.parametrize(
     "with_timestamps", [True, False])
-def test_render_implicit_features_and_depth(dev_str, call, with_features, with_timestamps):
-    if call is helpers.mx_call:
+def test_render_implicit_features_and_depth(dev_str, fw, with_features, with_timestamps):
+    if fw == 'mxnet':
         # MXNet does not support splitting with remainder
         pytest.skip()
-    rgb, depth = call(ivy_imp.render_implicit_features_and_depth, td.implicit_fn, td.rays_o, td.rays_d, td.near,
-                      td.far, td.samples_per_ray, td.timestamps if with_timestamps else None,
+    ivy.set_backend(fw)
+    rgb, depth = ivy_imp.render_implicit_features_and_depth(td.implicit_fn, ivy.array(td.rays_o), ivy.array(td.rays_d), ivy.array(td.near),
+                      ivy.array(td.far), td.samples_per_ray, ivy.array(td.timestamps) if with_timestamps else None,
                       inter_feat_fn=td.inter_feat_fn if with_features else None)
     assert rgb.shape == (3, 3)
     assert depth.shape == (3, 1)
+    ivy.unset_backend()
