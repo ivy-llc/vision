@@ -1,4 +1,5 @@
 # global
+import ivy
 import numpy as np
 
 # local
@@ -31,15 +32,19 @@ class SDFTestData(TestData):
 td = SDFTestData()
 
 
-def test_sphere_signed_distance(dev_str, call):
-    assert np.allclose(call(ivy_sdf.sphere_signed_distances, td.sphere_positions, td.sphere_radii,
-                            td.sphere_query_positions), td.sphere_sdf_vals, atol=1e-6)
-    assert np.allclose(call(ivy_sdf.sphere_signed_distances, td.sphere_positions[0], td.sphere_radii[0],
-                            td.sphere_query_positions[0]), td.sphere_sdf_vals[0], atol=1e-6)
+def test_sphere_signed_distance(dev_str, fw):
+    ivy.set_backend(fw)
+    assert np.allclose(ivy_sdf.sphere_signed_distances(ivy.array(td.sphere_positions), ivy.array(td.sphere_radii),
+                            ivy.array(td.sphere_query_positions)), td.sphere_sdf_vals, atol=1e-6)
+    assert np.allclose(ivy_sdf.sphere_signed_distances(ivy.array(td.sphere_positions[0]), ivy.array(td.sphere_radii[0]),
+                            ivy.array(td.sphere_query_positions[0])), td.sphere_sdf_vals[0], atol=1e-6)
+    ivy.unset_backend()
 
 
-def test_cuboid_signed_distance(dev_str, call):
-    assert np.allclose(call(ivy_sdf.cuboid_signed_distances, td.cuboid_ext_mats, td.cuboid_dims,
-                            td.cuboid_query_positions), td.cuboid_sdf_vals, atol=1e-6)
-    assert np.allclose(call(ivy_sdf.cuboid_signed_distances, td.cuboid_ext_mats[0], td.cuboid_dims[0],
-                            td.cuboid_query_positions[0]), td.cuboid_sdf_vals[0], atol=1e-6)
+def test_cuboid_signed_distance(dev_str, fw):
+    ivy.set_backend(fw)
+    assert np.allclose(ivy_sdf.cuboid_signed_distances(ivy.array(td.cuboid_ext_mats), ivy.array(td.cuboid_dims),
+                            ivy.array(td.cuboid_query_positions)), td.cuboid_sdf_vals, atol=1e-6)
+    assert np.allclose(ivy_sdf.cuboid_signed_distances(ivy.array(td.cuboid_ext_mats[0]), ivy.array(td.cuboid_dims[0]),
+                            ivy.array(td.cuboid_query_positions[0])), td.cuboid_sdf_vals[0], atol=1e-6)
+    ivy.unset_backend()    
