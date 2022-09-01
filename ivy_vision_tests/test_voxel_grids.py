@@ -1,8 +1,8 @@
 # global
+import ivy
 import pytest
 import ivy.functional.backends.numpy as ivy_np
 import numpy as np
-import ivy_tests.test_ivy.helpers as helpers
 
 # local
 import ivy_vision.voxel_grids as ivy_vg
@@ -63,42 +63,42 @@ class VoxelGridsTestData(TestData):
 td = VoxelGridsTestData()
 
 
-def test_world_coords_to_bounding_voxel_grid(dev_str, call):
-    if call in [helpers.tf_graph_call]:
+def test_world_coords_to_bounding_voxel_grid(dev_str, fw):
+    if fw == "tensorflow_graph":
         # the need to dynamically infer array shapes for scatter makes this only valid in eager mode currently
         pytest.skip()
     assert np.allclose(np.sum(
-        call(ivy_vg.coords_to_voxel_grid, td.simple_world_coords_flat, np.array([3, 3, 3]))[0], -1) > 0,
-                       td.simple_voxel_grid, atol=1e-6)
+        ivy_vg.coords_to_voxel_grid(ivy.array(td.simple_world_coords_flat), [3, 3, 3])[0], -1) > 0,
+                       ivy.array(td.simple_voxel_grid), atol=1e-6)
     assert np.allclose(np.sum(
-        call(ivy_vg.coords_to_voxel_grid, td.simple_world_coords_flat, (1, 1, 1), 'RES')[0], -1) > 0,
-                       td.simple_voxel_grid, atol=1e-6)
+        ivy_vg.coords_to_voxel_grid(ivy.array(td.simple_world_coords_flat), (1, 1, 1), 'RES')[0], -1) > 0,
+                       ivy.array(td.simple_voxel_grid), atol=1e-6)
 
     # with coord bounds
     assert np.allclose(np.sum(
-        call(ivy_vg.coords_to_voxel_grid, td.simple_world_coords_flat, (3, 3, 3),
-             coord_bounds=[-1]*3 + [4]*3)[0], -1) > 0, td.simple_voxel_grid_m1_4_bounded, atol=1e-6)
+        ivy_vg.coords_to_voxel_grid(ivy.array(td.simple_world_coords_flat), (3, 3, 3),
+             coord_bounds=[-1]*3 + [4]*3)[0], -1) > 0, ivy.array(td.simple_voxel_grid_m1_4_bounded), atol=1e-6)
     assert np.allclose(np.sum(
-        call(ivy_vg.coords_to_voxel_grid, td.simple_world_coords_flat, (3, 3, 3),
-             coord_bounds=[0]*3 + [4]*3)[0], -1) > 0, td.simple_voxel_grid_0_4_bounded, atol=1e-6)
+        ivy_vg.coords_to_voxel_grid(ivy.array(td.simple_world_coords_flat), (3, 3, 3),
+             coord_bounds=[0]*3 + [4]*3)[0], -1) > 0, ivy.array(td.simple_voxel_grid_0_4_bounded), atol=1e-6)
     assert np.allclose(np.sum(
-        call(ivy_vg.coords_to_voxel_grid, td.simple_world_coords_batched_flat, (3, 3, 3),
-             coord_bounds=[0.5]*3 + [2.5]*3)[0], -1) > 0, td.simple_voxel_grid_batched, atol=1e-6)
+        ivy_vg.coords_to_voxel_grid(ivy.array(td.simple_world_coords_batched_flat), (3, 3, 3),
+             coord_bounds=[0.5]*3 + [2.5]*3)[0], -1) > 0, ivy.array(td.simple_voxel_grid_batched), atol=1e-6)
 
     # with features
     assert np.allclose(
-        call(ivy_vg.coords_to_voxel_grid, td.simple_world_coords_flat, (3, 3, 3),
-             features=td.simple_world_features_flat)[0][..., 3], td.simple_voxel_grid, atol=1e-6)
+        ivy_vg.coords_to_voxel_grid(ivy.array(td.simple_world_coords_flat), (3, 3, 3),
+             features=ivy.array(td.simple_world_features_flat))[0][..., 3], ivy.array(td.simple_voxel_grid), atol=1e-6)
 
     # with multi-dimensions
-    if call in [helpers.mx_call]:
+    if fw == "mxnet":
         # MXNet cannot slice arrays with more than 6 dimensions
         return
     with ivy_np.use:
-        target = np.sum(ivy_vg.coords_to_voxel_grid(td.world_coords_flat, (32, 32, 32), 'DIMS')[0], -1) > 0
+        target = np.sum(ivy_vg.coords_to_voxel_grid(ivy.array(td.world_coords_flat), (32, 32, 32), 'DIMS')[0], -1) > 0
     assert np.allclose(np.sum(
-        call(ivy_vg.coords_to_voxel_grid, td.world_coords_flat, (32, 32, 32), 'DIMS')[0], -1) > 0, target, atol=1e-6)
+        ivy_vg.coords_to_voxel_grid(ivy.array(td.world_coords_flat), (32, 32, 32), 'DIMS')[0], -1) > 0, target, atol=1e-6)
     with ivy_np.use:
-        target = np.sum(ivy_vg.coords_to_voxel_grid(td.world_coords_flat, (0.1, 0.1, 0.1), 'RES')[0], -1) > 0
+        target = np.sum(ivy_vg.coords_to_voxel_grid(ivy.array(td.world_coords_flat), (0.1, 0.1, 0.1), 'RES')[0], -1) > 0
     assert np.allclose(np.sum(
-        call(ivy_vg.coords_to_voxel_grid, td.world_coords_flat, (0.1, 0.1, 0.1), 'RES')[0], -1) > 0, target, atol=1e-6)
+        ivy_vg.coords_to_voxel_grid(ivy.array(td.world_coords_flat), (0.1, 0.1, 0.1), 'RES')[0], -1) > 0, target, atol=1e-6)
