@@ -46,60 +46,76 @@ class TwoViewGeometryTestData(TestData):
 td = TwoViewGeometryTestData()
 
 
-def test_pixel_to_pixel_coords(dev_str, call):
-    assert np.allclose(call(ivy_tvg.ds_pixel_to_ds_pixel_coords, td.pixel_coords_to_scatter[:, 0:1], td.cam2cam_full_mats[:, 0:1]),
+def test_pixel_to_pixel_coords(dev_str, fw):
+    ivy.set_backend(fw)
+    assert np.allclose(ivy_tvg.ds_pixel_to_ds_pixel_coords(ivy.array(td.pixel_coords_to_scatter[:, 0:1]), ivy.array(td.cam2cam_full_mats[:, 0:1])),
                        td.proj_pixel_coords[:, 1:2], atol=1e-6)
-    assert np.allclose(call(ivy_tvg.ds_pixel_to_ds_pixel_coords, td.pixel_coords_to_scatter[:, 0], td.cam2cam_full_mats[:, 0]),
+    assert np.allclose(ivy_tvg.ds_pixel_to_ds_pixel_coords(ivy.array(td.pixel_coords_to_scatter[:, 0]), ivy.array(td.cam2cam_full_mats[:, 0])),
                        td.proj_pixel_coords[:, 1], atol=1e-6)
+    ivy.unset_backend()
 
 
-def test_angular_pixel_to_angular_pixel_coords(dev_str, call):
-    assert np.allclose(call(ivy_tvg.angular_pixel_to_angular_pixel_coords, td.angular_pixel_coords[:, 0:1],
-                            td.cam2cam_ext_mats[:, 0:1], td.pixels_per_degree),
+def test_angular_pixel_to_angular_pixel_coords(dev_str, fw):
+    ivy.set_backend(fw)
+    assert np.allclose(ivy_tvg.angular_pixel_to_angular_pixel_coords(ivy.array(td.angular_pixel_coords[:, 0:1]),
+                            ivy.array(td.cam2cam_ext_mats[:, 0:1]), td.pixels_per_degree),
                        td.proj_angular_pixel_coords[:, 1:2], atol=1e-3)
-    assert np.allclose(call(ivy_tvg.angular_pixel_to_angular_pixel_coords, td.angular_pixel_coords[:, 0],
-                            td.cam2cam_ext_mats[:, 0], td.pixels_per_degree),
+    assert np.allclose(ivy_tvg.angular_pixel_to_angular_pixel_coords(ivy.array(td.angular_pixel_coords[:, 0]),
+                            ivy.array(td.cam2cam_ext_mats[:, 0]), td.pixels_per_degree),
                        td.proj_angular_pixel_coords[:, 1], atol=1e-3)
+    ivy.unset_backend()
 
 
-def test_cam_to_cam_coords(dev_str, call):
-    assert np.allclose(call(ivy_tvg.cam_to_cam_coords, td.cam_coords[:, 0:1], td.cam2cam_ext_mats[:, 0:1]),
+def test_cam_to_cam_coords(dev_str, fw):
+    ivy.set_backend(fw)
+    assert np.allclose(ivy_tvg.cam_to_cam_coords(ivy.array(td.cam_coords[:, 0:1]), ivy.array(td.cam2cam_ext_mats[:, 0:1])),
                        td.proj_cam_coords[:, 1:2], atol=1e-6)
-    assert np.allclose(call(ivy_tvg.cam_to_cam_coords, td.cam_coords[:, 0], td.cam2cam_ext_mats[:, 0]),
+    assert np.allclose(ivy_tvg.cam_to_cam_coords(ivy.array(td.cam_coords[:, 0]), ivy.array(td.cam2cam_ext_mats[:, 0])),
                        td.proj_cam_coords[:, 1], atol=1e-6)
+    ivy.unset_backend()
 
 
-def test_sphere_to_sphere_coords(dev_str, call):
-    assert np.allclose(call(ivy_tvg.sphere_to_sphere_coords, td.sphere_coords[:, 0:1], td.cam2cam_ext_mats[:, 0:1]),
+def test_sphere_to_sphere_coords(dev_str, fw):
+    ivy.set_backend(fw)
+    assert np.allclose(ivy_tvg.sphere_to_sphere_coords(ivy.array(td.sphere_coords[:, 0:1]), ivy.array(td.cam2cam_ext_mats[:, 0:1])),
                        td.proj_sphere_coords[:, 1:2], atol=1e-5)
-    assert np.allclose(call(ivy_tvg.sphere_to_sphere_coords, td.sphere_coords[:, 0], td.cam2cam_ext_mats[:, 0]),
+    assert np.allclose(ivy_tvg.sphere_to_sphere_coords(ivy.array(td.sphere_coords[:, 0]), ivy.array(td.cam2cam_ext_mats[:, 0])),
                        td.proj_sphere_coords[:, 1], atol=1e-5)
+    ivy.unset_backend()
 
 
-def test_get_fundamental_matrix(dev_str, call):
-    assert np.allclose(call(ivy_tvg.get_fundamental_matrix, td.full_mats[:, 0:1], td.full_mats[:, 1:2]),
+def test_get_fundamental_matrix(dev_str, fw):
+    ivy.set_backend(fw)
+    assert np.allclose(ivy_tvg.get_fundamental_matrix(ivy.array(td.full_mats[:, 0:1]), ivy.array(td.full_mats[:, 1:2])),
                        td.fund_mats, atol=1e-5)
-    assert np.allclose(call(ivy_tvg.get_fundamental_matrix, td.full_mats[:, 0], td.full_mats[:, 1]),
+    assert np.allclose(ivy_tvg.get_fundamental_matrix(ivy.array(td.full_mats[:, 0]), ivy.array(td.full_mats[:, 1])),
                        td.fund_mats[:, 0], atol=1e-5)
+    ivy.unset_backend()
 
 
-def test_closest_mutual_points_along_two_skew_rays(dev_str, call):
-    closest_mutual_points = call(ivy_tvg.closest_mutual_points_along_two_skew_rays, td.C_hats, td.tvg_world_rays)
+def test_closest_mutual_points_along_two_skew_rays(dev_str, fw):
+    ivy.set_backend(fw)
+    closest_mutual_points = ivy_tvg.closest_mutual_points_along_two_skew_rays(ivy.array(td.C_hats), ivy.array(td.tvg_world_rays))
     assert np.allclose(closest_mutual_points[:, 0], td.world_coords[:, 0], atol=1e-6)
     assert np.allclose(closest_mutual_points[:, 1], td.world_coords[:, 0], atol=1e-6)
     assert np.allclose(closest_mutual_points[:, 0:1], td.world_coords[:, 0:1], atol=1e-6)
     assert np.allclose(closest_mutual_points[:, 1:2], td.world_coords[:, 0:1], atol=1e-6)
+    ivy.unset_backend()
 
 
-def test_triangulate_depth_by_closest_mutual_points(dev_str, call):
-    assert np.allclose(call(ivy_tvg.triangulate_depth, td.tvg_pixel_coords, td.full_mats, td.inv_full_mats,
-                            td.C_hats), td.tvg_pixel_coords[:, 0], atol=1e-4)
-    assert np.allclose(call(ivy_tvg.triangulate_depth, td.tvg_pixel_coords[0], td.full_mats[0], td.inv_full_mats[0],
-                            td.C_hats[0]), td.tvg_pixel_coords[0, 0], atol=1e-4)
+def test_triangulate_depth_by_closest_mutual_points(dev_str, fw):
+    ivy.set_backend(fw)
+    assert np.allclose(ivy_tvg.triangulate_depth(ivy.array(td.tvg_pixel_coords), ivy.array(td.full_mats), ivy.array(td.inv_full_mats),
+                            ivy.array(td.C_hats)), td.tvg_pixel_coords[:, 0], atol=1e-4)
+    assert np.allclose(ivy_tvg.triangulate_depth(ivy.array(td.tvg_pixel_coords[0]), ivy.array(td.full_mats[0]), ivy.array(td.inv_full_mats[0]),
+                            ivy.array(td.C_hats[0])), td.tvg_pixel_coords[0, 0], atol=1e-4)
+    ivy.unset_backend()
 
 
-def test_triangulate_depth_by_homogeneous_dlt(dev_str, call):
-    assert np.allclose(call(ivy_tvg.triangulate_depth, td.tvg_pixel_coords, td.full_mats, method='dlt'),
+def test_triangulate_depth_by_homogeneous_dlt(dev_str, fw):
+    ivy.set_backend(fw)
+    assert np.allclose(ivy_tvg.triangulate_depth(ivy.array(td.tvg_pixel_coords), ivy.array(td.full_mats), method='dlt'),
                        td.tvg_pixel_coords[:, 0], atol=1e-3)
-    assert np.allclose(call(ivy_tvg.triangulate_depth, td.tvg_pixel_coords[0], td.full_mats[0], method='dlt'),
+    assert np.allclose(ivy_tvg.triangulate_depth(ivy.array(td.tvg_pixel_coords[0]), ivy.array(td.full_mats[0]), method='dlt'),
                            td.tvg_pixel_coords[0, 0], atol=1e-3)
+    ivy.unset_backend()
