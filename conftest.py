@@ -7,7 +7,7 @@ import ivy
 from ivy_tests.test_ivy import helpers
 
 
-FW_STRS = ['numpy', 'jax', 'tensorflow', 'torch', 'mxnet']
+FW_STRS = ['numpy', 'jax', 'tensorflow', 'torch']
 
 
 TEST_BACKENDS: Dict[str, callable] = {
