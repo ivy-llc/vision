@@ -55,5 +55,10 @@
 		"docker-in-docker": "latest",
 		"docker-from-docker": "latest",
 		"github-cli": "latest"
-	}
+	},
+	"mounts": [
+		"source=${localWorkspaceFolder}/../ivy,target=/workspaces/ivy,type=bind,consistency=cached",
+	        "source=${localWorkspaceFolder}/../mech,target=/workspaces/vision,type=bind,consistency=cached",
+	        "source=${localWorkspaceFolder}/../demo-utils,target=/workspaces/demo-utils,type=bind,consistency=cached"
+	]
 }
