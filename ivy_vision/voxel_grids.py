@@ -149,7 +149,7 @@ def coords_to_voxel_grid(coords, voxel_shape_spec, mode='DIMS', coord_bounds=Non
         voxel_values = ivy.concat([voxel_values, features], axis=-1)
 
     # TNVC x len(BS)+1
-    valid_coord_indices = ivy.astype(ivy.indices_where(full_validity_mask), 'int32')
+    valid_coord_indices = ivy.astype(ivy.argwhere(full_validity_mask), 'int32')
 
     # scalar
     total_num_valid_coords = valid_coord_indices.shape[0]

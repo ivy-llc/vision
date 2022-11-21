@@ -248,7 +248,7 @@ def coord_image_to_trimesh(coord_img, validity_mask=None, batch_shape=None, imag
         trimesh_index_validity = ivy.concat((t0_validity_flat, t1_validity_flat), axis=-1)
 
         # BS x N
-        trimesh_valid_indices = ivy.indices_where(trimesh_index_validity)
+        trimesh_valid_indices = ivy.argwhere(trimesh_index_validity)
 
         # BS x 2x(H-1xW-1) x 3
         all_trimesh_indices = create_trimesh_indices_for_image(batch_shape, image_dims, dev_str)

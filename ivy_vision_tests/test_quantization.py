@@ -103,46 +103,43 @@ class QuantizationTestData(TestData):
 td = QuantizationTestData()
 
 
-def test_quantize_pixel_coords(dev_str, call):
-    if call in [helpers.mx_call]:
+def test_quantize_pixel_coords(dev_str, fw):
+    if fw == "mxnet":
         # mxnet does not support sum for scatter nd, only non-deterministic replacement for duplicates
         pytest.skip()
-    mean, var, counter = call(
-        ivy_quant.quantize_to_image, td.pixel_coords_to_scatter, [3, 3], td.feats_to_scatter,
-        td.feat_prior, var_threshold=np.array([[0., 1e4]] * 4))
+    mean, var, counter = ivy_quant.quantize_to_image(ivy.array(td.pixel_coords_to_scatter), [3, 3], ivy.array(td.feats_to_scatter),
+        ivy.array(td.feat_prior), var_threshold=ivy.array([[0., 1e4]] * 4))
     assert np.allclose(counter, td.quantized_counter, atol=1e-6)
     assert np.allclose(mean, td.quantized_pixel_coords, atol=1e-3)
     assert np.allclose(var[..., 2:], td.quantized_cov_values, atol=1e-3)
 
 
-def test_quantize_pixel_coordinates_with_var(dev_str, call):
-    if call in [helpers.mx_call]:
+def test_quantize_pixel_coordinates_with_var(dev_str, fw):
+    if fw == "mxnet":
         # mxnet does not support sum for scatter nd, only non-deterministic replacement for duplicates
         pytest.skip()
-    mean, var, counter = call(ivy_quant.quantize_to_image,
-                              td.pixel_coords_to_scatter, [3, 3], td.feats_to_scatter, td.feat_prior,
-                              pixel_coords_var=td.pixel_coord_vars_to_scatter,
-                              feat_var=td.feat_vars_to_scatter,
-                              pixel_coords_prior_var=td.pixel_coord_prior_var,
-                              feat_prior_var=td.feat_prior_var,
-                              var_threshold=np.array([[0., 1e4]] * 4))
+    mean, var, counter = ivy_quant.quantize_to_image(ivy.array(td.pixel_coords_to_scatter), [3, 3], ivy.array(td.feats_to_scatter), ivy.array(td.feat_prior),
+                              pixel_coords_var=ivy.array(td.pixel_coord_vars_to_scatter),
+                              feat_var=ivy.array(td.feat_vars_to_scatter),
+                              pixel_coords_prior_var=ivy.array(td.pixel_coord_prior_var),
+                              feat_prior_var=ivy.array(td.feat_prior_var),
+                              var_threshold=ivy.array([[0., 1e4]] * 4))
     assert np.allclose(counter, td.quantized_counter, atol=1e-6)
     assert np.allclose(mean, td.quantized_pixel_coords_from_cov, atol=1e-3)
     assert np.allclose(var[..., 2:], td.quantized_cov_values_from_cov, atol=1e-3)
 
 
-def test_quantize_pixel_coords_with_var_db(dev_str, call):
-    if call in [helpers.mx_call]:
+def test_quantize_pixel_coords_with_var_db(dev_str, fw):
+    if fw == "mxnet":
         # mxnet does not support min for scatter nd, only non-deterministic replacement for duplicates
         pytest.skip()
-    mean, var, counter = call(ivy_quant.quantize_to_image,
-                              td.pixel_coords_to_scatter, [3, 3], td.feats_to_scatter, td.feat_prior,
+    mean, var, counter = ivy_quant.quantize_to_image(ivy.array(td.pixel_coords_to_scatter), [3, 3], ivy.array(td.feats_to_scatter), ivy.array(td.feat_prior),
                               with_db=True,
-                              pixel_coords_var=td.pixel_coord_vars_to_scatter,
-                              feat_var=td.feat_vars_to_scatter,
-                              pixel_coords_prior_var=td.pixel_coord_prior_var,
-                              feat_prior_var=td.feat_prior_var,
-                              var_threshold=np.array([[0., 1e4]] * 4))
+                              pixel_coords_var=ivy.array(td.pixel_coord_vars_to_scatter),
+                              feat_var=ivy.array(td.feat_vars_to_scatter),
+                              pixel_coords_prior_var=ivy.array(td.pixel_coord_prior_var),
+                              feat_prior_var=ivy.array(td.feat_prior_var),
+                              var_threshold=ivy.array([[0., 1e4]] * 4))
     assert np.allclose(counter == -1, td.validity_mask, atol=1e-6)
     assert np.allclose(mean, td.quantized_pixel_coords_from_cov_db, atol=1e-3)
     assert np.allclose(var[..., 2:], td.quantized_cov_values_db, atol=1e-3)

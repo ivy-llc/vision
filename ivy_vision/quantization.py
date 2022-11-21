@@ -139,7 +139,7 @@ def quantize_to_image(pixel_coords, final_image_dims, feat=None, feat_prior=None
     validity_mask = ivy.logical_and(var_validity_mask, bounds_validity_mask)
 
     # num_valid_indices x len(BS)+2
-    validity_indices = ivy.reshape(ivy.astype(ivy.indices_where(validity_mask), 'int32'), [-1, num_batch_dims + 2])
+    validity_indices = ivy.reshape(ivy.astype(ivy.argwhere(validity_mask), 'int32'), [-1, num_batch_dims + 2])
     num_valid_indices = validity_indices.shape[-2]
 
     if num_valid_indices == 0:
