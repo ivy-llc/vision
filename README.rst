@@ -46,7 +46,7 @@ Contents
 * `Overview`_
 * `Run Through`_
 * `Interactive Demos`_
-* `Get Involed`_
+* `Get Involved`_
 
 Overview
 --------
@@ -470,8 +470,8 @@ The acquiring cameras all remain static, while the target frame for point render
         <img width="75%" style="display: block;" src='https://github.com/unifyai/unifyai.github.io/blob/master/img/externally_linked/ivy_vision/point_render_demo.gif?raw=true'>
     </p>
 
-Get Involed
------------
+Get Involved
+------------
 
 We hope the functions in this library are useful to a wide range of machine learning developers.
 However, there are many more areas of 3D vision which could be covered by this library.
