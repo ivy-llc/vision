@@ -1,6 +1,7 @@
 # global
 import os
 import ivy
+import ivy.compiler.compiler as ic
 import math
 import shutil
 import argparse
@@ -103,8 +104,7 @@ class NerfDemo:
         if compile_flag:
             rays_o, rays_d = self._get_rays(self._cam_geoms[0])
             target = self._images[0]
-            self._loss_fn = ivy.compile(self._loss_fn, dynamic=False,
-                                           example_inputs=[self._model, rays_o, rays_d, target, self._model.v])
+            self._loss_fn = ic.compile(self._loss_fn, return_backend_compiled_fn=True)
 
     # Private #
     # --------#

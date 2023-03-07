@@ -4,6 +4,7 @@ from typing import Dict
 
 # local
 import ivy
+import ivy.compiler.compiler as ic
 from ivy_tests.test_ivy import helpers
 
 
