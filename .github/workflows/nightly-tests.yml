@@ -13,4 +13,7 @@ jobs:
       - name: Run Tests
         run: |
           cd vision
+          mkdir .ivy
+          touch .ivy/key.pem
+          echo -n ${{ secrets.USER_API_KEY }} > .ivy/key.pem
           docker run --rm -v `pwd`:/vision unifyai/vision:latest python3 -m pytest ivy_vision_tests/
