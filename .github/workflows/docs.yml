@@ -10,34 +10,9 @@ jobs:
           path: ivy_vision
           persist-credentials: false
 
-      - name: Checkout 🛎️Ivy Doc Builder
-        uses: actions/checkout@v2
-        with:
-          repository: unifyai/doc-builder
-          path: ivy_doc_builder
-          persist-credentials: false
-
-      - name: Install Dependencies
-        continue-on-error: true
-        run: |
-          sudo apt-get update
-          sudo apt-get install rsync
-          pip3 install --upgrade pip
-          pip3 install wheel setuptools
-          pip3 install -r ivy_vision/requirements.txt
-          pip3 install -r ivy_vision/optional.txt
-          pip3 install -r ivy_vision/ivy_vision_demos/requirements.txt
-          cat ivy_doc_builder/requirements.txt | xargs -n 1 pip3 install
-
       - name: Build Docs
         run: |
-          cd ivy_vision
-          rm -rf .gitignore
-          cd docs
-          rsync -rav ../../ivy_doc_builder/docs/ .
-          bash _make_docs.sh --root_dir "../ivy_vision" --submodules_title "Modules"
-          cp .nojekyll build/
-          cd ../..
+          docker run --rm -v ivy_vision:/project unifyai/doc-builder:latest
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@3.7.1
