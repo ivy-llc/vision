@@ -251,7 +251,7 @@ All of these matrices are contained within the Ivy camera geometry class.
 
 The geometries used in this quick start demo are based upon the scene presented below.
 
-.. image:: https://github.com/unifyai/vision/blob/master/docs/partial_source/images/scene.png?raw=true
+.. image:: https://github.com/unifyai/vision/blob/master/docs/images/scene.png?raw=true
    :width: 100%
 
 The code sample below demonstrates all of the attributes contained within the Ivy camera geometry class.
@@ -305,7 +305,7 @@ This representation simplifies projections between frames.
 
 The rgb and depth images are presented below.
 
-.. image:: https://github.com/unifyai/vision/blob/master/docs/partial_source/images/rgb_and_depth.png?raw=true
+.. image:: https://github.com/unifyai/vision/blob/master/docs/images/rgb_and_depth.png?raw=true
    :width: 100%
 
 **Optical Flow and Depth Triangulation**
@@ -331,7 +331,7 @@ We start with some optical flow and depth triangulation functions.
 
 Visualizations of these images are given below.
 
-.. image:: https://github.com/unifyai/vision/blob/master/docs/partial_source/images/flow_and_depth.png?raw=true
+.. image:: https://github.com/unifyai/vision/blob/master/docs/images/flow_and_depth.png?raw=true
    :width: 100%
 
 **Inverse and Forward Warping**
@@ -378,7 +378,7 @@ Again, visualizations of these images are given below.
 The images represent intermediate steps for the inverse warping of color from frame 2 to frame 1,
 which is shown in the bottom right corner.
 
-.. image:: https://github.com/unifyai/vision/blob/master/docs/partial_source/images/inverse_warped.png?raw=true
+.. image:: https://github.com/unifyai/vision/blob/master/docs/images/inverse_warped.png?raw=true
    :width: 100%
 
 For forward warping, we instead assume depth to be known in the source frame.
@@ -420,7 +420,7 @@ Again, visualizations of these images are given below.
 The images show the forward warping of both depth and color from frame 2 to frame 1,
 which are shown with and without depth buffers in the right-hand and central columns respectively.
 
-.. image:: https://github.com/unifyai/vision/blob/master/docs/partial_source/images/forward_warped.png?raw=true
+.. image:: https://github.com/unifyai/vision/blob/master/docs/images/forward_warped.png?raw=true
    :width: 100%
 
 Interactive Demos
