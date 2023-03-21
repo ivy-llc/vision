@@ -12,7 +12,8 @@ jobs:
 
       - name: Build Docs
         run: |
-          docker run --rm -v ivy_vision:/project unifyai/doc-builder:latest
+          cd ivy_vision
+          docker run --rm -v "$(pwd)":/project unifyai/doc-builder:latest
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@3.7.1
