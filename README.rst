@@ -9,14 +9,14 @@
 .. raw:: html
 
     <br/>
-    <a href="https://pypi.org/project/ivy-mech">
-        <img class="dark-light" style="float: left; padding-right: 4px; padding-bottom: 4px;" src="https://badge.fury.io/py/ivy-mech.svg">
+    <a href="https://pypi.org/project/ivy-vision">
+        <img class="dark-light" style="float: left; padding-right: 4px; padding-bottom: 4px;" src="https://badge.fury.io/py/ivy-vision.svg">
     </a>
-    <a href="https://github.com/unifyai/mech/actions?query=workflow%3Adocs">
-        <img class="dark-light" style="float: left; padding-right: 4px; padding-bottom: 4px;" src="https://github.com/unifyai/mech/actions/workflows/docs.yml/badge.svg">
+    <a href="https://github.com/unifyai/vision/actions?query=workflow%3Adocs">
+        <img class="dark-light" style="float: left; padding-right: 4px; padding-bottom: 4px;" src="https://github.com/unifyai/vision/actions/workflows/docs.yml/badge.svg">
     </a>
-    <a href="https://github.com/unifyai/mech/actions?query=workflow%3Anightly-tests">
-        <img class="dark-light" style="float: left; padding-right: 4px; padding-bottom: 4px;" src="https://github.com/unifyai/mech/actions/workflows/nightly-tests.yml/badge.svg">
+    <a href="https://github.com/unifyai/vision/actions?query=workflow%3Anightly-tests">
+        <img class="dark-light" style="float: left; padding-right: 4px; padding-bottom: 4px;" src="https://github.com/unifyai/vision/actions/workflows/nightly-tests.yml/badge.svg">
     </a>
     <a href="https://discord.gg/G4aR9Q7DTN">
         <img class="dark-light" style="float: left; padding-right: 4px; padding-bottom: 4px;" src="https://img.shields.io/discord/799879767196958751?color=blue&label=%20&logo=discord&logoColor=white">
