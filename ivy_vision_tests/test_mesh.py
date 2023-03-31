@@ -76,7 +76,7 @@ def test_rasterize_triangles(dev_str, fw):
     assert np.allclose(ivy_mesh.rasterize_triangles(ivy.array(td.mesh_triangle), [3, 3]), td.rasterized_image, atol=1e-3)
     assert np.allclose(ivy_mesh.rasterize_triangles(ivy.expand_dims(ivy.array(td.mesh_triangle), axis=0), [3, 3],
                             batch_shape=[1])[0], td.rasterized_image, atol=1e-3)
-    ivy.unset_backend()
+    ivy.previous_backend()
 
 
 def test_create_trimesh_indices_for_image(dev_str, fw):
@@ -86,7 +86,7 @@ def test_create_trimesh_indices_for_image(dev_str, fw):
     ivy.set_backend(fw)
     assert np.allclose(ivy_mesh.create_trimesh_indices_for_image([1], [4, 3]),
                        td.tri_mesh_4x3_indices, atol=1e-3)
-    ivy.unset_backend()
+    ivy.previous_backend()
 
 
 def test_coord_image_to_trimesh(dev_str, fw):
@@ -103,4 +103,4 @@ def test_coord_image_to_trimesh(dev_str, fw):
                                      batch_shape=[1], image_dims=[4, 3], dev_str=dev_str)
     assert np.allclose(vertices, td.tri_mesh_4x3_vertices, atol=1e-3)
     assert np.allclose(trimesh_indices, td.tri_mesh_4x3_valid_indices, atol=1e-3)
-    ivy.unset_backend()
+    ivy.previous_backend()

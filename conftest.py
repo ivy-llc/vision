@@ -23,7 +23,7 @@ def run_around_tests(dev_str, f, compile_graph, implicit, fw):
     if 'gpu' in dev_str and fw == 'numpy':
         # Numpy does not support GPU
         pytest.skip()
-    ivy.clear_backend_stack()
+    ivy.unset_backend()
     with f.use:
         with ivy.DefaultDevice(dev_str):
             yield

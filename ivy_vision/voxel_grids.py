@@ -179,6 +179,7 @@ def coords_to_voxel_grid(coords, voxel_shape_spec, mode='DIMS', coord_bounds=Non
                                                     [max_dims, ivy.array([4 + feature_size], dtype='int32', device=dev_str)], axis=-1))
 
     # BS x x_max x y_max x z_max x 4
+    print(all_indices_pruned_flat)
     scattered = ivy.scatter_nd(all_indices_pruned_flat, voxel_values_pruned_flat, shape=total_dims_list,
                                 reduction='replace' if ivy.backend == 'mxnet' else 'sum')
 

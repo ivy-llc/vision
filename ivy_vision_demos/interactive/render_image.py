@@ -228,7 +228,7 @@ def main(interactive=True, try_use_sim=True, f=None, fw=None):
         xyzs.clear()
         rgbs.clear()
     sim.close()
-    ivy.unset_backend()
+    ivy.previous_backend()
 
 
 if __name__ == '__main__':

@@ -70,7 +70,7 @@ class ImplicitTestData(TestData):
         self.query_points = rays_o + rays_d * self.z_vals
 
         # unset framework
-        ivy.unset_backend()
+        ivy.previous_backend()
 
 
 td = ImplicitTestData()
@@ -87,7 +87,7 @@ def test_downsampled_image_dims_from_desired_num_pixels(dev_str, fw):
     new_img_dims, num_pixels = ivy_imp.downsampled_image_dims_from_desired_num_pixels([14, 18], 125, maximum=True)
     assert new_img_dims == [9, 12]
     assert num_pixels == 108
-    ivy.unset_backend()
+    ivy.previous_backend()
 
 
 def test_create_sampled_pixel_coords_image(dev_str, fw):
@@ -111,7 +111,7 @@ def test_create_sampled_pixel_coords_image(dev_str, fw):
                        (td.batch_size, td.num_cameras), normalized=True, randomize=True)
     assert ivy.min(sampled_img).to_scalar() >= 0
     assert ivy.max(sampled_img).to_scalar() < 1
-    ivy.unset_backend()
+    ivy.previous_backend()
 
 
 def test_sample_images(dev_str, fw):
@@ -123,7 +123,7 @@ def test_sample_images(dev_str, fw):
                       (td.batch_size, td.num_cameras), td.image_dims)
     assert list(img0.shape) == [td.batch_size, td.num_cameras, 35, 3]
     assert list(img1.shape) == [td.batch_size, td.num_cameras, 35, 3]
-    ivy.unset_backend()
+    ivy.previous_backend()
 
 
 def test_sampled_volume_density_to_occupancy_probability(dev_str, fw):
@@ -131,7 +131,7 @@ def test_sampled_volume_density_to_occupancy_probability(dev_str, fw):
     occ_prob = ivy_imp.sampled_volume_density_to_occupancy_probability(ivy.array(td.densities), ivy.array(td.inter_sample_distances))
     assert occ_prob.shape == td.densities.shape
     assert np.allclose(occ_prob, td.occ_probs)
-    ivy.unset_backend()
+    ivy.previous_backend()
 
 
 def test_ray_termination_probabilities(dev_str, fw):
@@ -139,7 +139,7 @@ def test_ray_termination_probabilities(dev_str, fw):
     ray_term_probs = ivy_imp.ray_termination_probabilities(ivy.array(td.densities), ivy.array(td.inter_sample_distances))
     assert ray_term_probs.shape == td.densities.shape
     assert np.allclose(ray_term_probs, td.ray_term_probs)
-    ivy.unset_backend()
+    ivy.previous_backend()
 
 
 def test_stratified_sample(dev_str, fw):
@@ -150,7 +150,7 @@ def test_stratified_sample(dev_str, fw):
     for i in range(3):
         for j in range(num - 1):
             assert res[i][j] < res[i][j + 1]
-    ivy.unset_backend()
+    ivy.previous_backend()
 
 
 def test_render_rays_via_termination_probabilities(dev_str, fw):
@@ -161,7 +161,7 @@ def test_render_rays_via_termination_probabilities(dev_str, fw):
     assert var.shape == td.radial_depths.shape[:-1] + (3,)
     assert np.allclose(rendering, td.term_prob_feature_rendering)
     assert np.allclose(var, td.term_prob_var_rendering)
-    ivy.unset_backend()
+    ivy.previous_backend()
 
 
 @pytest.mark.parametrize(
@@ -178,4 +178,4 @@ def test_render_implicit_features_and_depth(dev_str, fw, with_features, with_tim
                       inter_feat_fn=td.inter_feat_fn if with_features else None)
     assert rgb.shape == (3, 3)
     assert depth.shape == (3, 1)
-    ivy.unset_backend()
+    ivy.previous_backend()

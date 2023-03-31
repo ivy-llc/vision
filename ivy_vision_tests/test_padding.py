@@ -31,4 +31,4 @@ td = PaddingTestData()
 def test_pad_omni_image(dev_str, fw):
     ivy.set_backend(fw)
     assert np.allclose(ivy_pad.pad_omni_image(ivy.array(td.omni_image), 1), td.padded_omni_image, atol=1e-3)
-    ivy.unset_backend()
+    ivy.previous_backend()
