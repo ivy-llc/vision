@@ -11,6 +11,7 @@ jobs:
         with:
           repository: unifyai/vision
           persist-credentials: false
+          fetch-depth: 0
 
       - name: Build Docs
         run: |
