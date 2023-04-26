@@ -47,7 +47,6 @@ def stack_images(images, desired_aspect_ratio):
 
 
 def gradient_image(x):
-
     """Computes image gradients (dy, dx) for each channel.
     Parameters
     ----------
@@ -74,10 +73,12 @@ def gradient_image(x):
     dx = x[..., :, 1:, :] - x[..., :, :-1, :]
     # BS x H x W x D
     dy = ivy.concat(
-        (dy, ivy.zeros(batch_shape + [1, image_dims[1], num_dims], device=device)), axis=-3
+        (dy, ivy.zeros(batch_shape + [1, image_dims[1], num_dims], device=device)),
+        axis=-3,
     )
     dx = ivy.concat(
-        (dx, ivy.zeros(batch_shape + [image_dims[0], 1, num_dims], device=device)), axis=-2
+        (dx, ivy.zeros(batch_shape + [image_dims[0], 1, num_dims], device=device)),
+        axis=-2,
     )
     # BS x H x W x D,    BS x H x W x D
     return dx, dy
@@ -167,7 +168,9 @@ def random_crop(x, crop_size, batch_shape=None, image_dims=None, seed: int = Non
     # list of 1 x NH x NW x F
     cropped_list = [
         img[..., xo : xo + crop_size[0], yo : yo + crop_size[1], :]
-        for img, xo, yo in zip(ivy.unstack(x_flat, axis=0, keepdims=True), x_offsets, y_offsets)
+        for img, xo, yo in zip(
+            ivy.unstack(x_flat, axis=0, keepdims=True), x_offsets, y_offsets
+        )
     ]
 
     # FBS x NH x NW x F
@@ -203,7 +206,7 @@ def bilinear_resample(x, warp):
     height, width = input_image_dims
     max_x = width - 1
     max_y = height - 1
-    idx_size = warp.shape[-2]
+    warp.shape[-2]
     batch_shape_flat = int(ivy.prod(ivy.asarray(batch_shape)))
     # B
     batch_offsets = ivy.arange(batch_shape_flat) * height * width
@@ -215,7 +218,7 @@ def bilinear_resample(x, warp):
     data_flat = ivy.reshape(x, [batch_shape_flat * height * width, -1])
     # (BxHxW) x 2
     warp_flat = ivy.reshape(warp, [-1, 2])
-    warp_floored = (ivy.floor(warp_flat)).astype('int32')
+    warp_floored = (ivy.floor(warp_flat)).astype("int32")
     bilinear_weights = warp_flat - ivy.floor(warp_flat)
     # (BxHxW)
     x0 = warp_floored[:, 0]

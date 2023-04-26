@@ -12,8 +12,9 @@ from ivy_vision import single_view_geometry as ivy_svg
 MIN_DENOMINATOR = 1e-12
 
 
-def downsampled_image_dims_from_desired_num_pixels(image_dims, num_pixels,
-                                                   maximum=False):
+def downsampled_image_dims_from_desired_num_pixels(
+    image_dims, num_pixels, maximum=False
+):
     """Compute the best downsampled image dimensions, given original image dimensions
     and the ideal total number of pixels for the downsampled image. The final number
     of pixels in the downsampled image dimensions may not be exact, but will best
@@ -44,9 +45,15 @@ def downsampled_image_dims_from_desired_num_pixels(image_dims, num_pixels,
     return new_img_dims, num_pixels
 
 
-def create_sampled_pixel_coords_image(image_dims, samples_per_dim, batch_shape=None,
-                                      normalized=False, randomize=True,
-                                      homogeneous=False, dev_str=None):
+def create_sampled_pixel_coords_image(
+    image_dims,
+    samples_per_dim,
+    batch_shape=None,
+    normalized=False,
+    randomize=True,
+    homogeneous=False,
+    dev_str=None,
+):
     """Create image of randomly sampled homogeneous integer :math:`xy` pixel
     co-ordinates :math:`\mathbf{X}\in\mathbb{Z}^{h×w×3}`, stored as floating point
     values. The origin is at the top-left corner of the image, with :math:`+x`
@@ -87,13 +94,21 @@ def create_sampled_pixel_coords_image(image_dims, samples_per_dim, batch_shape=N
 
     # BS x DH x DW x 2
     low_res_pix_coords = ivy_svg.create_uniform_pixel_coords_image(
-        samples_per_dim, batch_shape, homogeneous=False, dev_str=dev_str)
+        samples_per_dim, batch_shape, homogeneous=False, dev_str=dev_str
+    )
 
     # 2
-    window_size = \
-        ivy.array(list(reversed([img_dim / sam_per_dim for img_dim, sam_per_dim in
-                                 zip(image_dims, samples_per_dim)])),
-                  device=dev_str)
+    window_size = ivy.array(
+        list(
+            reversed(
+                [
+                    img_dim / sam_per_dim
+                    for img_dim, sam_per_dim in zip(image_dims, samples_per_dim)
+                ]
+            )
+        ),
+        device=dev_str,
+    )
 
     # BS x DH x DW x 2
     downsam_pix_coords = low_res_pix_coords * window_size + window_size / 2 - 0.5
@@ -101,29 +116,38 @@ def create_sampled_pixel_coords_image(image_dims, samples_per_dim, batch_shape=N
     if randomize:
         # BS x DH x DW x 1
         rand_x = ivy.random_uniform(
-            low=ivy.to_scalar(-window_size[0] / 2), high=ivy.to_scalar(window_size[0] / 2),
-            shape=list(downsam_pix_coords.shape[:-1]) + [1], device=dev_str)
+            low=ivy.to_scalar(-window_size[0] / 2),
+            high=ivy.to_scalar(window_size[0] / 2),
+            shape=list(downsam_pix_coords.shape[:-1]) + [1],
+            device=dev_str,
+        )
         rand_y = ivy.random_uniform(
-            low=ivy.to_scalar(-window_size[1] / 2), high=ivy.to_scalar(window_size[1] / 2),
-            shape=list(downsam_pix_coords.shape[:-1]) + [1], device=dev_str)
+            low=ivy.to_scalar(-window_size[1] / 2),
+            high=ivy.to_scalar(window_size[1] / 2),
+            shape=list(downsam_pix_coords.shape[:-1]) + [1],
+            device=dev_str,
+        )
 
         # BS x DH x DW x 2
         rand_offsets = ivy.concat((rand_x, rand_y), axis=-1)
         downsam_pix_coords += rand_offsets
-    downsam_pix_coords = ivy.clip(ivy.round(downsam_pix_coords),
-                                  ivy.array([0.] * 2, device=dev_str),
-                                  ivy.array(list(reversed(image_dims)),
-                                            dtype='float32', device=dev_str) - 1)
+    downsam_pix_coords = ivy.clip(
+        ivy.round(downsam_pix_coords),
+        ivy.array([0.0] * 2, device=dev_str),
+        ivy.array(list(reversed(image_dims)), dtype="float32", device=dev_str) - 1,
+    )
 
     if normalized:
-        downsam_pix_coords /= \
-            ivy.array([image_dims[1], image_dims[0]], dtype='float32',
-                      device=dev_str) + MIN_DENOMINATOR
+        downsam_pix_coords /= (
+            ivy.array([image_dims[1], image_dims[0]], dtype="float32", device=dev_str)
+            + MIN_DENOMINATOR
+        )
 
     if homogeneous:
         # BS x DH x DW x 3
-        downsam_pix_coords = ivy_mech.make_coordinates_homogeneous(downsam_pix_coords,
-                                                                   batch_shape + samples_per_dim)
+        downsam_pix_coords = ivy_mech.make_coordinates_homogeneous(
+            downsam_pix_coords, batch_shape + samples_per_dim
+        )
 
     # BS x DH x DW x 2or3
     return downsam_pix_coords
@@ -166,38 +190,57 @@ def sample_images(list_of_images, num_pixels, batch_shape, image_dims, dev_str=N
     flat_batch_size = reduce(mul, batch_shape)
 
     new_img_dims, num_pixels_to_use = downsampled_image_dims_from_desired_num_pixels(
-        image_dims, num_pixels)
+        image_dims, num_pixels
+    )
 
     # BS x DH x DW x 2
-    sampled_pix_coords = ivy.astype(create_sampled_pixel_coords_image(
-        image_dims, new_img_dims, batch_shape, homogeneous=False, dev_str=dev_str),
-        'int32')
+    sampled_pix_coords = ivy.astype(
+        create_sampled_pixel_coords_image(
+            image_dims, new_img_dims, batch_shape, homogeneous=False, dev_str=dev_str
+        ),
+        "int32",
+    )
 
     # FBS x DH x DW x 2
-    sampled_pix_coords_flat = ivy.reshape(sampled_pix_coords,
-                                          [flat_batch_size] + new_img_dims + [2])
+    sampled_pix_coords_flat = ivy.reshape(
+        sampled_pix_coords, [flat_batch_size] + new_img_dims + [2]
+    )
 
     # FBS x DH x DW x 1
-    batch_idxs = ivy.expand_dims(ivy.permute_dims(ivy.astype(ivy.linspace(
-        ivy.zeros(new_img_dims, device=dev_str),
-        ivy.ones(new_img_dims, device=dev_str) * (flat_batch_size - 1),
-        flat_batch_size, axis=-1),
-        'int32'), axes=(2, 0, 1)), axis=-1)
+    batch_idxs = ivy.expand_dims(
+        ivy.permute_dims(
+            ivy.astype(
+                ivy.linspace(
+                    ivy.zeros(new_img_dims, device=dev_str),
+                    ivy.ones(new_img_dims, device=dev_str) * (flat_batch_size - 1),
+                    flat_batch_size,
+                    axis=-1,
+                ),
+                "int32",
+            ),
+            axes=(2, 0, 1),
+        ),
+        axis=-1,
+    )
 
     # FBS x DH x DW x 3
-    total_idxs = ivy.concat((batch_idxs, ivy.flip(sampled_pix_coords_flat, axis=-1)),
-                                 axis=-1)
+    total_idxs = ivy.concat(
+        (batch_idxs, ivy.flip(sampled_pix_coords_flat, axis=-1)), axis=-1
+    )
 
     # list of FBS x H x W x D
-    flat_batch_images = [ivy.reshape(img, [flat_batch_size] + image_dims + [-1]) for img
-                         in list_of_images]
+    flat_batch_images = [
+        ivy.reshape(img, [flat_batch_size] + image_dims + [-1])
+        for img in list_of_images
+    ]
 
     # FBS x H x W x sum(D)
     combined_img = ivy.concat(flat_batch_images, axis=-1)
 
     # BS x FID x sum(D)
-    combined_img_sampled = ivy.reshape(ivy.gather_nd(combined_img, total_idxs),
-                                       batch_shape + [num_pixels_to_use, -1])
+    combined_img_sampled = ivy.reshape(
+        ivy.gather_nd(combined_img, total_idxs), batch_shape + [num_pixels_to_use, -1]
+    )
 
     # list of BS x FID x D
     return ivy.split(combined_img_sampled, num_or_size_splits=image_channels, axis=-1)
@@ -243,9 +286,10 @@ def ray_termination_probabilities(density, inter_sample_distance):
     """
 
     # BS x NSPR
-    occ_prob = sampled_volume_density_to_occupancy_probability(density,
-                                                               inter_sample_distance)
-    return occ_prob * ivy.cumprod(1. - occ_prob + 1e-10, axis=-1, exclusive=True)
+    occ_prob = sampled_volume_density_to_occupancy_probability(
+        density, inter_sample_distance
+    )
+    return occ_prob * ivy.cumprod(1.0 - occ_prob + 1e-10, axis=-1, exclusive=True)
 
 
 # noinspection PyUnresolvedReferences
@@ -287,8 +331,9 @@ def stratified_sample(starts, ends, num_samples, batch_shape=None):
     linspace_vals = ivy.linspace(starts, ends - bin_sizes, num_samples)
 
     # BS x NS
-    random_uniform = ivy.random_uniform(shape=batch_shape + [num_samples],
-                                        device=ivy.dev(starts))
+    random_uniform = ivy.random_uniform(
+        shape=batch_shape + [num_samples], device=ivy.dev(starts)
+    )
 
     # BS x NS
     random_offsets = random_uniform * ivy.expand_dims(bin_sizes, axis=-1)
@@ -298,8 +343,9 @@ def stratified_sample(starts, ends, num_samples, batch_shape=None):
 
 
 # noinspection PyUnresolvedReferences
-def render_rays_via_termination_probabilities(ray_term_probs, features,
-                                              render_variance=False):
+def render_rays_via_termination_probabilities(
+    ray_term_probs, features, render_variance=False
+):
     """Render features onto the image plane, given rays sampled at radial depths with
     readings of feature values and densities at these sample points.
 
@@ -325,15 +371,26 @@ def render_rays_via_termination_probabilities(ray_term_probs, features,
     if not render_variance:
         return rendering
     var = ivy.sum(
-        ray_term_probs * (ivy.expand_dims(rendering, axis=-2) - features) ** 2, axis=-2)
+        ray_term_probs * (ivy.expand_dims(rendering, axis=-2) - features) ** 2, axis=-2
+    )
     return rendering, var
 
 
-def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far,
-                                       samples_per_ray, timestamps=None,
-                                       render_depth=True, render_feats=True,
-                                       render_variance=False, inter_feat_fn=None,
-                                       with_grads=True, v=None):
+def render_implicit_features_and_depth(
+    network_fn,
+    rays_o,
+    rays_d,
+    near,
+    far,
+    samples_per_ray,
+    timestamps=None,
+    render_depth=True,
+    render_feats=True,
+    render_variance=False,
+    inter_feat_fn=None,
+    with_grads=True,
+    v=None,
+):
     """Render an rgb-d image, given an implicit rgb and density function conditioned
     on xyz data.
 
@@ -394,7 +451,8 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far,
     rays_d = ivy.expand_dims(rays_d, axis=-2)
     rays_o = ivy.broadcast_to(
         ivy.reshape(rays_o, batch_shape + [1] * (num_ray_batch_dims + 1) + [3]),
-        rays_d.shape)
+        rays_d.shape,
+    )
 
     # BS x RBS x SPR x 3
     pts = rays_o + rays_d * z_vals
@@ -407,14 +465,13 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far,
     # input features
 
     if inter_feat_fn is not None:
-
         # BS x RBS x SPR x F
         features = inter_feat_fn(pts)
 
         # BS x FRBS x SPR x F
-        features_flat = ivy.reshape(features,
-                                    batch_shape + [flat_ray_batch_size, samples_per_ray,
-                                                   -1])
+        features_flat = ivy.reshape(
+            features, batch_shape + [flat_ray_batch_size, samples_per_ray, -1]
+        )
 
     else:
         features_flat = None
@@ -422,15 +479,17 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far,
     # Run network
 
     # BSPQ x OF,    BSPQ
-    feat, densities = network_fn(pts_flat, features_flat, timestamps,
-                                 with_grads=with_grads, v=v)
+    feat, densities = network_fn(
+        pts_flat, features_flat, timestamps, with_grads=with_grads, v=v
+    )
 
     # BS x RBS x SPR
     densities = ivy.reshape(densities, total_batch_shape + [samples_per_ray])
 
     # BS x RBS x (SPR+1)
     z_vals_w_terminal = ivy.concat(
-        (z_vals[..., 0], ivy.ones_like(z_vals[..., -1:, 0]) * 1e10), axis=-1)
+        (z_vals[..., 0], ivy.ones_like(z_vals[..., -1:, 0]) * 1e10), axis=-1
+    )
 
     # BS x RBS x SPR
     depth_diffs = z_vals_w_terminal[..., 1:] - z_vals_w_terminal[..., :-1]
@@ -440,24 +499,27 @@ def render_implicit_features_and_depth(network_fn, rays_o, rays_d, near, far,
     ret_vals = list()
 
     if render_feats:
-
         # BS x RBS x SPR x OF
         feat = ivy.reshape(feat, total_batch_shape + [samples_per_ray, -1])
 
         # BS x RBS x OF
-        feat = ivy.clip(render_rays_via_termination_probabilities(ray_term_probs, feat,
-                                                                  render_variance), 0.,
-                        1.)
+        feat = ivy.clip(
+            render_rays_via_termination_probabilities(
+                ray_term_probs, feat, render_variance
+            ),
+            0.0,
+            1.0,
+        )
         if render_variance:
             ret_vals += feat
         else:
             ret_vals.append(feat)
 
     if render_depth:
-
         # BS x RBS x 1
-        radial_depth = render_rays_via_termination_probabilities(ray_term_probs, z_vals,
-                                                                 render_variance)
+        radial_depth = render_rays_via_termination_probabilities(
+            ray_term_probs, z_vals, render_variance
+        )
         if render_variance:
             ret_vals += radial_depth
         else:
