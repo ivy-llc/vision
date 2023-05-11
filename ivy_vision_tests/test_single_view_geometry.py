@@ -13,7 +13,7 @@ class SingleViewGeometryTestData(TestData):
         super().__init__()
 
         # bilinear sampling
-        self.simple_image = np.tile(np.arange(9).astype(np.float).reshape((1, 1, 3, 3, 1)),
+        self.simple_image = np.tile(np.arange(9).astype(float).reshape((1, 1, 3, 3, 1)),
                                     (self.batch_size, 1, 1, 1, 1))
 
         self.warp = np.tile(np.array([[[[[0.0, 0.0], [0.5, 0.5], [2.0, 0.0]],

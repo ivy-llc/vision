@@ -139,7 +139,7 @@ def test_quantize_pixel_coords_with_var_db(dev_str, fw):
                               feat_var=ivy.array(td.feat_vars_to_scatter),
                               pixel_coords_prior_var=ivy.array(td.pixel_coord_prior_var),
                               feat_prior_var=ivy.array(td.feat_prior_var),
-                              var_threshold=ivy.array([[0., 1e4]] * 4))
+                              var_threshold=[[0., 1e4]] * 4)
     assert np.allclose(counter == -1, td.validity_mask, atol=1e-6)
     assert np.allclose(mean, td.quantized_pixel_coords_from_cov_db, atol=1e-3)
     assert np.allclose(var[..., 2:], td.quantized_cov_values_db, atol=1e-3)
