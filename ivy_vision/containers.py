@@ -1,5 +1,5 @@
 # global
-import ivy 
+import ivy
 
 # local
 import ivy_vision.sdf as ivy_sdf
@@ -7,12 +7,13 @@ import ivy_vision.sdf as ivy_sdf
 
 # noinspection PyMissingConstructor
 class PrimitiveScene(ivy.Container):
-
-    def __init__(self,
-                 sphere_positions=None,
-                 sphere_radii=None,
-                 cuboid_ext_mats=None,
-                 cuboid_dims=None):
+    def __init__(
+        self,
+        sphere_positions=None,
+        sphere_radii=None,
+        cuboid_ext_mats=None,
+        cuboid_dims=None,
+    ):
         """Initialize scene description as a composition of primitive shapes. # ToDo:
         extend this to include cylinders and cones once supported in ivy_vision.sdf
         module
@@ -35,7 +36,8 @@ class PrimitiveScene(ivy.Container):
             sphere_positions=sphere_positions,
             sphere_radii=sphere_radii,
             cuboid_ext_mats=cuboid_ext_mats,
-            cuboid_dims=cuboid_dims)
+            cuboid_dims=cuboid_dims,
+        )
 
     # Class Methods #
     # --------------#
@@ -87,25 +89,27 @@ class PrimitiveScene(ivy.Container):
         all_sdfs_list = list()
         if self.sphere_positions is not None:
             sphere_sdfs = ivy_sdf.sphere_signed_distances(
-                self.sphere_positions[..., 0:3, -1], self.sphere_radii, query_positions)
+                self.sphere_positions[..., 0:3, -1], self.sphere_radii, query_positions
+            )
             all_sdfs_list.append(sphere_sdfs)
         if self.cuboid_ext_mats is not None:
             cuboid_sdfs = ivy_sdf.cuboid_signed_distances(
-                self.cuboid_ext_mats, self.cuboid_dims, query_positions)
+                self.cuboid_ext_mats, self.cuboid_dims, query_positions
+            )
             all_sdfs_list.append(cuboid_sdfs)
-        sdfs_concatted = ivy.concat(all_sdfs_list, axis=-1) if len(all_sdfs_list) > 1 else all_sdfs_list[0]
+        sdfs_concatted = (
+            ivy.concat(all_sdfs_list, axis=-1)
+            if len(all_sdfs_list) > 1
+            else all_sdfs_list[0]
+        )
         return ivy.min(sdfs_concatted, axis=-1, keepdims=True)
 
 
 # noinspection PyMissingConstructor
 class Intrinsics(ivy.Container):
-
-    def __init__(self,
-                 focal_lengths,
-                 persp_angles,
-                 pp_offsets,
-                 calib_mats,
-                 inv_calib_mats):
+    def __init__(
+        self, focal_lengths, persp_angles, pp_offsets, calib_mats, inv_calib_mats
+    ):
         """Initialize camera intrinsics container.
 
         Parameters
@@ -127,7 +131,8 @@ class Intrinsics(ivy.Container):
             persp_angles=persp_angles,
             pp_offsets=pp_offsets,
             calib_mats=calib_mats,
-            inv_calib_mats=inv_calib_mats)
+            inv_calib_mats=inv_calib_mats,
+        )
 
     # Class Methods #
     # --------------#
@@ -155,18 +160,14 @@ class Intrinsics(ivy.Container):
         pp_offsets = ivy.zeros(batch_shape + [2])
         calib_mats = ivy.eye(3, batch_shape=batch_shape)
         inv_calib_mats = ivy.eye(3, batch_shape=batch_shape)
-        return __class__(focal_lengths, persp_angles, pp_offsets, calib_mats, inv_calib_mats)
+        return __class__(
+            focal_lengths, persp_angles, pp_offsets, calib_mats, inv_calib_mats
+        )
 
 
 # noinspection PyMissingConstructor
 class Extrinsics(ivy.Container):
-
-    def __init__(self,
-                 cam_centers,
-                 Rs,
-                 inv_Rs,
-                 ext_mats_homo,
-                 inv_ext_mats_homo):
+    def __init__(self, cam_centers, Rs, inv_Rs, ext_mats_homo, inv_ext_mats_homo):
         """Initialize camera extrinsics container.
 
         Parameters
@@ -188,7 +189,8 @@ class Extrinsics(ivy.Container):
             Rs=Rs,
             inv_Rs=inv_Rs,
             ext_mats_homo=ext_mats_homo,
-            inv_ext_mats_homo=inv_ext_mats_homo)
+            inv_ext_mats_homo=inv_ext_mats_homo,
+        )
 
     # Class Methods #
     # --------------#
@@ -221,12 +223,7 @@ class Extrinsics(ivy.Container):
 
 # noinspection PyMissingConstructor
 class CameraGeometry(ivy.Container):
-
-    def __init__(self,
-                 intrinsics,
-                 extrinsics,
-                 full_mats_homo,
-                 inv_full_mats_homo):
+    def __init__(self, intrinsics, extrinsics, full_mats_homo, inv_full_mats_homo):
         """Initialize camera geometry container.
 
         Parameters
@@ -245,7 +242,8 @@ class CameraGeometry(ivy.Container):
             intrinsics=intrinsics,
             extrinsics=extrinsics,
             full_mats_homo=full_mats_homo,
-            inv_full_mats_homo=inv_full_mats_homo)
+            inv_full_mats_homo=inv_full_mats_homo,
+        )
 
     # Class Methods #
     # --------------#

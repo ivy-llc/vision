@@ -3,7 +3,7 @@
 # https://www.iquilezles.org/www/articles/distfunctions/distfunctions.htm
 
 # global
-import ivy 
+import ivy
 
 
 def sphere_signed_distances(sphere_positions, sphere_radii, query_positions):
@@ -35,7 +35,10 @@ def sphere_signed_distances(sphere_positions, sphere_radii, query_positions):
     query_positions = ivy.expand_dims(query_positions, axis=-3)
 
     # BS x NS x NP x 1
-    distances_to_centre = ivy.sum((query_positions - sphere_positions) ** 2, axis=-1, keepdims=True)**0.5
+    distances_to_centre = (
+        ivy.sum((query_positions - sphere_positions) ** 2, axis=-1, keepdims=True)
+        ** 0.5
+    )
 
     # BS x NS x NP x 1
     all_sdfs = distances_to_centre - ivy.expand_dims(sphere_radii, axis=-2)
@@ -44,7 +47,9 @@ def sphere_signed_distances(sphere_positions, sphere_radii, query_positions):
     return ivy.min(all_sdfs, axis=-3)
 
 
-def cuboid_signed_distances(cuboid_ext_mats, cuboid_dims, query_positions, batch_shape=None):
+def cuboid_signed_distances(
+    cuboid_ext_mats, cuboid_dims, query_positions, batch_shape=None
+):
     """Return the signed distances of a set of query points from the cuboid
     surfaces.\n `[reference] <https://www.iquilezles.org/www/articles/distfunctions
     /distfunctions.htm>`_
@@ -80,7 +85,9 @@ def cuboid_signed_distances(cuboid_ext_mats, cuboid_dims, query_positions, batch
 
     # BS x 3 x NP
     query_positions_trans = ivy.permute_dims(
-        query_positions, axes=batch_dims_for_trans + [num_batch_dims+1, num_batch_dims])
+        query_positions,
+        axes=batch_dims_for_trans + [num_batch_dims + 1, num_batch_dims],
+    )
 
     # BS x 1 x NP
     ones = ivy.ones_like(query_positions_trans[..., 0:1, :])
@@ -92,20 +99,27 @@ def cuboid_signed_distances(cuboid_ext_mats, cuboid_dims, query_positions, batch
     cuboid_ext_mats_flat = ivy.reshape(cuboid_ext_mats, batch_shape + [-1, 4])
 
     # BS x NCx3 x NP
-    rel_query_positions_trans_flat = ivy.matmul(cuboid_ext_mats_flat, query_positions_trans_homo)
+    rel_query_positions_trans_flat = ivy.matmul(
+        cuboid_ext_mats_flat, query_positions_trans_homo
+    )
 
     # BS x NC x 3 x NP
-    rel_query_positions_trans = ivy.reshape(rel_query_positions_trans_flat, batch_shape + [num_cuboids, 3, num_points])
+    rel_query_positions_trans = ivy.reshape(
+        rel_query_positions_trans_flat, batch_shape + [num_cuboids, 3, num_points]
+    )
 
     # BS x NC x NP x 3
-    rel_query_positions = ivy.permute_dims(rel_query_positions_trans,
-                                         axes=batch_dims_for_trans + [num_batch_dims, num_batch_dims+2, num_batch_dims+1])
-    q = ivy.abs(rel_query_positions) - ivy.expand_dims(cuboid_dims/2, axis=-2)
+    rel_query_positions = ivy.permute_dims(
+        rel_query_positions_trans,
+        axes=batch_dims_for_trans
+        + [num_batch_dims, num_batch_dims + 2, num_batch_dims + 1],
+    )
+    q = ivy.abs(rel_query_positions) - ivy.expand_dims(cuboid_dims / 2, axis=-2)
     q_max_clipped = ivy.maximum(q, 1e-12)
 
     # BS x NC x NP x 1
-    q_min_clipped = ivy.minimum(ivy.max(q, axis=-1, keepdims=True), 0.)
-    q_max_clipped_len = ivy.sum(q_max_clipped**2, axis=-1, keepdims=True)**0.5
+    q_min_clipped = ivy.minimum(ivy.max(q, axis=-1, keepdims=True), 0.0)
+    q_max_clipped_len = ivy.sum(q_max_clipped**2, axis=-1, keepdims=True) ** 0.5
     sdfs = q_max_clipped_len + q_min_clipped
 
     # BS x NP x 1

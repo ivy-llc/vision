@@ -4,6 +4,7 @@
   :toctree: vision
   :template: top_level_toc.rst
   :recursive:
-  :include:
+  :caption: API Reference
+  :hide-table:
 
   ivy_vision

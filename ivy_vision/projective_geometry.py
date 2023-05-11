@@ -1,9 +1,9 @@
 """Collection of General Projective-Geometry Functions"""
 
 # global
-import ivy 
-from operator import mul 
-from functools import reduce 
+import ivy
+from operator import mul
+from functools import reduce
 
 
 def transform(coords, trans, batch_shape=None, image_shape=None):
@@ -53,10 +53,14 @@ def transform(coords, trans, batch_shape=None, image_shape=None):
     transformed_coords_vector = ivy.matmul(trans, coords_reshaped)
 
     # BS x ISF x M
-    transformed_coords_vector_transposed = ivy.swapaxes(transformed_coords_vector, -1, -2)
+    transformed_coords_vector_transposed = ivy.swapaxes(
+        transformed_coords_vector, -1, -2
+    )
 
     # BS x IS x M
-    return ivy.reshape(transformed_coords_vector_transposed, batch_shape + image_shape + [-1])
+    return ivy.reshape(
+        transformed_coords_vector_transposed, batch_shape + image_shape + [-1]
+    )
 
 
 def projection_matrix_pseudo_inverse(proj_mat, batch_shape=None):
@@ -93,7 +97,9 @@ def projection_matrix_pseudo_inverse(proj_mat, batch_shape=None):
     matrix_transposed = ivy.permute_dims(proj_mat, axes=transpose_idxs)
 
     # BS x 4 x 3
-    return ivy.matmul(matrix_transposed, ivy.inv(ivy.matmul(proj_mat, matrix_transposed)))
+    return ivy.matmul(
+        matrix_transposed, ivy.inv(ivy.matmul(proj_mat, matrix_transposed))
+    )
 
 
 def projection_matrix_inverse(proj_mat):

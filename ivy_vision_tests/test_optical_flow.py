@@ -5,7 +5,7 @@ import numpy as np
 import ivy_tests.test_ivy.helpers as helpers
 
 try:
-    import tensorflow as tf
+    pass
 except ImportError:
     pass
 
@@ -15,34 +15,61 @@ from ivy_vision import optical_flow as ivy_flow
 
 
 class OpticalFlowTestData(TestData):
-
     def __init__(self):
         super().__init__()
 
         # fundamental matrix
-        e2 = np.matmul(self.full_mats[:, 1:2], np.concatenate((self.C_hats[:, 0:1],
-                                                               np.ones((self.batch_size, 1, 1, 1))), 2))[..., -1]
+        e2 = np.matmul(
+            self.full_mats[:, 1:2],
+            np.concatenate(
+                (self.C_hats[:, 0:1], np.ones((self.batch_size, 1, 1, 1))), 2
+            ),
+        )[..., -1]
         e2_skew_matrices = ivy.vector_to_skew_symmetric_matrix(e2)
-        self.fund_mats = np.matmul(e2_skew_matrices, np.matmul(self.full_mats[:, 1:2], self.pinv_full_mats[:, 0:1]))
+        self.fund_mats = np.matmul(
+            e2_skew_matrices,
+            np.matmul(self.full_mats[:, 1:2], self.pinv_full_mats[:, 0:1]),
+        )
 
         # closest mutual point
-        self.tvg_world_rays = np.concatenate((self.world_rays[:, 0:1], self.proj_world_rays[:, 1:2]), 1)
+        self.tvg_world_rays = np.concatenate(
+            (self.world_rays[:, 0:1], self.proj_world_rays[:, 1:2]), 1
+        )
 
         # triangulation
-        self.tvg_pixel_coords = np.concatenate((self.pixel_coords_to_scatter[:, 0:1], self.proj_pixel_coords[:, 1:2]), 1)
+        self.tvg_pixel_coords = np.concatenate(
+            (self.pixel_coords_to_scatter[:, 0:1], self.proj_pixel_coords[:, 1:2]), 1
+        )
 
         # pixel cost volume
         self.cv_image1 = np.reshape(np.arange(9, dtype=np.float32), (1, 1, 3, 3, 1))
-        self.cv_image2 = np.reshape(np.flip(np.arange(9, dtype=np.float32), 0), (1, 1, 3, 3, 1))
-        self.cv = np.array([[[[[0., 0., 0., 0., 0., 0., 0., 0., 0.],
-                               [0., 0., 0., 8., 7., 6., 5., 4., 3.],
-                               [0., 0., 0., 14., 12., 0., 8., 6., 0.]],
-                              [[0., 24., 21., 0., 15., 12., 0., 6., 3.],
-                               [32., 28., 24., 20., 16., 12., 8., 4., 0.],
-                               [35., 30., 0., 20., 15., 0., 5., 0., 0.]],
-                              [[0., 30., 24., 0., 12., 6., 0., 0., 0.],
-                               [35., 28., 21., 14., 7., 0., 0., 0., 0.],
-                               [32., 24., 0., 8., 0., 0., 0., 0., 0.]]]]], dtype=np.float32)
+        self.cv_image2 = np.reshape(
+            np.flip(np.arange(9, dtype=np.float32), 0), (1, 1, 3, 3, 1)
+        )
+        self.cv = np.array(
+            [
+                [
+                    [
+                        [
+                            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                            [0.0, 0.0, 0.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0],
+                            [0.0, 0.0, 0.0, 14.0, 12.0, 0.0, 8.0, 6.0, 0.0],
+                        ],
+                        [
+                            [0.0, 24.0, 21.0, 0.0, 15.0, 12.0, 0.0, 6.0, 3.0],
+                            [32.0, 28.0, 24.0, 20.0, 16.0, 12.0, 8.0, 4.0, 0.0],
+                            [35.0, 30.0, 0.0, 20.0, 15.0, 0.0, 5.0, 0.0, 0.0],
+                        ],
+                        [
+                            [0.0, 30.0, 24.0, 0.0, 12.0, 6.0, 0.0, 0.0, 0.0],
+                            [35.0, 28.0, 21.0, 14.0, 7.0, 0.0, 0.0, 0.0, 0.0],
+                            [32.0, 24.0, 0.0, 8.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                        ],
+                    ]
+                ]
+            ],
+            dtype=np.float32,
+        )
 
 
 td = OpticalFlowTestData()
@@ -84,22 +111,39 @@ def test_project_cam_coords_with_object_transformations(dev_str, fw):
 
     # test data
     np.random.seed(0)
-    cam_coords_t = np.array([[[[0., 1., 2., 1.], [1., 2., 3., 1.]],
-                              [[2., 3., 4., 1.], [3., 4., 5., 1.]]]], np.float32)
+    cam_coords_t = np.array(
+        [
+            [
+                [[0.0, 1.0, 2.0, 1.0], [1.0, 2.0, 3.0, 1.0]],
+                [[2.0, 3.0, 4.0, 1.0], [3.0, 4.0, 5.0, 1.0]],
+            ]
+        ],
+        np.float32,
+    )
 
-    id_image = np.array([[[[0.], [1.]],
-                          [[2.], [3.]]]], np.float32)
+    id_image = np.array([[[[0.0], [1.0]], [[2.0], [3.0]]]], np.float32)
 
-    obj_ids = np.array([[[0.], [1.], [2.], [3.]]], np.float32)
+    obj_ids = np.array([[[0.0], [1.0], [2.0], [3.0]]], np.float32)
 
     obj_trans = np.random.uniform(0, 1, 48).astype(np.float32).reshape((1, 4, 3, 4))
 
     cam2cam_mat = np.random.uniform(0, 1, 12).astype(np.float32).reshape((1, 3, 4))
 
-    true_reprojection = np.array([[[[2.4655993, 2.4128416, 2.4957864, 1.],
-                                    [2.7194753, 4.8899407, 4.741903, 1.]],
-                                   [[3.6743941, 4.1201386, 3.3103971, 1.],
-                                    [9.704583, 6.375033, 5.863691, 1.]]]], dtype=np.float32)
+    true_reprojection = np.array(
+        [
+            [
+                [
+                    [2.4655993, 2.4128416, 2.4957864, 1.0],
+                    [2.7194753, 4.8899407, 4.741903, 1.0],
+                ],
+                [
+                    [3.6743941, 4.1201386, 3.3103971, 1.0],
+                    [9.704583, 6.375033, 5.863691, 1.0],
+                ],
+            ]
+        ],
+        dtype=np.float32,
+    )
 
     # testing
     assert np.allclose(ivy_flow.project_cam_coords_with_object_transformations(ivy.array(cam_coords_t), ivy.array(id_image),
@@ -110,22 +154,39 @@ def test_velocity_from_cam_coords_id_image_and_object_trans(dev_str, fw):
 
     # test data
     np.random.seed(0)
-    cam_coords_t = np.array([[[[0., 1., 2., 1.], [1., 2., 3., 1.]],
-                              [[2., 3., 4., 1.], [3., 4., 5., 1.]]]], np.float32)
+    cam_coords_t = np.array(
+        [
+            [
+                [[0.0, 1.0, 2.0, 1.0], [1.0, 2.0, 3.0, 1.0]],
+                [[2.0, 3.0, 4.0, 1.0], [3.0, 4.0, 5.0, 1.0]],
+            ]
+        ],
+        np.float32,
+    )
 
-    id_image = np.array([[[[0.], [1.]],
-                          [[2.], [3.]]]], np.float32)
+    id_image = np.array([[[[0.0], [1.0]], [[2.0], [3.0]]]], np.float32)
 
-    obj_ids = np.array([[[0.], [1.], [2.], [3.]]], np.float32)
+    obj_ids = np.array([[[0.0], [1.0], [2.0], [3.0]]], np.float32)
 
     obj_trans = np.random.uniform(0, 1, 48).astype(np.float32).reshape((1, 4, 3, 4))
 
     delta_t = np.array([[0.05]], np.float32)
 
-    true_vel = np.array([[[[-49.311985, -28.25683, -9.915729],
-                           [-34.389503, -57.798813, -34.838055]],
-                          [[-33.48788, -22.402773, 13.792057],
-                           [-134.09166, -47.500656, -17.273817]]]], np.float32)
+    true_vel = np.array(
+        [
+            [
+                [
+                    [-49.311985, -28.25683, -9.915729],
+                    [-34.389503, -57.798813, -34.838055],
+                ],
+                [
+                    [-33.48788, -22.402773, 13.792057],
+                    [-134.09166, -47.500656, -17.273817],
+                ],
+            ]
+        ],
+        np.float32,
+    )
 
     # testing
     assert np.allclose(ivy_flow.velocity_from_cam_coords_id_image_and_object_trans(ivy.array(cam_coords_t), ivy.array(id_image),
@@ -136,13 +197,19 @@ def test_flow_from_cam_coords_id_image_and_object_trans(dev_str, fw):
 
     # test data
     np.random.seed(0)
-    cam_coords_1 = np.array([[[[0., 1., 2., 1.], [1., 2., 3., 1.]],
-                              [[2., 3., 4., 1.], [3., 4., 5., 1.]]]], np.float32)
+    cam_coords_1 = np.array(
+        [
+            [
+                [[0.0, 1.0, 2.0, 1.0], [1.0, 2.0, 3.0, 1.0]],
+                [[2.0, 3.0, 4.0, 1.0], [3.0, 4.0, 5.0, 1.0]],
+            ]
+        ],
+        np.float32,
+    )
 
-    id_image = np.array([[[[0.], [1.]],
-                          [[2.], [3.]]]], np.float32)
+    id_image = np.array([[[[0.0], [1.0]], [[2.0], [3.0]]]], np.float32)
 
-    obj_ids = np.array([[[0.], [1.], [2.], [3.]]], np.float32)
+    obj_ids = np.array([[[0.0], [1.0], [2.0], [3.0]]], np.float32)
 
     obj_trans = np.random.uniform(0, 1, 48).astype(np.float32).reshape((1, 4, 3, 4))
 

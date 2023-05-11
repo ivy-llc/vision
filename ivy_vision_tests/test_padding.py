@@ -8,21 +8,32 @@ from ivy_vision import padding as ivy_pad
 
 
 class PaddingTestData(TestData):
-
     def __init__(self):
         super().__init__()
 
-        self.omni_image = np.array([[[[0.], [1.], [2.], [3.]],
-                                     [[4.], [5.], [6.], [7.]],
-                                     [[8.], [9.], [10.], [11.]],
-                                     [[12.], [13.], [14.], [15.]]]])
+        self.omni_image = np.array(
+            [
+                [
+                    [[0.0], [1.0], [2.0], [3.0]],
+                    [[4.0], [5.0], [6.0], [7.0]],
+                    [[8.0], [9.0], [10.0], [11.0]],
+                    [[12.0], [13.0], [14.0], [15.0]],
+                ]
+            ]
+        )
 
-        self.padded_omni_image = np.array([[[[1.], [2.], [3.], [0.], [1.], [2.]],
-                                            [[3.], [0.], [1.], [2.], [3.], [0.]],
-                                            [[7.], [4.], [5.], [6.], [7.], [4.]],
-                                            [[11.], [8.], [9.], [10.], [11.], [8.]],
-                                            [[15.], [12.], [13.], [14.], [15.], [12.]],
-                                            [[13.], [14.], [15.], [12.], [13.], [14.]]]])
+        self.padded_omni_image = np.array(
+            [
+                [
+                    [[1.0], [2.0], [3.0], [0.0], [1.0], [2.0]],
+                    [[3.0], [0.0], [1.0], [2.0], [3.0], [0.0]],
+                    [[7.0], [4.0], [5.0], [6.0], [7.0], [4.0]],
+                    [[11.0], [8.0], [9.0], [10.0], [11.0], [8.0]],
+                    [[15.0], [12.0], [13.0], [14.0], [15.0], [12.0]],
+                    [[13.0], [14.0], [15.0], [12.0], [13.0], [14.0]],
+                ]
+            ]
+        )
 
 
 td = PaddingTestData()
@@ -30,5 +41,9 @@ td = PaddingTestData()
 
 def test_pad_omni_image(dev_str, fw):
     ivy.set_backend(fw)
-    assert np.allclose(ivy_pad.pad_omni_image(ivy.array(td.omni_image), 1), td.padded_omni_image, atol=1e-3)
+    assert np.allclose(
+        ivy_pad.pad_omni_image(ivy.array(td.omni_image), 1),
+        td.padded_omni_image,
+        atol=1e-3,
+    )
     ivy.previous_backend()

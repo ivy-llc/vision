@@ -1,7 +1,7 @@
 """Collection of Padding Functions"""
 
 # global
-import ivy 
+import ivy
 
 
 def pad_omni_image(image, pad_size, image_dims=None):
@@ -27,15 +27,15 @@ def pad_omni_image(image, pad_size, image_dims=None):
         image_dims = image.shape[-3:-1]
 
     # BS x PS x W/2 x D
-    top_left = image[..., 0:pad_size, int(image_dims[1] / 2):, :]
-    top_right = image[..., 0:pad_size, 0:int(image_dims[1] / 2), :]
+    top_left = image[..., 0:pad_size, int(image_dims[1] / 2) :, :]
+    top_right = image[..., 0:pad_size, 0 : int(image_dims[1] / 2), :]
 
     # BS x PS x W x D
     top_border = ivy.flip(ivy.concat((top_left, top_right), axis=-2), axis=-3)
 
     # BS x PS x W/2 x D
-    bottom_left = image[..., -pad_size:, int(image_dims[1] / 2):, :]
-    bottom_right = image[..., -pad_size:, 0:int(image_dims[1] / 2), :]
+    bottom_left = image[..., -pad_size:, int(image_dims[1] / 2) :, :]
+    bottom_right = image[..., -pad_size:, 0 : int(image_dims[1] / 2), :]
 
     # BS x PS x W x D
     bottom_border = ivy.flip(ivy.concat((bottom_left, bottom_right), axis=-2), axis=-3)

@@ -6,8 +6,15 @@ import ivy
 MIN_DENOMINATOR = 1e-12
 
 
-def coords_to_voxel_grid(coords, voxel_shape_spec, mode='DIMS', coord_bounds=None, features=None, batch_shape=None,
-                         dev_str=None):
+def coords_to_voxel_grid(
+    coords,
+    voxel_shape_spec,
+    mode="DIMS",
+    coord_bounds=None,
+    features=None,
+    batch_shape=None,
+    dev_str=None,
+):
     """Create voxel grid :math:`\mathbf{X}_v\in\mathbb{R}^{x×y×z×(3+N+1)}` from
     homogeneous co-ordinates :math:`\mathbf{X}_w\in\mathbb{R}^{num\_coords×4}`. Each
     voxel contains 3+N+1 values: the mean world co-ordinate inside the voxel for the
@@ -64,19 +71,25 @@ def coords_to_voxel_grid(coords, voxel_shape_spec, mode='DIMS', coord_bounds=Non
 
     # voxel shape spec as array
     if len(voxel_shape_spec) is 3:
-
         # BS x 1 x 3
-        voxel_shape_spec = ivy.expand_dims(ivy.tile(ivy.reshape(
-            ivy.array(voxel_shape_spec), [1] * num_batch_dims + [3]), batch_shape + [1]), axis=-2)
+        voxel_shape_spec = ivy.expand_dims(
+            ivy.tile(
+                ivy.reshape(ivy.array(voxel_shape_spec), [1] * num_batch_dims + [3]),
+                batch_shape + [1],
+            ),
+            axis=-2,
+        )
 
     # coord bounds spec as array
     if coord_bounds is not None:
-
         if len(coord_bounds) is 6:
-
             # BS x 6
-            coord_bounds = ivy.tile(ivy.reshape(
-                ivy.array(coord_bounds, dtype='float32'), [1] * num_batch_dims + [6]), batch_shape + [1])
+            coord_bounds = ivy.tile(
+                ivy.reshape(
+                    ivy.array(coord_bounds, dtype="float32"), [1] * num_batch_dims + [6]
+                ),
+                batch_shape + [1],
+            )
 
         # BS x 1 x 6
         coord_bounds = ivy.expand_dims(coord_bounds, axis=-2)
@@ -85,7 +98,6 @@ def coords_to_voxel_grid(coords, voxel_shape_spec, mode='DIMS', coord_bounds=Non
     coords = coords[..., 0:3]
 
     if coord_bounds is not None:
-
         # BS x 1 x 1
         x_min = coord_bounds[..., 0:1]
         y_min = coord_bounds[..., 1:2]
@@ -104,17 +116,19 @@ def coords_to_voxel_grid(coords, voxel_shape_spec, mode='DIMS', coord_bounds=Non
         z_validity_mask = ivy.logical_and(z_coords > z_min, z_coords < z_max)
 
         # BS x N
-        full_validity_mask = ivy.logical_and(ivy.logical_and(x_validity_mask, y_validity_mask),
-                                              z_validity_mask)[..., 0]
+        full_validity_mask = ivy.logical_and(
+            ivy.logical_and(x_validity_mask, y_validity_mask), z_validity_mask
+        )[..., 0]
 
         # BS x 1 x 3
         bb_mins = coord_bounds[..., 0:3]
         bb_maxs = coord_bounds[..., 3:6]
         bb_ranges = bb_maxs - bb_mins
     else:
-
         # BS x N
-        full_validity_mask = ivy.astype(ivy.ones(batch_shape + [num_coords_per_batch], device=dev_str), 'bool')
+        full_validity_mask = ivy.astype(
+            ivy.ones(batch_shape + [num_coords_per_batch], device=dev_str), "bool"
+        )
 
         # BS x 1 x 3
         bb_mins = ivy.min(coords, axis=-2, keepdims=True)
@@ -122,23 +136,25 @@ def coords_to_voxel_grid(coords, voxel_shape_spec, mode='DIMS', coord_bounds=Non
         bb_ranges = bb_maxs - bb_mins
 
     # get voxel dimensions
-    if mode is 'DIMS':
+    if mode is "DIMS":
         # BS x 1 x 3
-        dims = ivy.astype(voxel_shape_spec, 'int32')
-    elif mode is 'RES':
+        dims = ivy.astype(voxel_shape_spec, "int32")
+    elif mode is "RES":
         # BS x 1 x 3
-        res = ivy.astype(voxel_shape_spec, 'float32')
-        dims = ivy.astype(ivy.ceil(bb_ranges / (res + MIN_DENOMINATOR)), 'int32')
+        res = ivy.astype(voxel_shape_spec, "float32")
+        dims = ivy.astype(ivy.ceil(bb_ranges / (res + MIN_DENOMINATOR)), "int32")
     else:
         raise Exception('Invalid mode selection. Must be either "DIMS" or "RES"')
-    dims_m_one = ivy.astype(dims - 1, 'int32')
+    dims_m_one = ivy.astype(dims - 1, "int32")
 
     # BS x 1 x 3
-    res = bb_ranges / (ivy.astype(dims, 'float32') + MIN_DENOMINATOR)
+    res = bb_ranges / (ivy.astype(dims, "float32") + MIN_DENOMINATOR)
 
     # BS x NC x 3
-    voxel_indices = ivy.minimum(ivy.astype(ivy.floor((coords - bb_mins) / (res + MIN_DENOMINATOR)),
-                                           'int32'), dims_m_one)
+    voxel_indices = ivy.minimum(
+        ivy.astype(ivy.floor((coords - bb_mins) / (res + MIN_DENOMINATOR)), "int32"),
+        dims_m_one,
+    )
 
     # BS x NC x 3
     voxel_values = coords
@@ -149,7 +165,7 @@ def coords_to_voxel_grid(coords, voxel_shape_spec, mode='DIMS', coord_bounds=Non
         voxel_values = ivy.concat([voxel_values, features], axis=-1)
 
     # TNVC x len(BS)+1
-    valid_coord_indices = ivy.astype(ivy.argwhere(full_validity_mask), 'int32')
+    valid_coord_indices = ivy.astype(ivy.argwhere(full_validity_mask), "int32")
 
     # scalar
     total_num_valid_coords = valid_coord_indices.shape[0]
@@ -163,27 +179,58 @@ def coords_to_voxel_grid(coords, voxel_shape_spec, mode='DIMS', coord_bounds=Non
         all_indices_pruned_flat = voxel_indices_pruned_flat
     else:
         batch_indices = valid_coord_indices[..., :-1]
-        all_indices_pruned_flat = ivy.concat([batch_indices] + [voxel_indices_pruned_flat], axis=-1)
+        all_indices_pruned_flat = ivy.concat(
+            [batch_indices] + [voxel_indices_pruned_flat], axis=-1
+        )
 
     # TNVC x 4
-    voxel_values_pruned_flat =\
-        ivy.concat((voxel_values_pruned_flat, ivy.ones([total_num_valid_coords, 1], device=dev_str)), axis=-1)
+    voxel_values_pruned_flat = ivy.concat(
+        (
+            voxel_values_pruned_flat,
+            ivy.ones([total_num_valid_coords, 1], device=dev_str),
+        ),
+        axis=-1,
+    )
 
     # get max dims list for scatter
     if num_batch_dims > 0:
-        max_dims = ivy.max(ivy.reshape(dims, batch_shape + [3]), axis=list(range(num_batch_dims)))
+        max_dims = ivy.max(
+            ivy.reshape(dims, batch_shape + [3]), axis=list(range(num_batch_dims))
+        )
     else:
         max_dims = ivy.reshape(dims, batch_shape + [3])
-    batch_shape_array_list = [ivy.array(batch_shape, dtype='int32', device=dev_str)] if num_batch_dims != 0 else []
-    total_dims_list = ivy.to_list(ivy.concat(batch_shape_array_list +
-                                                    [max_dims, ivy.array([4 + feature_size], dtype='int32', device=dev_str)], axis=-1))
+    batch_shape_array_list = (
+        [ivy.array(batch_shape, dtype="int32", device=dev_str)]
+        if num_batch_dims != 0
+        else []
+    )
+    total_dims_list = ivy.to_list(
+        ivy.concat(
+            batch_shape_array_list
+            + [max_dims, ivy.array([4 + feature_size], dtype="int32", device=dev_str)],
+            axis=-1,
+        )
+    )
 
     # BS x x_max x y_max x z_max x 4
-    print(all_indices_pruned_flat)
-    scattered = ivy.scatter_nd(all_indices_pruned_flat, voxel_values_pruned_flat, shape=total_dims_list,
-                                reduction='replace' if ivy.backend == 'mxnet' else 'sum')
+    scattered = ivy.scatter_nd(
+        all_indices_pruned_flat,
+        voxel_values_pruned_flat,
+        shape=total_dims_list,
+        reduction="sum",
+    )
 
     # BS x x_max x y_max x z_max x 4 + feature_size, BS x 3, BS x 3, BS x 3
-    return ivy.concat((
-        scattered[..., :-1] / (ivy.maximum(scattered[..., -1:], 1.) + MIN_DENOMINATOR),
-        scattered[..., -1:]), axis=-1), dims[..., 0, :], res[..., 0, :], bb_mins[..., 0, :]
+    return (
+        ivy.concat(
+            (
+                scattered[..., :-1]
+                / (ivy.maximum(scattered[..., -1:], 1.0) + MIN_DENOMINATOR),
+                scattered[..., -1:],
+            ),
+            axis=-1,
+        ),
+        dims[..., 0, :],
+        res[..., 0, :],
+        bb_mins[..., 0, :],
+    )
