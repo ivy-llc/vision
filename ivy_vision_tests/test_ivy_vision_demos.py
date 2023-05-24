@@ -3,9 +3,7 @@ Collection of tests for ivy vision demos
 """
 
 # global
-import os
 import pytest
-import shutil
 
 
 def test_demo_run_through(dev_str, f, fw):
@@ -47,6 +45,6 @@ def test_demo_nerf(with_sim, dev_str, f, fw):
         # MXNet does not support splitting along an axis with a remainder after division.
         pytest.skip()
     main(1, 2, 1, 1, False, with_sim, f=f, fw=fw)
-    cwd = os.getcwd()
-    os.remove(os.path.join(cwd, "nerf_video.mp4"))
-    shutil.rmtree(os.path.join(cwd, "nerf_renderings"))
+    # cwd = os.getcwd()
+    # os.remove(os.path.join(cwd, "nerf_video.mp4"))
+    # shutil.rmtree(os.path.join(cwd, "nerf_renderings"))

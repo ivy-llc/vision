@@ -75,7 +75,7 @@ class ImplicitTestData(TestData):
         )
 
         # render implicit features and depth
-        self.implicit_fn = lambda pts, feat, timestamps, with_grads=True, v=None: (
+        self.implicit_fn = lambda pts, feat, timestamps, v=None: (
             ivy.array(self.features),
             ivy.array(self.densities),
         )

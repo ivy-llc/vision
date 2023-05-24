@@ -15,3 +15,4 @@ chkpt/
 saved_model/
 nerf_renderings/
 *.mp4
+.ivy

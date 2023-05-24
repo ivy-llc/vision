@@ -325,7 +325,7 @@ def quantize_to_image(
         ivy.reshape(all_indices, [-1, num_batch_dims + 2]),
         ivy.reshape(values_to_scatter, [-1, 2 * (2 + d) + 1]),
         shape=batch_shape + final_image_dims + [2 * (2 + d) + 1],
-        reduction="replace" if ivy.backend == "mxnet" else red,
+        reduction=red,
     )
 
     # BS x H x W x 1

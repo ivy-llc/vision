@@ -237,10 +237,10 @@ def bilinear_resample(x, warp):
     idx_d = base_y1 + x1
 
     # (BxHxW) x D
-    Ia = ivy.gather(data_flat, ivy.reshape(idx_a, [-1, 1]), axis=0)
-    Ib = ivy.gather(data_flat, ivy.reshape(idx_b, [-1, 1]), axis=0)
-    Ic = ivy.gather(data_flat, ivy.reshape(idx_c, [-1, 1]), axis=0)
-    Id = ivy.gather(data_flat, ivy.reshape(idx_d, [-1, 1]), axis=0)
+    Ia = ivy.gather(data_flat, ivy.reshape(idx_a, [-1, 1]), axis=0).squeeze(axis=1)
+    Ib = ivy.gather(data_flat, ivy.reshape(idx_b, [-1, 1]), axis=0).squeeze(axis=1)
+    Ic = ivy.gather(data_flat, ivy.reshape(idx_c, [-1, 1]), axis=0).squeeze(axis=1)
+    Id = ivy.gather(data_flat, ivy.reshape(idx_d, [-1, 1]), axis=0).squeeze(axis=1)
 
     # (BxHxW)
     xw = bilinear_weights[:, 0]

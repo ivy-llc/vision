@@ -388,7 +388,6 @@ def render_implicit_features_and_depth(
     render_feats=True,
     render_variance=False,
     inter_feat_fn=None,
-    with_grads=True,
     v=None,
 ):
     """Render an rgb-d image, given an implicit rgb and density function conditioned
@@ -419,9 +418,6 @@ def render_implicit_features_and_depth(
     inter_feat_fn
         Function to extract interpolated features from world-coords
         *[batch_shape,ray_batch_shape,3]* (Default value = None)
-    with_grads
-        Whether to track gradients during the network forward pass. Defualt is True.
-        (Default value = True)
     v
         The container of trainable variables for the implicit model.
         Default is to use internal variables.
@@ -479,9 +475,7 @@ def render_implicit_features_and_depth(
     # Run network
 
     # BSPQ x OF,    BSPQ
-    feat, densities = network_fn(
-        pts_flat, features_flat, timestamps, with_grads=with_grads, v=v
-    )
+    feat, densities = network_fn(pts_flat, features_flat, timestamps, v=v)
 
     # BS x RBS x SPR
     densities = ivy.reshape(densities, total_batch_shape + [samples_per_ray])

@@ -44,9 +44,13 @@ def weighted_image_smooth(mean, weights, kernel_dim):
     # BS x H x W x D
     mean_x_weights = mean * weights
     mean_x_weights_sum = ivy.abs(
-        ivy.depthwise_conv2d(mean_x_weights, kernel, 1, "VALID")
+        ivy.depthwise_conv2d(
+            mean_x_weights.astype("float64"), kernel.astype("float64"), 1, "VALID"
+        )
     )
-    sum_of_weights = ivy.depthwise_conv2d(weights, kernel, 1, "VALID")
+    sum_of_weights = ivy.depthwise_conv2d(
+        weights.astype("float64"), kernel.astype("float64"), 1, "VALID"
+    )
     new_mean = mean_x_weights_sum / (sum_of_weights + MIN_DENOMINATOR)
 
     new_weights = sum_of_weights / (kernel_sum + MIN_DENOMINATOR)

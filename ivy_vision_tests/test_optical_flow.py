@@ -128,13 +128,15 @@ def test_project_flow_to_epipolar_line(dev_str, fw):
 
 def test_pixel_cost_volume(dev_str, fw):
     assert np.allclose(
-        ivy_flow.pixel_cost_volume(ivy.array(td.cv_image1), ivy.array(td.cv_image2), 1),
+        ivy_flow.pixel_cost_volume(
+            ivy.array(td.cv_image1.copy()), ivy.array(td.cv_image2.copy()), 1
+        ),
         td.cv,
         atol=1e-3,
     )
     assert np.allclose(
         ivy_flow.pixel_cost_volume(
-            ivy.array(td.cv_image1[0]), ivy.array(td.cv_image2[0]), 1
+            ivy.array(td.cv_image1[0].copy()), ivy.array(td.cv_image2[0].copy()), 1
         ),
         td.cv[0],
         atol=1e-3,

@@ -1,7 +1,8 @@
 # global
 import os
 import ivy
-import ivy.compiler.compiler as ic
+
+# import ivy.compiler.compiler as ic
 import math
 import shutil
 import argparse
@@ -129,7 +130,7 @@ class NerfDemo:
         if compile_flag:
             rays_o, rays_d = self._get_rays(self._cam_geoms[0])
             self._images[0]
-            self._loss_fn = ic.compile(self._loss_fn, return_backend_compiled_fn=True)
+            # self._loss_fn = ic.compile(self._loss_fn, return_backend_compiled_fn=True)
 
     # Private #
     # --------#
@@ -157,7 +158,7 @@ class NerfDemo:
         render_feats=True,
         render_variance=False,
         inter_feat_fn=None,
-        with_grads=True,
+        # with_grads=True,
         v=None,
     ):
         if not self._with_tensor_splitting:
@@ -173,7 +174,7 @@ class NerfDemo:
                 render_feats,
                 render_variance,
                 inter_feat_fn,
-                with_grads,
+                # with_grads,
                 v,
             )
 
@@ -211,7 +212,7 @@ class NerfDemo:
                 render_feats,
                 render_variance,
                 inter_feat_fn,
-                with_grads,
+                # with_grads,
                 v,
             ),
             [rays_d, near, far],
@@ -234,7 +235,7 @@ class NerfDemo:
             samples_per_ray=self._samples_per_ray,
             v=v,
         )
-        return ivy.mean((rgb - target) ** 2)[0]
+        return ivy.mean((rgb - target) ** 2)
 
     # Public #
     # -------#
@@ -246,7 +247,7 @@ class NerfDemo:
         #     print('tuning tensor splitting for device allocation, the first few iterations may be slow...')
 
         for i in range(self._num_iters + 1):
-            img_i = np.random.randint(self._images.shape[0])
+            img_i = ivy.randint(0, self._images.shape[0])
             target = self._images[img_i]
             cam_geom = self._cam_geoms[img_i]
             rays_o, rays_d = self._get_rays(cam_geom)
@@ -353,10 +354,10 @@ class NerfDemo:
                 samples_per_ray=self._samples_per_ray,
             )
             frames.append((255 * np.clip(ivy.to_numpy(rgb), 0, 1)).astype(np.uint8))
-        import imageio
+        # import imageio.v2 as iio
 
-        vid_filename = "nerf_video.mp4"
-        imageio.mimwrite(vid_filename, frames, fps=30, quality=7)
+        # vid_filename = "nerf_video.mp4"
+        # iio.mimwrite(vid_filename, frames, format="mp4", fps=30, quality=7)
 
 
 def main(
@@ -384,8 +385,8 @@ def main(
         fw,
     )
     nerf_demo.train()
-    if interactive:
-        nerf_demo.save_video()
+    # if interactive:
+    #     nerf_demo.save_video()
 
 
 if __name__ == "__main__":
