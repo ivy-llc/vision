@@ -217,8 +217,8 @@ and use this to set the ivy backend framework.
 
 .. code-block:: python
 
-    import ivy
-    from ivy_demo_utils.framework_utils import choose_random_framework
+    import  ivy
+    from ivy_demo_utils.framework_utils import  choose_random_framework
     ivy.set_framework(choose_random_framework())
 
 **Camera Geometry**

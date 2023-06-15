@@ -1,10 +1,10 @@
 # # global
-# import ivy
-# import numpy as np
+# import  ivy
+# import  numpy as np
 
 # # local
-# from ivy_vision_tests.data import TestData
-# from ivy_vision import quantization as ivy_quant
+# from ivy_vision_tests.data import  TestData
+# from ivy_vision import  quantization as ivy_quant
 
 
 # class QuantizationTestData(TestData):
@@ -107,7 +107,8 @@
 #                 [
 #                     [0.0, 0],
 #                     [(1 / 3) * 5, (1 / 3) * 0.5],
-#                     [((1 / 0.5) * 4 + (1 / 3) * 6), ((1 / 0.5) * 0.6 + (1 / 3) * 0.4)],
+#                     [((1 / 0.5) * 4 + (1 / 3) * 6), ((1 / 0.5) * 0.6 +
+# (1 / 3) * 0.4)],
 #                 ],
 #                 [
 #                     [0.0, 0.0],
@@ -190,7 +191,8 @@
 #     )
 #     assert np.allclose(counter, td.quantized_counter, atol=1, rtol=1)
 #     assert np.allclose(mean, td.quantized_pixel_coords_from_cov, atol=1, rtol=1)
-#     assert np.allclose(var[..., 2:], td.quantized_cov_values_from_cov, atol=1.5, rtol=1)
+#     assert np.allclose(var[..., 2:],
+# td.quantized_cov_values_from_cov, atol=1.5, rtol=1)
 
 
 # def test_quantize_pixel_coords_with_var_db(dev_str, fw):

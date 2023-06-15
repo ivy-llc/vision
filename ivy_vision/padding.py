@@ -22,7 +22,6 @@ def pad_omni_image(image, pad_size, image_dims=None):
         New padded omni-directional image *[batch_shape,h+ps,w+ps,d]*
 
     """
-
     if image_dims is None:
         image_dims = image.shape[-3:-1]
 

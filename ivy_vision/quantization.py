@@ -25,7 +25,7 @@ def quantize_to_image(
     batch_shape=None,
     dev_str=None,
 ):
-    """Quantize pixel co-ordinates with d feature channels (for depth, rgb, normals
+    r"""Quantize pixel co-ordinates with d feature channels (for depth, rgb, normals
     etc.), from images :math:`\mathbf{X}\in\mathbb{R}^{input\_images\_shape×(2+d)}`,
     which may have been reprojected from a host of different cameras (leading to
     non-integer pixel values), to a new quantized pixel co-ordinate image with the
@@ -41,7 +41,8 @@ def quantize_to_image(
     final_image_dims
         Image dimensions of the final image.
     feat
-        Features (i.e. depth, rgb, encoded), default is None. *[batch_shape,input_size,d]*
+        Features (i.e. depth, rgb, encoded), default is None.
+        *[batch_shape,input_size,d]*
     feat_prior
         Prior feature image mean, default is None. *[batch_shape,input_size,d]*
     with_db
@@ -76,7 +77,6 @@ def quantize_to_image(
         *[batch_shape,h,w,1]*
 
     """
-
     # ToDo: make variance fully optional. If not specified,
     #  then do not compute and scatter during function call for better efficiency.
     # config

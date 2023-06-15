@@ -30,7 +30,6 @@ def weighted_image_smooth(mean, weights, kernel_dim):
         Image smoothed based on variance image and smoothing kernel.
 
     """
-
     # shapes as list
     kernel_shape = [kernel_dim, kernel_dim]
     dim = mean.shape[-1]
@@ -84,7 +83,6 @@ def smooth_image_fom_var_image(mean, var, kernel_dim, kernel_scale, dev_str=None
         Image smoothed based on variance image and smoothing kernel.
 
     """
-
     if dev_str is None:
         dev_str = ivy.dev(mean)
 
@@ -129,7 +127,8 @@ def smooth_image_fom_var_image(mean, var, kernel_dim, kernel_scale, dev_str=None
     recip_new_var_scaled = ivy.depthwise_conv2d(
         recip_var_scaled, recip_kernel, 1, "VALID"
     )
-    # This 0.99 prevents float32 rounding errors leading to -ve variances, the true equation would use 1.0
+    # This 0.99 prevents float32 rounding errors leading to -ve variances,
+    # the true equation would use 1.0
     recip_new_var = recip_new_var_scaled - recip_kernel_sum * 0.99
     new_var = 1 / (recip_new_var + MIN_DENOMINATOR)
 

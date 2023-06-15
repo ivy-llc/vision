@@ -39,7 +39,6 @@ def rasterize_triangles(
         Rasterized triangles
 
     """
-
     if batch_shape is None:
         batch_shape = []
 
@@ -177,7 +176,6 @@ def create_trimesh_indices_for_image(batch_shape, image_dims, dev_str=None):
         Triangle mesh indices for image *[batch_shape,h*w*some_other_stuff,3]*
 
     """
-
     # shapes as lists
     batch_shape = list(batch_shape)
     image_dims = list(image_dims)
@@ -247,7 +245,6 @@ def coord_image_to_trimesh(
         Vertices *[batch_shape,(hxw),3]* amd Trimesh indices *[batch_shape,n,3]*
 
     """
-
     if dev_str is None:
         dev_str = ivy.dev(coord_img)
 

@@ -15,7 +15,7 @@ def coords_to_voxel_grid(
     batch_shape=None,
     dev_str=None,
 ):
-    """Create voxel grid :math:`\mathbf{X}_v\in\mathbb{R}^{x×y×z×(3+N+1)}` from
+    r"""Create voxel grid :math:`\mathbf{X}_v\in\mathbb{R}^{x×y×z×(3+N+1)}` from
     homogeneous co-ordinates :math:`\mathbf{X}_w\in\mathbb{R}^{num\_coords×4}`. Each
     voxel contains 3+N+1 values: the mean world co-ordinate inside the voxel for the
     projected pixels, N coordinte features (optional), and also the number of
@@ -57,7 +57,6 @@ def coords_to_voxel_grid(
         resolutions *[batch_shape,3]*, voxel_grid_lower_corners *[batch_shape,3]*
 
     """
-
     if batch_shape is None:
         batch_shape = coords.shape[:-2]
 
@@ -70,7 +69,7 @@ def coords_to_voxel_grid(
     num_coords_per_batch = coords.shape[-2]
 
     # voxel shape spec as array
-    if len(voxel_shape_spec) is 3:
+    if len(voxel_shape_spec) == 3:
         # BS x 1 x 3
         voxel_shape_spec = ivy.expand_dims(
             ivy.tile(
@@ -82,7 +81,7 @@ def coords_to_voxel_grid(
 
     # coord bounds spec as array
     if coord_bounds is not None:
-        if len(coord_bounds) is 6:
+        if len(coord_bounds) == 6:
             # BS x 6
             coord_bounds = ivy.tile(
                 ivy.reshape(
@@ -136,10 +135,10 @@ def coords_to_voxel_grid(
         bb_ranges = bb_maxs - bb_mins
 
     # get voxel dimensions
-    if mode is "DIMS":
+    if mode == "DIMS":
         # BS x 1 x 3
         dims = ivy.astype(voxel_shape_spec, "int32")
-    elif mode is "RES":
+    elif mode == "RES":
         # BS x 1 x 3
         res = ivy.astype(voxel_shape_spec, "float32")
         dims = ivy.astype(ivy.ceil(bb_ranges / (res + MIN_DENOMINATOR)), "int32")

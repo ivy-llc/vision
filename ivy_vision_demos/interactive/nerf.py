@@ -2,7 +2,7 @@
 import os
 import ivy
 
-# import ivy.compiler.compiler as ic
+# import  ivy.compiler.compiler as ic
 import math
 import shutil
 import argparse
@@ -244,7 +244,10 @@ class NerfDemo:
         optimizer = ivy.Adam(self._lr)
 
         # if self._with_tensor_splitting and not self._dev_manager.tuned:
-        #     print('tuning tensor splitting for device allocation, the first few iterations may be slow...')
+        #     print(
+        #         'tuning tensor splitting for device allocation,',
+        #         'the first few iterations may be slow...'
+        #     )
 
         for i in range(self._num_iters + 1):
             img_i = ivy.randint(0, self._images.shape[0])
@@ -354,7 +357,7 @@ class NerfDemo:
                 samples_per_ray=self._samples_per_ray,
             )
             frames.append((255 * np.clip(ivy.to_numpy(rgb), 0, 1)).astype(np.uint8))
-        # import imageio.v2 as iio
+        # import  imageio.v2 as iio
 
         # vid_filename = "nerf_video.mp4"
         # iio.mimwrite(vid_filename, frames, format="mp4", fps=30, quality=7)
@@ -418,7 +421,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--no_tensor_splitting",
         action="store_true",
-        help="Turn off device splitting. In this case, all full sized tensors are sent to the device.",
+        help=(
+            "Turn off device splitting. "
+            "In this case, all full sized tensors are sent to the device."
+        ),
     )
     parser.add_argument(
         "--compile",

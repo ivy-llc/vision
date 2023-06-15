@@ -7,7 +7,7 @@ import ivy
 
 
 def sphere_signed_distances(sphere_positions, sphere_radii, query_positions):
-    """Return the signed distances of a set of query points from the sphere
+    r"""Return the signed distances of a set of query points from the sphere
     surfaces.\n `[reference] <https://www.iquilezles.org/www/articles/distfunctions
     /distfunctions.htm>`_
 
@@ -27,7 +27,6 @@ def sphere_signed_distances(sphere_positions, sphere_radii, query_positions):
         *[batch_shape,num_points,1]*
 
     """
-
     # BS x NS x 1 x 3
     sphere_positions = ivy.expand_dims(sphere_positions, axis=-2)
 
@@ -50,7 +49,7 @@ def sphere_signed_distances(sphere_positions, sphere_radii, query_positions):
 def cuboid_signed_distances(
     cuboid_ext_mats, cuboid_dims, query_positions, batch_shape=None
 ):
-    """Return the signed distances of a set of query points from the cuboid
+    r"""Return the signed distances of a set of query points from the cuboid
     surfaces.\n `[reference] <https://www.iquilezles.org/www/articles/distfunctions
     /distfunctions.htm>`_
 
@@ -72,7 +71,6 @@ def cuboid_signed_distances(
         *[batch_shape,num_points,1]*
 
     """
-
     if batch_shape is None:
         batch_shape = cuboid_ext_mats.shape[:-3]
 

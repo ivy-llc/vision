@@ -7,7 +7,7 @@ from functools import reduce
 
 
 def transform(coords, trans, batch_shape=None, image_shape=None):
-    """Transform image of :math:`n`-dimensional co-ordinates :math:`\mathbf{
+    r"""Transform image of :math:`n`-dimensional co-ordinates :math:`\mathbf{
     x}\in\mathbb{R}^{h×w×n}` by transformation matrix :math:`\mathbf{f}\in\mathbb{
     R}^{m×n}`, to produce image of transformed co-ordinates :math:`\mathbf{x}_{
     trans}\in\mathbb{R}^{h×w×m}`.\n `[reference]
@@ -30,7 +30,6 @@ def transform(coords, trans, batch_shape=None, image_shape=None):
         Transformed co-ordinate image *[batch_shape,height,width,m]*
 
     """
-
     if batch_shape is None:
         batch_shape = trans.shape[:-2]
     num_batch_dims = len(batch_shape)
@@ -64,7 +63,7 @@ def transform(coords, trans, batch_shape=None, image_shape=None):
 
 
 def projection_matrix_pseudo_inverse(proj_mat, batch_shape=None):
-    """Given projection matrix :math:`\mathbf{P}\in\mathbb{R}^{3×4}`, compute it's
+    r"""Given projection matrix :math:`\mathbf{P}\in\mathbb{R}^{3×4}`, compute it's
     pseudo-inverse :math:`\mathbf{P}^+\in\mathbb{R}^{4×3}`.\n `[reference]
     <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf?_ijt
     =25ihpil89dmfo4da975v402ogc#page=179>`_ bottom of page 161, section 6.2.2
@@ -82,7 +81,6 @@ def projection_matrix_pseudo_inverse(proj_mat, batch_shape=None):
         Projection matrix pseudo-inverse *[batch_shape,4,3]*
 
     """
-
     if batch_shape is None:
         batch_shape = proj_mat.shape[:-2]
 
@@ -103,7 +101,7 @@ def projection_matrix_pseudo_inverse(proj_mat, batch_shape=None):
 
 
 def projection_matrix_inverse(proj_mat):
-    """Given projection matrix :math:`\mathbf{P}\in\mathbb{R}^{3×4}`, compute it's
+    r"""Given projection matrix :math:`\mathbf{P}\in\mathbb{R}^{3×4}`, compute it's
     inverse :math:`\mathbf{P}^{-1}\in\mathbb{R}^{3×4}`.\n `[reference]
     <https://github.com/pranjals16/cs676/blob/master/Hartley%2C%20Zisserman%20
     -%20Multiple%20View%20Geometry%20in%20Computer%20Vision.pdf#page=174>`_ middle of
@@ -120,7 +118,6 @@ def projection_matrix_inverse(proj_mat):
         Projection matrix inverse *[batch_shape,3,4]*
 
     """
-
     # BS x 3 x 3
     rotation_matrix = proj_mat[..., 0:3]
 
@@ -138,7 +135,7 @@ def projection_matrix_inverse(proj_mat):
 
 
 def solve_homogeneous_dlt(A):
-    """Given :math:`\mathbf{A}\in\mathbb{R}^{d×d}`, solve the system of :math:`d`
+    r"""Given :math:`\mathbf{A}\in\mathbb{R}^{d×d}`, solve the system of :math:`d`
     equations in :math:`d` unknowns :math:`\mathbf{Ax} = \mathbf{0}` using the
     homogeneous DLT method, to return :math:`\mathbf{x}\in\mathbb{R}^d`.\n `[
     reference] <https://github.com/pranjals16/cs676/blob/master/Hartley%2C
@@ -156,7 +153,6 @@ def solve_homogeneous_dlt(A):
         Solution to the system of equations *[batch_shape,d]*
 
     """
-
     # BS x D x D,    BS x D,    BS x D x D
     U, D, VT = ivy.svd(A)
 

@@ -24,7 +24,7 @@ def depth_from_flow_and_cam_mats(
     image_dims=None,
     dev_str=None,
 ):
-    """Compute depth map :math:`\mathbf{X}\in\mathbb{R}^{h×w×1}` in frame 1 using
+    r"""Compute depth map :math:`\mathbf{X}\in\mathbb{R}^{h×w×1}` in frame 1 using
     optical flow :math:`\mathbf{U}_{1→2}\in\mathbb{R}^{h×w×2}` from frame 1 to 2,
     and the camera geometry.\n
 
@@ -60,7 +60,6 @@ def depth_from_flow_and_cam_mats(
         Depth map in frame 1 *[batch_shape,h,w,1]*
 
     """
-
     if batch_shape is None:
         batch_shape = flow.shape[:-3]
 
@@ -121,7 +120,8 @@ def depth_from_flow_and_cam_mats(
 def flow_from_depth_and_cam_mats(
     pixel_coords1, cam1to2_full_mat, batch_shape=None, image_shape=None
 ):
-    """Compute optical flow :math:`\mathbf{U}_{1→2}\in\mathbb{R}^{is×2}` from frame 1 to 2, using depth map
+    r"""Compute optical flow :math:`\mathbf{U}_{1→2}\in\mathbb{R}^{is×2}`
+    from frame 1 to 2, using depth map
     :math:`\mathbf{X}\in\mathbb{R}^{is×1}` in frame 1, and the camera geometry.\n
 
     Parameters
@@ -142,7 +142,6 @@ def flow_from_depth_and_cam_mats(
         Optical flow from frame 1 to 2 *[batch_shape,image_shape,2]*
 
     """
-
     if batch_shape is None:
         batch_shape = cam1to2_full_mat.shape[:-2]
     num_batch_dims = len(batch_shape)
@@ -181,7 +180,7 @@ def project_flow_to_epipolar_line(
     image_dims=None,
     dev_str=None,
 ):
-    """Project optical flow :math:`\mathbf{U}_{1→2}\in\mathbb{R}^{h×w×2}` to epipolar
+    r"""Project optical flow :math:`\mathbf{U}_{1→2}\in\mathbb{R}^{h×w×2}` to epipolar
     line in frame 1.\n `[reference]
     <https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
     #Line_defined_by_an_equation>`_
@@ -210,7 +209,6 @@ def project_flow_to_epipolar_line(
         *[batch_shape,h,w,2]*
 
     """
-
     if batch_shape is None:
         batch_shape = flow.shape[:-3]
 
@@ -261,7 +259,7 @@ def project_flow_to_epipolar_line(
 
 # noinspection PyUnresolvedReferences
 def pixel_cost_volume(image1, image2, search_range, batch_shape=None):
-    """Compute cost volume from image feature patch comparisons between first image
+    r"""Compute cost volume from image feature patch comparisons between first image
     :math:`\mathbf{X}_1\in\mathbb{R}^{h×w×d}` and second image :math:`\mathbf{
     X}_2\in\mathbb{R}^{h×w×d}`, as used in FlowNet paper.\n `[reference]
     <https://www.cv-foundation.org/openaccess/content_iccv_2015/papers
@@ -284,7 +282,6 @@ def pixel_cost_volume(image1, image2, search_range, batch_shape=None):
         Cost volume between the images *[batch_shape,h,w,(search_range*2+1)^2]*
 
     """
-
     if batch_shape is None:
         batch_shape = image1.shape[:-3]
 
@@ -368,7 +365,6 @@ def velocity_from_flow_cam_coords_and_cam_mats(
         Cartesian velocity measurements relative to the camera *[batch_shape,h,w,3]*
 
     """
-
     if batch_shape is None:
         batch_shape = flow_t_to_tm1.shape[:-3]
 
@@ -475,7 +471,6 @@ def project_cam_coords_with_object_transformations(
         Relative velocity image *[batch_shape,image_shape,3]*
 
     """
-
     if batch_shape is None:
         batch_shape = cam_1_to_2_ext_mat.shape[:-2]
     num_batch_dims = len(batch_shape)
@@ -601,7 +596,6 @@ def velocity_from_cam_coords_id_image_and_object_trans(
         Relative velocity image *[batch_shape,image_shape,3]*
 
     """
-
     if batch_shape is None:
         batch_shape = delta_t.shape[:-1]
     num_batch_dims = len(batch_shape)
@@ -689,7 +683,6 @@ def flow_from_cam_coords_id_image_and_object_trans(
         Relative velocity image *[batch_shape,image_shape,3]*
 
     """
-
     if batch_shape is None:
         batch_shape = calib_mat.shape[:-2]
     num_batch_dims = len(batch_shape)

@@ -16,16 +16,20 @@ MIN_DENOMINATOR = 1e-12
 def ds_pixel_to_ds_pixel_coords(
     ds_pixel_coords1, cam1to2_full_mat, batch_shape=None, image_shape=None, dev_str=None
 ):
-    """Transform depth scaled homogeneous pixel co-ordinates image in first camera frame
-    :math:`\mathbf{X}_{p1}\in\mathbb{R}^{is×3}` to depth scaled homogeneous pixel co-ordinates image in second camera
-    frame :math:`\mathbf{X}_{p2}\in\mathbb{R}^{is×3}`, given camera to camera projection matrix
+    r"""Transform depth scaled homogeneous pixel co-ordinates image in
+    first camera frame
+    :math:`\mathbf{X}_{p1}\in\mathbb{R}^{is×3}` to
+    depth scaled homogeneous pixel co-ordinates image in second camera
+    frame :math:`\mathbf{X}_{p2}\in\mathbb{R}^{is×3}`,
+    given camera to camera projection matrix
     :math:`\mathbf{P}_{1→2}\in\mathbb{R}^{3×4}`.\n
-    `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=174>`_
+    `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=174>`_ # noqa
 
     Parameters
     ----------
     ds_pixel_coords1
-        Depth scaled homogeneous pixel co-ordinates image in frame 1 *[batch_shape,image_shape,3]*
+        Depth scaled homogeneous pixel co-ordinates image in
+        frame 1 *[batch_shape,image_shape,3]*
     cam1to2_full_mat
         Camera1-to-camera2 full projection matrix *[batch_shape,3,4]*
     batch_shape
@@ -43,7 +47,6 @@ def ds_pixel_to_ds_pixel_coords(
         *[batch_shape,image_shape,3]*
 
     """
-
     if batch_shape is None:
         batch_shape = cam1to2_full_mat.shape[:-2]
     num_batch_dims = len(batch_shape)
@@ -70,14 +73,17 @@ def ds_pixel_to_ds_pixel_coords(
 def cam_to_cam_coords(
     cam_coords1, cam1to2_ext_mat, batch_shape=None, image_shape=None, dev_str=None
 ):
-    """Transform camera-centric homogeneous co-ordinates image for camera 1 :math:`\mathbf{X}_{c1}\in\mathbb{R}^{is×4}` to
-    camera-centric homogeneous co-ordinates image for camera 2 :math:`\mathbf{X}_{c2}\in\mathbb{R}^{is×4}`.\n
-    `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=174>`_
+    r"""Transform camera-centric homogeneous co-ordinates image for camera 1
+    :math:`\mathbf{X}_{c1}\in\mathbb{R}^{is×4}` to
+    camera-centric homogeneous co-ordinates image for camera 2 :
+    math:`\mathbf{X}_{c2}\in\mathbb{R}^{is×4}`.\n
+    `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=174>`_ # noqa
 
     Parameters
     ----------
     cam_coords1
-        Camera-centric homogeneous co-ordinates image in frame 1 *[batch_shape,image_shape,4]*
+        Camera-centric homogeneous co-ordinates image in
+        frame 1 *[batch_shape,image_shape,4]*
     cam1to2_ext_mat
         Camera1-to-camera2 extrinsic projection matrix *[batch_shape,3,4]*
     batch_shape
@@ -91,10 +97,10 @@ def cam_to_cam_coords(
     Returns
     -------
     ret
-        Depth scaled homogeneous pixel co-ordinates image in frame 2 *[batch_shape,image_shape,3]*
+        Depth scaled homogeneous pixel co-ordinates image
+        in frame 2 *[batch_shape,image_shape,3]*
 
     """
-
     if batch_shape is None:
         batch_shape = cam1to2_ext_mat.shape[:-2]
     num_batch_dims = len(batch_shape)
@@ -121,9 +127,11 @@ def cam_to_cam_coords(
 def sphere_to_sphere_coords(
     sphere_coords1, cam1to2_ext_mat, batch_shape=None, image_shape=None
 ):
-    """Convert camera-centric ego-sphere polar co-ordinates image in frame 1 :math:`\mathbf{S}_{c1}\in\mathbb{R}^{is×3}`
-    to camera-centric ego-sphere polar co-ordinates image in frame 2 :math:`\mathbf{S}_{c2}\in\mathbb{R}^{is×3}`.\n
-    `[reference] <https://en.wikipedia.org/wiki/Spherical_coordinate_system#Cartesian_coordinates>`_
+    r"""Convert camera-centric ego-sphere polar co-ordinates image in frame 1
+    :math:`\mathbf{S}_{c1}\in\mathbb{R}^{is×3}`
+    to camera-centric ego-sphere polar co-ordinates image in frame 2
+    :math:`\mathbf{S}_{c2}\in\mathbb{R}^{is×3}`.\n
+    `[reference] <https://en.wikipedia.org/wiki/Spherical_coordinate_system#Cartesian_coordinates>`_ # noqa
 
     Parameters
     ----------
@@ -144,7 +152,6 @@ def sphere_to_sphere_coords(
         *[batch_shape,image_shape,3]*
 
     """
-
     if batch_shape is None:
         batch_shape = cam1to2_ext_mat.shape[:-2]
     num_batch_dims = len(batch_shape)
@@ -175,9 +182,10 @@ def angular_pixel_to_angular_pixel_coords(
     batch_shape=None,
     image_shape=None,
 ):
-    """Convert angular pixel co-ordinates image in frame 1 :math:`\mathbf{A}_{p1}\in\mathbb{R}^{is×3}` to angular pixel
+    r"""Convert angular pixel co-ordinates image in frame 1
+    :math:`\mathbf{A}_{p1}\in\mathbb{R}^{is×3}` to angular pixel
     co-ordinates image in frame 2 :math:`\mathbf{A}_{p2}\in\mathbb{R}^{is×3}`.\n
-    `[reference] <https://en.wikipedia.org/wiki/Spherical_coordinate_system#Cartesian_coordinates>`_
+    `[reference] <https://en.wikipedia.org/wiki/Spherical_coordinate_system#Cartesian_coordinates>`_ # noqa
 
     Parameters
     ----------
@@ -199,7 +207,6 @@ def angular_pixel_to_angular_pixel_coords(
         *[batch_shape,image_shape,3]*
 
     """
-
     if batch_shape is None:
         batch_shape = cam1to2_ext_mat.shape[:-2]
     num_batch_dims = len(batch_shape)
@@ -233,9 +240,12 @@ def get_fundamental_matrix(
     batch_shape=None,
     dev_str=None,
 ):
-    """Compute fundamental matrix :math:`\mathbf{F}\in\mathbb{R}^{3×3}` between two cameras, given their extrinsic
-    matrices :math:`\mathbf{E}_1\in\mathbb{R}^{3×4}` and :math:`\mathbf{E}_2\in\mathbb{R}^{3×4}`.\n
-    `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=262>`_
+    r"""Compute fundamental matrix
+    :math:`\mathbf{F}\in\mathbb{R}^{3×3}` between two cameras,
+    given their extrinsic
+    matrices :math:`\mathbf{E}_1\in\mathbb{R}^{3×4}` and
+    :math:`\mathbf{E}_2\in\mathbb{R}^{3×4}`.\n
+    `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=262>`_ # noqa
     bottom of page 244, section 9.2.2, equation 9.1
 
     Parameters
@@ -262,7 +272,6 @@ def get_fundamental_matrix(
         Fundamental matrix connecting frames 1 and 2 *[batch_shape,3,3]*
 
     """
-
     if batch_shape is None:
         batch_shape = full_mat1.shape[:-2]
 
@@ -300,15 +309,20 @@ def get_fundamental_matrix(
 def closest_mutual_points_along_two_skew_rays(
     camera_centers, world_ray_vectors, batch_shape=None, image_shape=None, dev_str=None
 ):
-    """Compute closest mutual homogeneous co-ordinates :math:`\mathbf{x}_{1,i,j}\in\mathbb{R}^{4}` and
+    r"""Compute closest mutual homogeneous co-ordinates
+    :math:`\mathbf{x}_{1,i,j}\in\mathbb{R}^{4}` and
     :math:`\mathbf{x}_{2,i,j}\in\mathbb{R}^{4}` along two world-centric rays
     :math:`\overset{\sim}{\mathbf{C}_1} + λ_1\mathbf{rv}_{1,i,j}` and
-    :math:`\overset{\sim}{\mathbf{C}_2} + λ_2\mathbf{rv}_{2,i,j}`, for each index aligned pixel between two
-    world-centric ray vector images :math:`\mathbf{RV}_1\in\mathbb{R}^{is×3}` and
-    :math:`\mathbf{RV}_2\in\mathbb{R}^{is×3}`. The function returns two images of closest mutual homogeneous
-    co-ordinates :math:`\mathbf{X}_1\in\mathbb{R}^{is×4}` and :math:`\mathbf{X}_2\in\mathbb{R}^{is×4}`,
+    :math:`\overset{\sim}{\mathbf{C}_2} + λ_2\mathbf{rv}_{2,i,j}`,
+    for each index aligned pixel between two
+    world-centric ray vector images
+    :math:`\mathbf{RV}_1\in\mathbb{R}^{is×3}` and
+    :math:`\mathbf{RV}_2\in\mathbb{R}^{is×3}`.
+    The function returns two images of closest mutual homogeneous
+    co-ordinates :math:`\mathbf{X}_1\in\mathbb{R}^{is×4}` and
+    :math:`\mathbf{X}_2\in\mathbb{R}^{is×4}`,
     concatenated together into a single array.\n
-    `[reference] <https://math.stackexchange.com/questions/1414285/location-of-shortest-distance-between-two-skew-lines-in-3d>`_
+    `[reference] <https://math.stackexchange.com/questions/1414285/location-of-shortest-distance-between-two-skew-lines-in-3d>`_ # noqa
     second answer in forum
 
     Parameters
@@ -331,7 +345,6 @@ def closest_mutual_points_along_two_skew_rays(
         Closest mutual points image *[batch_shape,2,image_shape,4]*
 
     """
-
     if batch_shape is None:
         batch_shape = camera_centers.shape[:-3]
     num_batch_dims = len(batch_shape)
@@ -418,7 +431,6 @@ def _triangulate_depth_by_closest_mutual_points(
     image_shape
 
     """
-
     # single view geom batch shape
     svg_batch_shape = batch_shape + [2]
     num_batch_dims = len(batch_shape)
@@ -465,7 +477,6 @@ def _triangulate_depth_by_homogeneous_dlt(
     image_shape
 
     """
-
     # num batch dims
     num_batch_dims = len(batch_shape)
     num_image_dims = len(image_shape)
@@ -574,7 +585,7 @@ def triangulate_depth(
     batch_shape=None,
     image_shape=None,
 ):
-    """Triangulate depth in frame 1, returning depth scaled homogeneous pixel
+    r"""Triangulate depth in frame 1, returning depth scaled homogeneous pixel
     co-ordinate image :math:`\mathbf{X}\in\mathbb{R}^{is×3}` in frame 1.\n
 
     Parameters
@@ -604,7 +615,6 @@ def triangulate_depth(
         *[batch_shape,image_shape,3]*
 
     """
-
     if batch_shape is None:
         batch_shape = ds_pixel_coords.shape[:-4]
 

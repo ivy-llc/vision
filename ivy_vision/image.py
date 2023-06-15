@@ -2,11 +2,16 @@
 
 # global
 import ivy
+import numpy as np
+import operator
+import functools
+import math
 
 
 def stack_images(images, desired_aspect_ratio):
     """Stacks a group of images into a combined windowed image, fitting the desired
     aspect ratio as closely as possible.
+
     Parameters
     ----------
     images
@@ -48,6 +53,7 @@ def stack_images(images, desired_aspect_ratio):
 
 def gradient_image(x):
     """Computes image gradients (dy, dx) for each channel.
+
     Parameters
     ----------
     x
@@ -87,10 +93,12 @@ def gradient_image(x):
 def float_img_to_uint8_img(x):
     """Converts an image of floats into a bit-cast 4-channel image of uint8s, which can
     be saved to disk.
+
     Parameters
     ----------
     x
         Input float image *[batch_shape,h,w]*.
+
     Returns
     -------
     ret
@@ -105,6 +113,7 @@ def float_img_to_uint8_img(x):
 
 def uint8_img_to_float_img(x):
     """Converts an image of uint8 values into a bit-cast float image.
+
     Parameters
     ----------
     x
@@ -125,6 +134,7 @@ def uint8_img_to_float_img(x):
 
 def random_crop(x, crop_size, batch_shape=None, image_dims=None, seed: int = None):
     """Randomly crops the input images.
+
     Parameters
     ----------
     x
@@ -177,13 +187,12 @@ def random_crop(x, crop_size, batch_shape=None, image_dims=None, seed: int = Non
     flat_cropped = ivy.concat(cropped_list, axis=0)
 
     # BS x NH x NW x F
-    return ivy.reshape(
-        flat_cropped, [batch_shape] + crop_size + [num_channels], out=out
-    )
+    return ivy.reshape(flat_cropped, [batch_shape] + crop_size + [num_channels])
 
 
 def bilinear_resample(x, warp):
     """Performs bilinearly re-sampling on input image.
+
     Parameters
     ----------
     x

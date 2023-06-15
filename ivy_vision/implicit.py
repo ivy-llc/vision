@@ -54,7 +54,7 @@ def create_sampled_pixel_coords_image(
     homogeneous=False,
     dev_str=None,
 ):
-    """Create image of randomly sampled homogeneous integer :math:`xy` pixel
+    r"""Create image of randomly sampled homogeneous integer :math:`xy` pixel
     co-ordinates :math:`\mathbf{X}\in\mathbb{Z}^{h×w×3}`, stored as floating point
     values. The origin is at the top-left corner of the image, with :math:`+x`
     rightwards, and :math:`+y` downwards. The final homogeneous dimension are all
@@ -91,7 +91,6 @@ def create_sampled_pixel_coords_image(
         Image of homogeneous pixel co-ordinates *[batch_shape,height,width,3]*
 
     """
-
     # BS x DH x DW x 2
     low_res_pix_coords = ivy_svg.create_uniform_pixel_coords_image(
         samples_per_dim, batch_shape, homogeneous=False, dev_str=dev_str
@@ -172,7 +171,6 @@ def sample_images(list_of_images, num_pixels, batch_shape, image_dims, dev_str=N
         Same as images if None. (Default value = None)
 
     """
-
     if batch_shape is None:
         batch_shape = list_of_images[0].shape[:-3]
 
@@ -284,7 +282,6 @@ def ray_termination_probabilities(density, inter_sample_distance):
         The occupancy probabilities *[batch_shape]*
 
     """
-
     # BS x NSPR
     occ_prob = sampled_volume_density_to_occupancy_probability(
         density, inter_sample_distance
@@ -316,7 +313,6 @@ def stratified_sample(starts, ends, num_samples, batch_shape=None):
         *[batch_shape,num_samples]*
 
     """
-
     # shapes
     if batch_shape is None:
         batch_shape = starts.shape
@@ -365,7 +361,6 @@ def render_rays_via_termination_probabilities(
         probabilities *[batch_shape,feat_dim]*
 
     """
-
     # BS x NSPR
     rendering = ivy.sum(ivy.expand_dims(ray_term_probs, axis=-1) * features, axis=-2)
     if not render_variance:
@@ -429,7 +424,6 @@ def render_implicit_features_and_depth(
         *[batch_shape,ray_batch_shape,1]*
 
     """
-
     # shapes
     batch_shape = list(rays_o.shape[:-1])
     num_batch_dims = len(batch_shape)

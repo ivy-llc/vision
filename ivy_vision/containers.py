@@ -84,7 +84,6 @@ class PrimitiveScene(ivy.Container):
             *[batch_shape,num_points,1]*
 
         """
-
         # BS x NP x 1
         all_sdfs_list = list()
         if self.sphere_positions is not None:
