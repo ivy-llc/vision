@@ -87,7 +87,8 @@ td = VoxelGridsTestData()
 
 def test_world_coords_to_bounding_voxel_grid(dev_str, fw):
     if fw == "tensorflow_graph":
-        # the need to dynamically infer array shapes for scatter makes this only valid in eager mode currently
+        # the need to dynamically infer array shapes
+        # for scatter makes this only valid in eager mode currently
         pytest.skip()
     assert np.allclose(
         np.sum(

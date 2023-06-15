@@ -177,7 +177,9 @@ def test_create_sampled_pixel_coords_image(dev_str, fw):
 
 def test_sample_images(dev_str, fw):
     if fw == "mxnet":
-        # MXNet does not support splitting based on section sizes,only number of sections as integer input is supported.
+        # MXNet does not support splitting based on
+        # section sizes, only number of sections as integer input
+        # is supported.
         pytest.skip()
     ivy.set_backend(fw)
     img0, img1 = ivy_imp.sample_images(

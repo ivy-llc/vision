@@ -60,17 +60,26 @@ class Simulator(BaseSimulator):
             # wait for user input
             self._user_prompt(
                 "\nInitialized scene with 6 projective cameras in the centre.\n\n"
-                'You can click on the dummy object "vision_senors" in the left hand panel, '
-                "then select the box icon with four arrows in the top panel of the simulator, "
+                'You can click on the dummy object "vision_senors" '
+                "in the left hand panel, "
+                "then select the box icon with four arrows "
+                "in the top panel of the simulator, "
                 "and then drag the cameras around dynamically.\n"
-                "Starting to drag and then holding ctrl allows you to also drag the cameras up and down. \n\n"
-                "This demo enables you to capture images from the cameras 10 times, "
-                "and render the associated 10 voxel grids in an open3D visualizer.\n\n"
-                "Both visualizers can be translated and rotated by clicking either the left mouse button or the wheel, "
+                "Starting to drag and then holding ctrl allows you "
+                "to also drag the cameras up and down. \n\n"
+                "This demo enables you to capture images from "
+                "the cameras 10 times, "
+                "and render the associated 10 voxel grids "
+                "in an open3D visualizer.\n\n"
+                "Both visualizers can be translated and rotated "
+                "by clicking either the left mouse button or the wheel, "
                 "and then dragging the mouse.\n"
                 "Scrolling the mouse wheel zooms the view in and out.\n\n"
-                "Press enter in the terminal to use method ivy_vision.coords_to_bounding_voxel_grid and show the first voxel grid "
-                "reconstruction of the scene, produced using the 6 depth and color images from the projective cameras.\n"
+                "Press enter in the terminal to use method "
+                "ivy_vision.coords_to_bounding_voxel_grid and "
+                "show the first voxel grid "
+                "reconstruction of the scene, produced using the "
+                "6 depth and color images from the projective cameras.\n"
             )
         else:
             cam_names = ["vs{}".format(i) for i in range(6)]
@@ -111,9 +120,12 @@ class Simulator(BaseSimulator):
 
             # message
             print(
-                "\nInitialized dummy scene with 6 projective cameras in the centre."
-                "\nClose the visualization window to use method ivy_vision.coords_to_bounding_voxel_grid and show a voxel grid "
-                "reconstruction of the scene, produced using the 6 depth and color images from the projective cameras.\n"
+                "\nInitialized dummy scene with 6 projective cameras "
+                "in the centre."
+                "\nClose the visualization window to use method "
+                "ivy_vision.coords_to_bounding_voxel_grid and show a voxel grid "
+                "reconstruction of the scene, produced using the "
+                "6 depth and color images from the projective cameras.\n"
             )
 
             # plot scene before rotation

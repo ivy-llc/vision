@@ -41,8 +41,10 @@ def test_demo_nerf(with_sim, dev_str, f, fw):
 
     if fw in ["numpy", "tensorflow_graph", "mxnet"]:
         # NumPy does not support gradients
-        # these particular demos are only implemented in eager mode, without compilation
-        # MXNet does not support splitting along an axis with a remainder after division.
+        # these particular demos are only implemented in eager mode,
+        # without compilation
+        # MXNet does not support splitting along an axis
+        # with a remainder after division.
         pytest.skip()
     main(1, 2, 1, 1, False, with_sim, f=f, fw=fw)
     # cwd = os.getcwd()

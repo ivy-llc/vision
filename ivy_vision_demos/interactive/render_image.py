@@ -111,22 +111,34 @@ class Simulator(BaseSimulator):
 
             # wait for user input
             self._user_prompt(
-                "\nInitialized scene with 3 acquiring projective cameras (blue rays) and 1 target projective camera (green rays) "
+                "\nInitialized scene with 3 acquiring projective cameras (blue rays) "
+                "and 1 target projective camera (green rays) "
                 "facing the overturned table.\n\n"
-                "The simulator visualizer can be translated and rotated by clicking either the left mouse button or the wheel, "
+                "The simulator visualizer can be translated and rotated "
+                "by clicking either the left mouse button or the wheel, "
                 "and then dragging the mouse.\n"
                 "Scrolling the mouse wheel zooms the view in and out.\n\n"
-                'You can click on the object "vision_senor_3" in the left hand panel, '
-                "then select the box icon with four arrows in the top panel of the simulator, "
+                "You can click on the object "
+                "vision_senor_3"
+                "in "
+                "the left hand panel, "
+                "then select the box icon with four arrows in the top panel "
+                "of the simulator, "
                 "and then drag the target camera around dynamically.\n"
-                "Starting to drag and then holding ctrl allows you to also drag the cameras up and down.\n"
-                "Clicking the top icon with a box and two rotating arrows similarly allows rotation of the camera.\n\n"
+                "Starting to drag and then holding ctrl allows you to also "
+                "drag the cameras up and down.\n"
+                "Clicking the top icon with a box and two rotating arrows "
+                "similarly allows rotation of the camera.\n\n"
                 "This demo enables you to capture images from the cameras 10 times, "
                 "and render the associated images in the target frame.\n\n"
-                "\nPress enter to use method ivy_vision.render_pixel_coords and show the first renderings for the target frame, "
-                "produced by projecting the depth and color values from the 3 acquiring frames."
-                "\nRenderings are shown both with and without the use of a depth buffer in the ivy_vision method.\n"
-                "If the image window appears blank at first, maximize it to show the renderings."
+                "\nPress enter to use method ivy_vision.render_pixel_coords "
+                "and show the first renderings for the target frame, "
+                "produced by projecting the depth and color values from the "
+                "3 acquiring frames."
+                "\nRenderings are shown both with and without the use of a "
+                "depth buffer in the ivy_vision method.\n"
+                "If the image window appears blank at first, maximize it to "
+                "show the renderings."
             )
 
         else:
@@ -190,11 +202,16 @@ class Simulator(BaseSimulator):
 
             # message
             print(
-                "\nInitialized dummy scene with 3 acquiring projective cameras and 1 target projective camera "
+                "\nInitialized dummy scene with 3 acquiring projective "
+                "cameras and 1 target projective camera "
                 "facing the overturned table."
-                "\nClose the visualization window to use method ivy_vision.render_pixel_coords and show renderings for the target frame, "
-                "produced by projecting the depth and color values from the 3 acquiring frames."
-                "\nRenderings are shown both with and without the use of a depth buffer in the ivy_vision method.\n"
+                "\nClose the visualization window to use method "
+                "ivy_vision.render_pixel_coords and show renderings for "
+                "the target frame, "
+                "produced by projecting the depth and color values from "
+                "the 3 acquiring frames."
+                "\nRenderings are shown both with and without the use of "
+                "a depth buffer in the ivy_vision method.\n"
             )
 
             # plot scene before rotation
@@ -222,10 +239,14 @@ def main(interactive=True, try_use_sim=True, f=None, fw=None):
     with_mxnet = ivy.current_backend_str() == "mxnet"
     if with_mxnet:
         print(
-            '\nMXnet does not support "sum" or "min" reductions for scatter_nd,\n'
-            "instead it only supports non-deterministic replacement for duplicates.\n"
-            "Depth buffer rendering (requies min) or fusion buffer (requies sum) are therefore unsupported.\n"
-            "The rendering in this demo with MXNet backend exhibits non-deterministic jagged edges as a result."
+            '\nMXnet does not support "sum" or "min" reductions '
+            "for scatter_nd,\n"
+            "instead it only supports non-deterministic replacement "
+            "for duplicates.\n"
+            "Depth buffer rendering (requies min) or fusion buffer "
+            "(requires sum) are therefore unsupported.\n"
+            "The rendering in this demo with MXNet backend exhibits "
+            "non-deterministic jagged edges as a result."
         )
     sim = Simulator(interactive, try_use_sim)
     import matplotlib.pyplot as plt

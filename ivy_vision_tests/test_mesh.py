@@ -100,7 +100,8 @@ td = MeshTestData()
 
 def test_rasterize_triangles(dev_str, fw):
     if fw == "tensorflow_graph":
-        # the need to dynamically infer array shapes for scatter makes this only valid in eager mode currently
+        # the need to dynamically infer array shapes
+        # for scatter makes this only valid in eager mode currently
         pytest.skip()
     ivy.set_backend(fw)
     assert np.allclose(
