@@ -218,8 +218,7 @@ and use this to set the ivy backend framework.
 .. code-block:: python
 
     import  ivy
-    from ivy_demo_utils.framework_utils import  choose_random_framework
-    ivy.set_framework(choose_random_framework())
+    ivy.set_backend(ivy.choose_random_backend())
 
 **Camera Geometry**
 
@@ -327,8 +326,8 @@ We start with some optical flow and depth triangulation functions.
     # required mat formats
     cam1to2_full_mat_homo = ivy.matmul(cam2_geom.full_mats_homo, cam1_geom.inv_full_mats_homo)
     cam1to2_full_mat = cam1to2_full_mat_homo[..., 0:3, :]
-    full_mats_homo = ivy.concatenate((ivy.expand_dims(cam1_geom.full_mats_homo, 0),
-                                      ivy.expand_dims(cam2_geom.full_mats_homo, 0)), 0)
+    full_mats_homo = ivy.concat((ivy.expand_dims(cam1_geom.full_mats_homo, axis=0),
+                                      ivy.expand_dims(cam2_geom.full_mats_homo, axis=0)), axis=0)
     full_mats = full_mats_homo[..., 0:3, :]
 
     # flow
@@ -365,7 +364,7 @@ to inverse warp the color data from frame 2 to frame 1, as shown below.
 
     # inverse warp rendering
     warp = u_pix_coords[..., 0:2] + flow1to2
-    color2_warp_to_f1 = ivy.bilinear_resample(color2, warp)
+    color2_warp_to_f1 = ivy_vision.image.bilinear_resample(color2, warp)
 
     # projected depth scaled pixel coords 2
     ds_pixel_coords1_wrt_f2 = ivy_vision.ds_pixel_to_ds_pixel_coords(ds_pixel_coords1, cam1to2_full_mat)
@@ -374,7 +373,7 @@ to inverse warp the color data from frame 2 to frame 1, as shown below.
     depth1_wrt_f2 = ds_pixel_coords1_wrt_f2[..., -1:]
 
     # inverse warp depth
-    depth2_warp_to_f1 = ivy.bilinear_resample(depth2, warp)
+    depth2_warp_to_f1 = ivy_vision.image.bilinear_resample(depth2, warp)
 
     # depth validity
     depth_validity = ivy.abs(depth1_wrt_f2 - depth2_warp_to_f1) < 0.01
@@ -412,7 +411,7 @@ and again render the new color image in target frame 1.
         ds_pixel_coords2, ivy.inv(cam1to2_full_mat_homo)[..., 0:3, :])
     depth1_proj = ds_pixel_coords1_proj[..., -1:]
     ds_pixel_coords1_proj = ds_pixel_coords1_proj[..., 0:2] / depth1_proj
-    features_to_render = ivy.concatenate((depth1_proj, color2), -1)
+    features_to_render = ivy.concat((depth1_proj, color2), axis=-1)
 
     # without depth buffer
     f1_forward_warp_no_db, _, _ = ivy_vision.quantize_to_image(
