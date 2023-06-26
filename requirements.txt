@@ -1,2 +1,2 @@
-ivy-core # mod_name=ivy
+ivy
 ivy-mech # mod_name=ivy_mech
