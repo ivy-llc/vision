@@ -12,7 +12,7 @@ MIN_DENOMINATOR = 1e-12
 
 
 def rasterize_triangles(
-    pixel_coords_triangles, image_dims, batch_shape=None, dev_str=None
+    pixel_coords_triangles, image_dims, batch_shape=None, device=None
 ):
     """Rasterize image-projected triangles based on:
     https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical
@@ -29,7 +29,7 @@ def rasterize_triangles(
         Image dimensions.
     batch_shape
         Shape of batch. Inferred from Inputs if None. (Default value = None)
-    dev_str
+    device
         device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
         Same as x if None. (Default value = None)
 
@@ -42,8 +42,8 @@ def rasterize_triangles(
     if batch_shape is None:
         batch_shape = []
 
-    if dev_str is None:
-        dev_str = ivy.dev(pixel_coords_triangles)
+    if device is None:
+        device = ivy.dev(pixel_coords_triangles)
 
     # shapes as list
     batch_shape = list(batch_shape)
@@ -113,7 +113,7 @@ def rasterize_triangles(
         num_batch_dims_after = len(batch_dims_after)
 
         # [batch_dim]
-        batch_indices = ivy.arange(batch_dim, dtype="int32", device=dev_str)
+        batch_indices = ivy.arange(batch_dim, dtype="int32", device=device)
 
         # [1]*num_batch_dims_before x batch_dim x [1]*num_batch_dims_after x 1 x 1
         reshaped_batch_indices = ivy.reshape(
@@ -157,7 +157,7 @@ def rasterize_triangles(
     )
 
 
-def create_trimesh_indices_for_image(batch_shape, image_dims, dev_str=None):
+def create_trimesh_indices_for_image(batch_shape, image_dims, device=None):
     """Create triangle mesh for image with given image dimensions
 
     Parameters
@@ -166,7 +166,7 @@ def create_trimesh_indices_for_image(batch_shape, image_dims, dev_str=None):
         Shape of batch.
     image_dims
         Image dimensions.
-    dev_str
+    device
         device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
         (Default value = None)
 
@@ -188,20 +188,20 @@ def create_trimesh_indices_for_image(batch_shape, image_dims, dev_str=None):
 
     # 1 x W-1
     t00_ = ivy.reshape(
-        ivy.arange(image_dims[1] - 1, dtype="float32", device=dev_str), (1, -1)
+        ivy.arange(image_dims[1] - 1, dtype="float32", device=device), (1, -1)
     )
 
     # H-1 x 1
     k_ = (
         ivy.reshape(
-            ivy.arange(image_dims[0] - 1, dtype="float32", device=dev_str), (-1, 1)
+            ivy.arange(image_dims[0] - 1, dtype="float32", device=device), (-1, 1)
         )
         * image_dims[1]
     )
 
     # H-1 x W-1
-    t00_ = ivy.matmul(ivy.ones((image_dims[0] - 1, 1), device=dev_str), t00_)
-    k_ = ivy.matmul(k_, ivy.ones((1, image_dims[1] - 1), device=dev_str))
+    t00_ = ivy.matmul(ivy.ones((image_dims[0] - 1, 1), device=device), t00_)
+    k_ = ivy.matmul(k_, ivy.ones((1, image_dims[1] - 1), device=device))
 
     # (H-1xW-1) x 1
     t00 = ivy.expand_dims(t00_ + k_, axis=-1)
@@ -220,7 +220,7 @@ def create_trimesh_indices_for_image(batch_shape, image_dims, dev_str=None):
 
 
 def coord_image_to_trimesh(
-    coord_img, validity_mask=None, batch_shape=None, image_dims=None, dev_str=None
+    coord_img, validity_mask=None, batch_shape=None, image_dims=None, device=None
 ):
     """Create trimesh, with vertices and triangle indices, from co-ordinate image.
 
@@ -235,7 +235,7 @@ def coord_image_to_trimesh(
         Shape of batch. Inferred from inputs if None. (Default value = None)
     image_dims
         Image dimensions. Inferred from inputs in None. (Default value = None)
-    dev_str
+    device
         device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
         Same as x if None. (Default value = None)
 
@@ -245,8 +245,8 @@ def coord_image_to_trimesh(
         Vertices *[batch_shape,(hxw),3]* amd Trimesh indices *[batch_shape,n,3]*
 
     """
-    if dev_str is None:
-        dev_str = ivy.dev(coord_img)
+    if device is None:
+        device = ivy.dev(coord_img)
 
     if batch_shape is None:
         batch_shape = ivy.shape(coord_img)[:-3]
@@ -294,7 +294,7 @@ def coord_image_to_trimesh(
 
         # BS x 2x(H-1xW-1) x 3
         all_trimesh_indices = create_trimesh_indices_for_image(
-            batch_shape, image_dims, dev_str
+            batch_shape, image_dims, device
         )
 
         # BS x N x 3

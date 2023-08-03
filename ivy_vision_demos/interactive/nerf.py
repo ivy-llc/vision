@@ -13,22 +13,22 @@ from tqdm import tqdm_notebook as tqdm
 
 
 class Model(ivy.Module):
-    def __init__(self, num_layers, layer_dim, embedding_length, dev_str=None):
+    def __init__(self, num_layers, layer_dim, embedding_length, device=None):
         self._num_layers = num_layers
         self._layer_dim = layer_dim
         self._embedding_length = embedding_length
         embedding_size = 3 + 3 * 2 * embedding_length
-        self._fc_layers = [ivy.Linear(embedding_size, layer_dim, device=dev_str)]
+        self._fc_layers = [ivy.Linear(embedding_size, layer_dim, device=device)]
         self._fc_layers += [
             ivy.Linear(
                 layer_dim + (embedding_size if i % 4 == 0 and i > 0 else 0),
                 layer_dim,
-                device=dev_str,
+                device=device,
             )
             for i in range(num_layers - 2)
         ]
-        self._fc_layers.append(ivy.Linear(layer_dim, 4, device=dev_str))
-        super(Model, self).__init__(dev_str)
+        self._fc_layers.append(ivy.Linear(layer_dim, 4, device=device))
+        super(Model, self).__init__(device)
 
     def _forward(self, x, feat=None, timestamps=None):
         embedding = ivy.fourier_encode(
@@ -58,7 +58,7 @@ class NerfDemo:
         with_tensor_splitting,
         compile_flag,
         interactive,
-        dev_str,
+        device,
         f,
         fw,
     ):
@@ -67,8 +67,8 @@ class NerfDemo:
         ivy.set_backend(fw)
         f = ivy.get_backend(backend=fw) if f is None else f
 
-        if dev_str:
-            ivy.set_default_device(dev_str)
+        if device:
+            ivy.set_default_device(device)
         ivy.seed(seed_value=0)
 
         # Load input images and poses
@@ -124,7 +124,7 @@ class NerfDemo:
         # tensor splitting
         self._with_tensor_splitting = with_tensor_splitting
         # if with_tensor_splitting:
-        #     self._dev_manager = ivy.DevManager(dev_strs=[ivy.default_device()])
+        #     self._dev_manager = ivy.DevManager(devices=[ivy.default_device()])
 
         # compile
         if compile_flag:
@@ -371,8 +371,7 @@ def main(
     with_tensor_splitting,
     compile_flag,
     interactive=True,
-    dev_str=None,
-    f=None,
+    device=None,
     fw=None,
 ):
     nerf_demo = NerfDemo(
@@ -383,8 +382,7 @@ def main(
         with_tensor_splitting,
         compile_flag,
         interactive,
-        dev_str,
-        f,
+        device,
         fw,
     )
     nerf_demo.train()
@@ -450,7 +448,6 @@ if __name__ == "__main__":
     )
     parsed_args = parser.parse_args()
     fw = parsed_args.backend
-    f = None if fw is None else ivy.get_backend(backend=fw)
     main(
         parsed_args.iterations,
         parsed_args.samples_per_ray,
@@ -460,6 +457,5 @@ if __name__ == "__main__":
         parsed_args.compile,
         not parsed_args.non_interactive,
         parsed_args.device,
-        f,
         fw,
     )

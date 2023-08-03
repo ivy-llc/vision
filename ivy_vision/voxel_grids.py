@@ -13,7 +13,7 @@ def coords_to_voxel_grid(
     coord_bounds=None,
     features=None,
     batch_shape=None,
-    dev_str=None,
+    device=None,
 ):
     r"""Create voxel grid :math:`\mathbf{X}_v\in\mathbb{R}^{x×y×z×(3+N+1)}` from
     homogeneous co-ordinates :math:`\mathbf{X}_w\in\mathbb{R}^{num\_coords×4}`. Each
@@ -45,7 +45,7 @@ def coords_to_voxel_grid(
         Features mapping to the same voxel are averaged. (Default value = None)
     batch_shape
         Shape of batch. Inferred from inputs if None. (Default value = None)
-    dev_str
+    device
         device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
         Same as x if None. (Default value = None)
 
@@ -60,8 +60,8 @@ def coords_to_voxel_grid(
     if batch_shape is None:
         batch_shape = coords.shape[:-2]
 
-    if dev_str is None:
-        dev_str = ivy.dev(coords)
+    if device is None:
+        device = ivy.dev(coords)
 
     # shapes as list
     batch_shape = list(batch_shape)
@@ -126,7 +126,7 @@ def coords_to_voxel_grid(
     else:
         # BS x N
         full_validity_mask = ivy.astype(
-            ivy.ones(batch_shape + [num_coords_per_batch], device=dev_str), "bool"
+            ivy.ones(batch_shape + [num_coords_per_batch], device=device), "bool"
         )
 
         # BS x 1 x 3
@@ -186,7 +186,7 @@ def coords_to_voxel_grid(
     voxel_values_pruned_flat = ivy.concat(
         (
             voxel_values_pruned_flat,
-            ivy.ones([total_num_valid_coords, 1], device=dev_str),
+            ivy.ones([total_num_valid_coords, 1], device=device),
         ),
         axis=-1,
     )
@@ -199,14 +199,14 @@ def coords_to_voxel_grid(
     else:
         max_dims = ivy.reshape(dims, batch_shape + [3])
     batch_shape_array_list = (
-        [ivy.array(batch_shape, dtype="int32", device=dev_str)]
+        [ivy.array(batch_shape, dtype="int32", device=device)]
         if num_batch_dims != 0
         else []
     )
     total_dims_list = ivy.to_list(
         ivy.concat(
             batch_shape_array_list
-            + [max_dims, ivy.array([4 + feature_size], dtype="int32", device=dev_str)],
+            + [max_dims, ivy.array([4 + feature_size], dtype="int32", device=device)],
             axis=-1,
         )
     )

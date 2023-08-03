@@ -98,11 +98,7 @@ class MeshTestData(TestData):
 td = MeshTestData()
 
 
-def test_rasterize_triangles(dev_str, fw):
-    if fw == "tensorflow_graph":
-        # the need to dynamically infer array shapes
-        # for scatter makes this only valid in eager mode currently
-        pytest.skip()
+def test_rasterize_triangles(device, fw):
     ivy.set_backend(fw)
     assert np.allclose(
         ivy_mesh.rasterize_triangles(ivy.array(td.mesh_triangle), [3, 3]),
@@ -121,7 +117,7 @@ def test_rasterize_triangles(dev_str, fw):
     ivy.previous_backend()
 
 
-def test_create_trimesh_indices_for_image(dev_str, fw):
+def test_create_trimesh_indices_for_image(device, fw):
     if fw == "mxnet":
         # mxnet matmul only support N-D*N-D array (N >= 3)
         pytest.skip()
@@ -134,14 +130,14 @@ def test_create_trimesh_indices_for_image(dev_str, fw):
     ivy.previous_backend()
 
 
-def test_coord_image_to_trimesh(dev_str, fw):
+def test_coord_image_to_trimesh(device, fw):
     if fw == "mxnet":
         # mxnet matmul only support N-D*N-D array (N >= 3)
         pytest.skip()
     ivy.set_backend(fw)
     coord_img = ivy.array(td.coord_img.tolist())
     vertices, trimesh_indices = ivy_mesh.coord_image_to_trimesh(
-        coord_img, batch_shape=[1], image_dims=[4, 3], dev_str=dev_str
+        coord_img, batch_shape=[1], image_dims=[4, 3], device=device
     )
     assert np.allclose(vertices, td.tri_mesh_4x3_vertices, atol=1e-3)
     assert np.allclose(trimesh_indices, td.tri_mesh_4x3_indices, atol=1e-3)
@@ -150,7 +146,7 @@ def test_coord_image_to_trimesh(dev_str, fw):
         ivy.array(td.coord_validity_img),
         batch_shape=[1],
         image_dims=[4, 3],
-        dev_str=dev_str,
+        device=device,
     )
     assert np.allclose(vertices, td.tri_mesh_4x3_vertices, atol=1e-3)
     assert np.allclose(trimesh_indices, td.tri_mesh_4x3_valid_indices, atol=1e-3)

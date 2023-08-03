@@ -41,7 +41,7 @@ class SDFTestData(TestData):
 td = SDFTestData()
 
 
-def test_sphere_signed_distance(dev_str, fw):
+def test_sphere_signed_distance(device, fw):
     ivy.set_backend(fw)
     assert np.allclose(
         ivy_sdf.sphere_signed_distances(
@@ -64,7 +64,7 @@ def test_sphere_signed_distance(dev_str, fw):
     ivy.previous_backend()
 
 
-def test_cuboid_signed_distance(dev_str, fw):
+def test_cuboid_signed_distance(device, fw):
     ivy.set_backend(fw)
     assert np.allclose(
         ivy_sdf.cuboid_signed_distances(

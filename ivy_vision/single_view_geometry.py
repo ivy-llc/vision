@@ -19,7 +19,7 @@ MIN_DENOMINATOR = 1e-12
 
 
 def create_uniform_pixel_coords_image(
-    image_dims, batch_shape=None, normalized=False, homogeneous=True, dev_str=None
+    image_dims, batch_shape=None, normalized=False, homogeneous=True, device=None
 ):
     r"""Create image of homogeneous integer
     :math:`xy` pixel co-ordinates
@@ -51,7 +51,7 @@ def create_uniform_pixel_coords_image(
     homogeneous
         Whether the pixel co-ordinates should be 3D homogeneous or just 2D.
         Default is True.
-    dev_str
+    device
         device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
         (Default value = None)
 
@@ -74,7 +74,7 @@ def create_uniform_pixel_coords_image(
     # H x W x 1
     pixel_x_coords = ivy.astype(
         ivy.reshape(
-            ivy.tile(ivy.arange(image_dims[1], device=dev_str), [image_dims[0]]),
+            ivy.tile(ivy.arange(image_dims[1], device=device), [image_dims[0]]),
             (image_dims[0], image_dims[1], 1),
         ),
         "float32",
@@ -85,7 +85,7 @@ def create_uniform_pixel_coords_image(
     # W x H x 1
     pixel_y_coords_ = ivy.astype(
         ivy.reshape(
-            ivy.tile(ivy.arange(image_dims[0], device=dev_str), [image_dims[1]]),
+            ivy.tile(ivy.arange(image_dims[0], device=device), [image_dims[1]]),
             (image_dims[1], image_dims[0], 1),
         ),
         "float32",
@@ -110,7 +110,7 @@ def create_uniform_pixel_coords_image(
     return pix_coords
 
 
-def persp_angles_to_focal_lengths(persp_angles, image_dims, dev_str=None):
+def persp_angles_to_focal_lengths(persp_angles, image_dims, device=None):
     r"""Compute focal lengths :math:`f_x, f_y`
     from perspective angles :math:`θ_x, θ_y`.\n
     `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=172>`_ # noqa
@@ -122,7 +122,7 @@ def persp_angles_to_focal_lengths(persp_angles, image_dims, dev_str=None):
         Perspective angles *[batch_shape,2]*
     image_dims
         Image dimensions.
-    dev_str
+    device
         device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
         Same as x if None. (Default value = None)
 
@@ -132,19 +132,19 @@ def persp_angles_to_focal_lengths(persp_angles, image_dims, dev_str=None):
         Focal lengths *[batch_shape,2]*
 
     """
-    if dev_str is None:
-        dev_str = ivy.dev(persp_angles)
+    if device is None:
+        device = ivy.dev(persp_angles)
 
     # shapes as list
     image_dims = list(image_dims)
 
     # BS x 2
     return -ivy.flip(
-        ivy.astype(ivy.array(image_dims, device=dev_str), "float32"), axis=-1
+        ivy.astype(ivy.array(image_dims, device=device), "float32"), axis=-1
     ) / (2 * ivy.tan(persp_angles / 2) + MIN_DENOMINATOR)
 
 
-def focal_lengths_to_persp_angles(focal_lengths, image_dims, dev_str=None):
+def focal_lengths_to_persp_angles(focal_lengths, image_dims, device=None):
     r"""Compute perspective angles
     :math:`θ_x, θ_y` from focal lengths :math:`f_x, f_y`.\n
     `[reference] <localhost:63342/ivy/docs/source/references/mvg_textbook.pdf#page=172>`_ # noqa
@@ -156,7 +156,7 @@ def focal_lengths_to_persp_angles(focal_lengths, image_dims, dev_str=None):
         batch_shape,2]*
     image_dims
         Image dimensions.
-    dev_str
+    device
         device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
         Same as x if None. (Default value = None)
 
@@ -166,21 +166,21 @@ def focal_lengths_to_persp_angles(focal_lengths, image_dims, dev_str=None):
         Perspective angles *[batch_shape,2]*
 
     """
-    if dev_str is None:
-        dev_str = ivy.dev(focal_lengths)
+    if device is None:
+        device = ivy.dev(focal_lengths)
 
     # shapes as list
     image_dims = list(image_dims)
 
     # BS x 2
     return -2 * ivy.atan(
-        ivy.flip(ivy.astype(ivy.array(image_dims, device=dev_str), "float32"), axis=-1)
+        ivy.flip(ivy.astype(ivy.array(image_dims, device=device), "float32"), axis=-1)
         / (2 * focal_lengths + MIN_DENOMINATOR)
     )
 
 
 def focal_lengths_and_pp_offsets_to_calib_mat(
-    focal_lengths, pp_offsets, batch_shape=None, dev_str=None
+    focal_lengths, pp_offsets, batch_shape=None, device=None
 ):
     r"""Compute calibration matrix :math:`\mathbf{K}\in\mathbb{R}^{3×3}`
     from focal lengths :math:`f_x, f_y` and
@@ -197,7 +197,7 @@ def focal_lengths_and_pp_offsets_to_calib_mat(
     batch_shape
         Shape of batch. Inferred from inputs if None.
         (Default value = None)
-    dev_str
+    device
         device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
         Same as x if None. (Default value = None)
 
@@ -210,15 +210,15 @@ def focal_lengths_and_pp_offsets_to_calib_mat(
     if batch_shape is None:
         batch_shape = focal_lengths.shape[:-1]
 
-    if dev_str is None:
-        dev_str = ivy.dev(focal_lengths)
+    if device is None:
+        device = ivy.dev(focal_lengths)
 
     # shapes as list
     batch_shape = list(batch_shape)
 
     # BS x 1 x 1
-    zeros = ivy.zeros(batch_shape + [1, 1], device=dev_str)
-    ones = ivy.ones(batch_shape + [1, 1], device=dev_str)
+    zeros = ivy.zeros(batch_shape + [1, 1], device=device)
+    ones = ivy.ones(batch_shape + [1, 1], device=device)
 
     # BS x 2 x 1
     focal_lengths_reshaped = ivy.expand_dims(focal_lengths, axis=-1)
@@ -322,7 +322,7 @@ def depth_to_ds_pixel_coords(
     # BS x H x W x 3
     if uniform_pixel_coords is None:
         uniform_pixel_coords = create_uniform_pixel_coords_image(
-            image_dims, batch_shape, dev_str=ivy.dev(depth)
+            image_dims, batch_shape, device=ivy.dev(depth)
         )
 
     # BS x H x W x 3
@@ -372,7 +372,7 @@ def depth_to_radial_depth(
     # BS x H x W x 3
     if uniform_pix_coords is None:
         uniform_pix_coords = create_uniform_pixel_coords_image(
-            image_dims, batch_shape, dev_str=ivy.dev(depth)
+            image_dims, batch_shape, device=ivy.dev(depth)
         )
     ds_pixel_coords = uniform_pix_coords * depth
 
@@ -499,7 +499,7 @@ def cam_coords_to_depth(coords_wrt_cam, calib_mat, batch_shape=None, image_shape
 
 
 def ds_pixel_to_cam_coords(
-    ds_pixel_coords, inv_calib_mat, batch_shape=None, image_shape=None, dev_str=None
+    ds_pixel_coords, inv_calib_mat, batch_shape=None, image_shape=None, device=None
 ):
     r"""Get camera-centric homogeneous co-ordinates image
     :math:`\mathbf{X}_c\in\mathbb{R}^{is×4}` from
@@ -519,7 +519,7 @@ def ds_pixel_to_cam_coords(
         Shape of batch. Inferred from inputs if None. (Default value = None)
     image_shape
         Image dimensions. Inferred from inputs in None. (Default value = None)
-    dev_str
+    device
         device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
         Same as x if None. (Default value = None)
 
@@ -536,8 +536,8 @@ def ds_pixel_to_cam_coords(
     if image_shape is None:
         image_shape = ds_pixel_coords.shape[num_batch_dims:-1]
 
-    if dev_str is None:
-        dev_str = ivy.dev(ds_pixel_coords)
+    if device is None:
+        device = ivy.dev(ds_pixel_coords)
 
     # shapes as list
     batch_shape = list(batch_shape)
@@ -558,7 +558,7 @@ def depth_to_cam_coords(
     uniform_pixel_coords=None,
     batch_shape=None,
     image_dims=None,
-    dev_str=None,
+    device=None,
 ):
     r"""Get camera-centric homogeneous co-ordinates image
     :math:`\mathbf{X}_c\in\mathbb{R}^{hxw×4}` from
@@ -577,7 +577,7 @@ def depth_to_cam_coords(
         Shape of batch. Inferred from inputs if None. (Default value = None)
     image_dims
         Image dimensions. Inferred from inputs in None. (Default value = None)
-    dev_str
+    device
         device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
         Same as x if None. (Default value = None)
 
@@ -593,8 +593,8 @@ def depth_to_cam_coords(
     if image_dims is None:
         image_dims = depth.shape[-3:-1]
 
-    if dev_str is None:
-        dev_str = ivy.dev(depth)
+    if device is None:
+        device = ivy.dev(depth)
 
     # shapes as list
     batch_shape = list(batch_shape)
@@ -607,12 +607,12 @@ def depth_to_cam_coords(
 
     # BS x H x W x 4
     return ds_pixel_to_cam_coords(
-        ds_pixel_coords, inv_calib_mat, batch_shape, image_dims, dev_str
+        ds_pixel_coords, inv_calib_mat, batch_shape, image_dims, device
     )
 
 
 def world_to_cam_coords(
-    coords_wrt_world, ext_mat, batch_shape=None, image_shape=None, dev_str=None
+    coords_wrt_world, ext_mat, batch_shape=None, image_shape=None, device=None
 ):
     r"""Get camera-centric homogeneous co-ordinates image
     :math:`\mathbf{X}_c\in\mathbb{R}^{is×4}` from world-centric
@@ -631,7 +631,7 @@ def world_to_cam_coords(
         Shape of batch. Inferred from inputs if None. (Default value = None)
     image_shape
         Image shape. Inferred from inputs in None. (Default value = None)
-    dev_str
+    device
         device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
         Same as x if None. (Default value = None)
 
@@ -648,8 +648,8 @@ def world_to_cam_coords(
     if image_shape is None:
         image_shape = coords_wrt_world.shape[num_batch_dims:-1]
 
-    if dev_str is None:
-        dev_str = ivy.dev(coords_wrt_world)
+    if device is None:
+        device = ivy.dev(coords_wrt_world)
 
     # shapes as list
     batch_shape = list(batch_shape)
@@ -660,12 +660,12 @@ def world_to_cam_coords(
 
     # BS x IS x 4
     return ivy.concat(
-        (cam_coords, ivy.ones(batch_shape + image_shape + [1], device=dev_str)), axis=-1
+        (cam_coords, ivy.ones(batch_shape + image_shape + [1], device=device)), axis=-1
     )
 
 
 def cam_to_world_coords(
-    coords_wrt_cam, inv_ext_mat, batch_shape=None, image_shape=None, dev_str=None
+    coords_wrt_cam, inv_ext_mat, batch_shape=None, image_shape=None, device=None
 ):
     r"""Get world-centric homogeneous co-ordinates image
     :math:`\mathbf{X}_w\in\mathbb{R}^{is×4}` from camera-centric
@@ -684,7 +684,7 @@ def cam_to_world_coords(
         Shape of batch. Inferred from inputs if None. (Default value = None)
     image_shape
         Image shape. Inferred from inputs in None. (Default value = None)
-    dev_str
+    device
         device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
         Same as x if None. (Default value = None)
 
@@ -701,8 +701,8 @@ def cam_to_world_coords(
     if image_shape is None:
         image_shape = coords_wrt_cam.shape[num_batch_dims:-1]
 
-    if dev_str is None:
-        dev_str = ivy.dev(coords_wrt_cam)
+    if device is None:
+        device = ivy.dev(coords_wrt_cam)
 
     # shapes as list
     batch_shape = list(batch_shape)
@@ -715,7 +715,7 @@ def cam_to_world_coords(
 
     # BS x IS x 4
     return ivy.concat(
-        (world_coords, ivy.ones(batch_shape + image_shape + [1], device=dev_str)),
+        (world_coords, ivy.ones(batch_shape + image_shape + [1], device=device)),
         axis=-1,
     )
 
@@ -961,7 +961,7 @@ def pixel_coords_to_world_ray_vectors(
 
     if pixel_coords is None:
         pixel_coords = create_uniform_pixel_coords_image(
-            image_shape, batch_shape, dev_str=ivy.dev(inv_full_mat)
+            image_shape, batch_shape, device=ivy.dev(inv_full_mat)
         )
 
     # BS x [1]xNID x 3
@@ -1263,7 +1263,7 @@ def angular_pixel_to_sphere_coords(angular_pixel_coords, pixels_per_degree):
 
 
 def sphere_to_cam_coords(
-    sphere_coords, forward_facing_z=True, batch_shape=None, dev_str=None
+    sphere_coords, forward_facing_z=True, batch_shape=None, device=None
 ):
     r"""Convert camera-centric ego-sphere polar co-ordinates image
     :math:`\mathbf{S}_c\in\mathbb{R}^{bs×3}` to
@@ -1279,7 +1279,7 @@ def sphere_to_cam_coords(
         Whether to use reference frame so z is forward facing. Default is False.
     batch_shape
         Shape of batch. Inferred from inputs if None. (Default value = None)
-    dev_str
+    device
         device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
         Same as x if None. (Default value = None)
 
@@ -1292,8 +1292,8 @@ def sphere_to_cam_coords(
     if batch_shape is None:
         batch_shape = sphere_coords.shape[:-1]
 
-    if dev_str is None:
-        dev_str = ivy.dev(sphere_coords)
+    if device is None:
+        device = ivy.dev(sphere_coords)
 
     # shapes as list
     batch_shape = list(batch_shape)
@@ -1541,7 +1541,7 @@ def calib_mat_to_intrinsics_object(calib_mat, image_dims, batch_shape=None):
 
 
 def ext_mat_and_intrinsics_to_cam_geometry_object(
-    ext_mat, intrinsics, batch_shape=None, dev_str=None
+    ext_mat, intrinsics, batch_shape=None, device=None
 ):
     r"""Create camera geometry object from extrinsic matrix
     :math:`\mathbf{E}\in\mathbb{R}^{3×4}`, and camera intrinsics
@@ -1555,7 +1555,7 @@ def ext_mat_and_intrinsics_to_cam_geometry_object(
         camera intrinsics object
     batch_shape
         Shape of batch. Inferred from inputs if None. (Default value = None)
-    dev_str
+    device
         device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
         Same as x if None. (Default value = None)
 
@@ -1568,8 +1568,8 @@ def ext_mat_and_intrinsics_to_cam_geometry_object(
     if batch_shape is None:
         batch_shape = ext_mat.shape[:-2]
 
-    if dev_str is None:
-        dev_str = ivy.dev(ext_mat)
+    if device is None:
+        device = ivy.dev(ext_mat)
 
     # shapes as list
     batch_shape = list(batch_shape)
@@ -1583,7 +1583,7 @@ def ext_mat_and_intrinsics_to_cam_geometry_object(
             ext_mat,
             ivy.tile(
                 ivy.reshape(
-                    ivy.array([0.0, 0.0, 0.0, 1.0], device=dev_str),
+                    ivy.array([0.0, 0.0, 0.0, 1.0], device=device),
                     [1] * (num_batch_dims + 1) + [4],
                 ),
                 batch_shape + [1, 1],
@@ -1619,7 +1619,7 @@ def ext_mat_and_intrinsics_to_cam_geometry_object(
             full_mat,
             ivy.tile(
                 ivy.reshape(
-                    ivy.array([0.0, 0.0, 0.0, 1.0], device=dev_str),
+                    ivy.array([0.0, 0.0, 0.0, 1.0], device=device),
                     [1] * (num_batch_dims + 1) + [4],
                 ),
                 batch_shape + [1, 1],
@@ -1639,7 +1639,7 @@ def ext_mat_and_intrinsics_to_cam_geometry_object(
 
 
 def inv_ext_mat_and_intrinsics_to_cam_geometry_object(
-    inv_ext_mat, intrinsics, batch_shape=None, dev_str=None
+    inv_ext_mat, intrinsics, batch_shape=None, device=None
 ):
     r"""Create camera geometry object from inverse extrinsic matrix
     :math:`\mathbf{E}^{-1}\in\mathbb{R}^{3×4}`, and camera
@@ -1653,7 +1653,7 @@ def inv_ext_mat_and_intrinsics_to_cam_geometry_object(
         camera intrinsics object
     batch_shape
         Shape of batch. Inferred from inputs if None. (Default value = None)
-    dev_str
+    device
         device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
         Same as x if None. (Default value = None)
 
@@ -1666,8 +1666,8 @@ def inv_ext_mat_and_intrinsics_to_cam_geometry_object(
     if batch_shape is None:
         batch_shape = inv_ext_mat.shape[:-2]
 
-    if dev_str is None:
-        dev_str = ivy.dev(inv_ext_mat)
+    if device is None:
+        device = ivy.dev(inv_ext_mat)
 
     # shapes as list
     batch_shape = list(batch_shape)
@@ -1681,7 +1681,7 @@ def inv_ext_mat_and_intrinsics_to_cam_geometry_object(
             inv_ext_mat,
             ivy.tile(
                 ivy.reshape(
-                    ivy.array([0.0, 0.0, 0.0, 1.0], device=dev_str),
+                    ivy.array([0.0, 0.0, 0.0, 1.0], device=device),
                     [1] * (num_batch_dims + 1) + [4],
                 ),
                 batch_shape + [1, 1],
@@ -1717,7 +1717,7 @@ def inv_ext_mat_and_intrinsics_to_cam_geometry_object(
             full_mat,
             ivy.tile(
                 ivy.reshape(
-                    ivy.array([0.0, 0.0, 0.0, 1.0], device=dev_str),
+                    ivy.array([0.0, 0.0, 0.0, 1.0], device=device),
                     [1] * (num_batch_dims + 1) + [4],
                 ),
                 batch_shape + [1, 1],

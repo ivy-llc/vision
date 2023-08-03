@@ -1,6 +1,5 @@
 # global
 import ivy
-import pytest
 import ivy.functional.backends.numpy as ivy_np
 import numpy as np
 
@@ -85,11 +84,7 @@ class VoxelGridsTestData(TestData):
 td = VoxelGridsTestData()
 
 
-def test_world_coords_to_bounding_voxel_grid(dev_str, fw):
-    if fw == "tensorflow_graph":
-        # the need to dynamically infer array shapes
-        # for scatter makes this only valid in eager mode currently
-        pytest.skip()
+def test_world_coords_to_bounding_voxel_grid(device, fw):
     assert np.allclose(
         np.sum(
             ivy_vg.coords_to_voxel_grid(
