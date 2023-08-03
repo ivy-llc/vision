@@ -59,13 +59,11 @@ class NerfDemo:
         compile_flag,
         interactive,
         device,
-        f,
         fw,
     ):
         # ivy
         fw = ivy.choose_random_backend() if fw is None else fw
         ivy.set_backend(fw)
-        f = ivy.get_backend(backend=fw) if f is None else f
 
         if device:
             ivy.set_default_device(device)
