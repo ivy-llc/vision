@@ -73,7 +73,7 @@ class TwoViewGeometryTestData(TestData):
 td = TwoViewGeometryTestData()
 
 
-def test_pixel_to_pixel_coords(dev_str, fw):
+def test_pixel_to_pixel_coords(device, fw):
     ivy.set_backend(fw)
     assert np.allclose(
         ivy_tvg.ds_pixel_to_ds_pixel_coords(
@@ -94,7 +94,7 @@ def test_pixel_to_pixel_coords(dev_str, fw):
     ivy.previous_backend()
 
 
-def test_angular_pixel_to_angular_pixel_coords(dev_str, fw):
+def test_angular_pixel_to_angular_pixel_coords(device, fw):
     ivy.set_backend(fw)
     assert np.allclose(
         ivy_tvg.angular_pixel_to_angular_pixel_coords(
@@ -117,7 +117,7 @@ def test_angular_pixel_to_angular_pixel_coords(dev_str, fw):
     ivy.previous_backend()
 
 
-def test_cam_to_cam_coords(dev_str, fw):
+def test_cam_to_cam_coords(device, fw):
     ivy.set_backend(fw)
     assert np.allclose(
         ivy_tvg.cam_to_cam_coords(
@@ -136,7 +136,7 @@ def test_cam_to_cam_coords(dev_str, fw):
     ivy.previous_backend()
 
 
-def test_sphere_to_sphere_coords(dev_str, fw):
+def test_sphere_to_sphere_coords(device, fw):
     ivy.set_backend(fw)
     assert np.allclose(
         ivy_tvg.sphere_to_sphere_coords(
@@ -155,7 +155,7 @@ def test_sphere_to_sphere_coords(dev_str, fw):
     ivy.previous_backend()
 
 
-def test_get_fundamental_matrix(dev_str, fw):
+def test_get_fundamental_matrix(device, fw):
     ivy.set_backend(fw)
     assert np.allclose(
         ivy_tvg.get_fundamental_matrix(
@@ -174,7 +174,7 @@ def test_get_fundamental_matrix(dev_str, fw):
     ivy.previous_backend()
 
 
-def test_closest_mutual_points_along_two_skew_rays(dev_str, fw):
+def test_closest_mutual_points_along_two_skew_rays(device, fw):
     ivy.set_backend(fw)
     closest_mutual_points = ivy_tvg.closest_mutual_points_along_two_skew_rays(
         ivy.array(td.C_hats), ivy.array(td.tvg_world_rays)
@@ -190,7 +190,7 @@ def test_closest_mutual_points_along_two_skew_rays(dev_str, fw):
     ivy.previous_backend()
 
 
-def test_triangulate_depth_by_closest_mutual_points(dev_str, fw):
+def test_triangulate_depth_by_closest_mutual_points(device, fw):
     ivy.set_backend(fw)
     assert np.allclose(
         ivy_tvg.triangulate_depth(
@@ -215,7 +215,7 @@ def test_triangulate_depth_by_closest_mutual_points(dev_str, fw):
     ivy.previous_backend()
 
 
-def test_triangulate_depth_by_homogeneous_dlt(dev_str, fw):
+def test_triangulate_depth_by_homogeneous_dlt(device, fw):
     ivy.set_backend(fw)
     assert np.allclose(
         ivy_tvg.triangulate_depth(

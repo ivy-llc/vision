@@ -58,7 +58,7 @@ def weighted_image_smooth(mean, weights, kernel_dim):
     return new_mean, new_weights
 
 
-def smooth_image_fom_var_image(mean, var, kernel_dim, kernel_scale, dev_str=None):
+def smooth_image_fom_var_image(mean, var, kernel_dim, kernel_scale, device=None):
     """Smooth an image using variance values from a variance image of the same size,
     and a spatial smoothing kernel.
 
@@ -73,7 +73,7 @@ def smooth_image_fom_var_image(mean, var, kernel_dim, kernel_scale, dev_str=None
         The dimension of the kernel
     kernel_scale
         The scale of the kernel along the channel dimension *[d]*
-    dev_str
+    device
         device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
         Same as x if None. (Default value = None)
 
@@ -83,8 +83,8 @@ def smooth_image_fom_var_image(mean, var, kernel_dim, kernel_scale, dev_str=None
         Image smoothed based on variance image and smoothing kernel.
 
     """
-    if dev_str is None:
-        dev_str = ivy.dev(mean)
+    if device is None:
+        device = ivy.dev(mean)
 
     # shapes as list
     kernel_shape = [kernel_dim, kernel_dim]
@@ -93,7 +93,7 @@ def smooth_image_fom_var_image(mean, var, kernel_dim, kernel_scale, dev_str=None
 
     # KH x KW x 2
     uniform_pixel_coords = ivy_svg.create_uniform_pixel_coords_image(
-        kernel_shape, dev_str=dev_str
+        kernel_shape, device=device
     )[..., 0:2]
 
     # 2
@@ -102,7 +102,7 @@ def smooth_image_fom_var_image(mean, var, kernel_dim, kernel_scale, dev_str=None
             float(math.floor(kernel_shape[0] / 2)),
             float(math.floor(kernel_shape[1] / 2)),
         ],
-        device=dev_str,
+        device=device,
     )
 
     # KH x KW x 2

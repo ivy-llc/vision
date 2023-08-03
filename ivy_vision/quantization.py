@@ -23,7 +23,7 @@ def quantize_to_image(
     var_threshold=(1e-3, 1e12),
     uniform_pixel_coords=None,
     batch_shape=None,
-    dev_str=None,
+    device=None,
 ):
     r"""Quantize pixel co-ordinates with d feature channels (for depth, rgb, normals
     etc.), from images :math:`\mathbf{X}\in\mathbb{R}^{input\_images\_shape×(2+d)}`,
@@ -64,7 +64,7 @@ def quantize_to_image(
         if None *[batch_shape,h,w,3]* (Default value = None)
     batch_shape
         Shape of batch. Assumed no batches if None. (Default value = None)
-    dev_str
+    device
         device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
         Same as x if None. (Default value = None)
 
@@ -83,14 +83,14 @@ def quantize_to_image(
     if batch_shape is None:
         batch_shape = pixel_coords.shape[:-2]
 
-    if dev_str is None:
-        dev_str = ivy.dev(pixel_coords)
+    if device is None:
+        device = ivy.dev(pixel_coords)
 
     if feat is None:
         d = 0
     else:
         d = feat.shape[-1]
-    min_depth_diff = ivy.array([MIN_DEPTH_DIFF], device=dev_str)
+    min_depth_diff = ivy.array([MIN_DEPTH_DIFF], device=device)
     red = "min" if with_db else "sum"
 
     # shapes as list
@@ -110,7 +110,7 @@ def quantize_to_image(
     # uniform pixel coords
     if uniform_pixel_coords is None:
         uniform_pixel_coords = ivy_svg.create_uniform_pixel_coords_image(
-            final_image_dims, batch_shape, dev_str=dev_str
+            final_image_dims, batch_shape, device=device
         )
     uniform_pixel_coords = uniform_pixel_coords[..., 0:2]
 
@@ -193,7 +193,7 @@ def quantize_to_image(
         return (
             ivy.concat((uniform_pixel_coords[..., 0:2], feat_prior), axis=-1),
             ivy.concat((pixel_coords_prior_var, feat_prior_var), axis=-1),
-            ivy.zeros_like(feat[..., 0:1], device=dev_str),
+            ivy.zeros_like(feat[..., 0:1], device=device),
         )
 
     # Depth Based Scaling #
@@ -221,8 +221,8 @@ def quantize_to_image(
 
         if d == 1:
             # BS x 1 x 1+D
-            pc_n_feat_wo_depth_min = ivy.zeros(batch_shape + [1, 0], device=dev_str)
-            pc_n_feat_wo_depth_range = ivy.ones(batch_shape + [1, 0], device=dev_str)
+            pc_n_feat_wo_depth_min = ivy.zeros(batch_shape + [1, 0], device=device)
+            pc_n_feat_wo_depth_range = ivy.ones(batch_shape + [1, 0], device=device)
 
         else:
             # feat without depth
@@ -306,7 +306,7 @@ def quantize_to_image(
     # Scatter #
 
     # num_valid_indices x 1
-    counter = ivy.ones_like(pc_n_feat[..., 0:1], device=dev_str)
+    counter = ivy.ones_like(pc_n_feat[..., 0:1], device=device)
     if with_db:
         counter *= -1
 

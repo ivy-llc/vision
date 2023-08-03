@@ -14,7 +14,7 @@ MIN_DENOMINATOR = 1e-12
 
 
 def ds_pixel_to_ds_pixel_coords(
-    ds_pixel_coords1, cam1to2_full_mat, batch_shape=None, image_shape=None, dev_str=None
+    ds_pixel_coords1, cam1to2_full_mat, batch_shape=None, image_shape=None, device=None
 ):
     r"""Transform depth scaled homogeneous pixel co-ordinates image in
     first camera frame
@@ -36,7 +36,7 @@ def ds_pixel_to_ds_pixel_coords(
         Shape of batch. Inferred from inputs if None. (Default value = None)
     image_shape
         Image shape. Inferred from inputs in None. (Default value = None)
-    dev_str
+    device
         device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
         Same as x if None. (Default value = None)
 
@@ -54,8 +54,8 @@ def ds_pixel_to_ds_pixel_coords(
     if image_shape is None:
         image_shape = ds_pixel_coords1.shape[num_batch_dims:-1]
 
-    if dev_str is None:
-        dev_str = ivy.dev(ds_pixel_coords1)
+    if device is None:
+        device = ivy.dev(ds_pixel_coords1)
 
     # shapes as list
     batch_shape = list(batch_shape)
@@ -71,7 +71,7 @@ def ds_pixel_to_ds_pixel_coords(
 
 
 def cam_to_cam_coords(
-    cam_coords1, cam1to2_ext_mat, batch_shape=None, image_shape=None, dev_str=None
+    cam_coords1, cam1to2_ext_mat, batch_shape=None, image_shape=None, device=None
 ):
     r"""Transform camera-centric homogeneous co-ordinates image for camera 1
     :math:`\mathbf{X}_{c1}\in\mathbb{R}^{is×4}` to
@@ -90,7 +90,7 @@ def cam_to_cam_coords(
         Shape of batch. Inferred from inputs if None. (Default value = None)
     image_shape
         Image shape. Inferred from inputs in None. (Default value = None)
-    dev_str
+    device
         device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
         Same as x if None. (Default value = None)
 
@@ -108,8 +108,8 @@ def cam_to_cam_coords(
     if image_shape is None:
         image_shape = cam_coords1.shape[num_batch_dims:-1]
 
-    if dev_str is None:
-        dev_str = ivy.dev(cam_coords1)
+    if device is None:
+        device = ivy.dev(cam_coords1)
 
     # shapes as list
     batch_shape = list(batch_shape)
@@ -238,7 +238,7 @@ def get_fundamental_matrix(
     camera_center1=None,
     pinv_full_mat1=None,
     batch_shape=None,
-    dev_str=None,
+    device=None,
 ):
     r"""Compute fundamental matrix
     :math:`\mathbf{F}\in\mathbb{R}^{3×3}` between two cameras,
@@ -262,7 +262,7 @@ def get_fundamental_matrix(
         *[batch_shape,4,3]* (Default value = None)
     batch_shape
         Shape of batch. Inferred from inputs if None. (Default value = None)
-    dev_str
+    device
         device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
         Same as x if None. (Default value = None)
 
@@ -275,15 +275,15 @@ def get_fundamental_matrix(
     if batch_shape is None:
         batch_shape = full_mat1.shape[:-2]
 
-    if dev_str is None:
-        dev_str = ivy.dev(full_mat1)
+    if device is None:
+        device = ivy.dev(full_mat1)
 
     # shapes as list
     batch_shape = list(batch_shape)
 
     if camera_center1 is None:
         inv_full_mat1 = ivy.inv(
-            ivy_mech.make_transformation_homogeneous(full_mat1, batch_shape, dev_str)
+            ivy_mech.make_transformation_homogeneous(full_mat1, batch_shape, device)
         )[..., 0:3, :]
         camera_center1 = ivy_svg.inv_ext_mat_to_camera_center(inv_full_mat1)
 
@@ -292,7 +292,7 @@ def get_fundamental_matrix(
 
     # BS x 4 x 1
     camera_center1_homo = ivy.concat(
-        (camera_center1, ivy.ones(batch_shape + [1, 1], device=dev_str)), axis=-2
+        (camera_center1, ivy.ones(batch_shape + [1, 1], device=device)), axis=-2
     )
 
     # BS x 3
@@ -307,7 +307,7 @@ def get_fundamental_matrix(
 
 # noinspection PyUnresolvedReferences
 def closest_mutual_points_along_two_skew_rays(
-    camera_centers, world_ray_vectors, batch_shape=None, image_shape=None, dev_str=None
+    camera_centers, world_ray_vectors, batch_shape=None, image_shape=None, device=None
 ):
     r"""Compute closest mutual homogeneous co-ordinates
     :math:`\mathbf{x}_{1,i,j}\in\mathbb{R}^{4}` and
@@ -335,7 +335,7 @@ def closest_mutual_points_along_two_skew_rays(
         Shape of batch. Inferred from inputs if None. (Default value = None)
     image_shape
         Image dimensions. Inferred from inputs in None. (Default value = None)
-    dev_str
+    device
         device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
         Same as x if None. (Default value = None)
 
@@ -353,8 +353,8 @@ def closest_mutual_points_along_two_skew_rays(
         image_shape = world_ray_vectors.shape[num_batch_dims + 1 : -1]
     num_image_dims = len(image_shape)
 
-    if dev_str is None:
-        dev_str = ivy.dev(camera_centers)
+    if device is None:
+        device = ivy.dev(camera_centers)
 
     # shapes as list
     batch_shape = list(batch_shape)

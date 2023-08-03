@@ -39,7 +39,7 @@ class PaddingTestData(TestData):
 td = PaddingTestData()
 
 
-def test_pad_omni_image(dev_str, fw):
+def test_pad_omni_image(device, fw):
     ivy.set_backend(fw)
     assert np.allclose(
         ivy_pad.pad_omni_image(ivy.array(td.omni_image), 1),

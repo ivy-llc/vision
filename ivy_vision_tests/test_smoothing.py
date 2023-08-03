@@ -44,7 +44,7 @@ class SmoothingTestData(TestData):
 td = SmoothingTestData()
 
 
-def test_weighted_image_smooth(dev_str, fw):
+def test_weighted_image_smooth(device, fw):
     if fw in ["numpy", "jax"]:
         # numpy and jax do not yet support depthwise 2d convolutions
         pytest.skip()
@@ -54,7 +54,7 @@ def test_weighted_image_smooth(dev_str, fw):
     assert np.allclose(mean_ret, td.smoothed_img_from_weights, atol=1e-6)
 
 
-def test_smooth_image_fom_var_image(dev_str, fw):
+def test_smooth_image_fom_var_image(device, fw):
     if fw in ["numpy", "jax"]:
         # numpy and jax do not yet support depthwise 2d convolutions
         pytest.skip()

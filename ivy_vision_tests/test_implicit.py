@@ -111,7 +111,7 @@ class ImplicitTestData(TestData):
 td = ImplicitTestData()
 
 
-def test_downsampled_image_dims_from_desired_num_pixels(dev_str, fw):
+def test_downsampled_image_dims_from_desired_num_pixels(device, fw):
     ivy.set_backend(fw)
     new_img_dims, num_pixels = ivy_imp.downsampled_image_dims_from_desired_num_pixels(
         [32, 32], 256
@@ -131,7 +131,7 @@ def test_downsampled_image_dims_from_desired_num_pixels(dev_str, fw):
     ivy.previous_backend()
 
 
-def test_create_sampled_pixel_coords_image(dev_str, fw):
+def test_create_sampled_pixel_coords_image(device, fw):
     if fw == "mxnet":
         # MXNet does not support clipping based on min or max specified as arrays
         pytest.skip()
@@ -175,7 +175,7 @@ def test_create_sampled_pixel_coords_image(dev_str, fw):
     ivy.previous_backend()
 
 
-def test_sample_images(dev_str, fw):
+def test_sample_images(device, fw):
     if fw == "mxnet":
         # MXNet does not support splitting based on
         # section sizes, only number of sections as integer input
@@ -193,7 +193,7 @@ def test_sample_images(dev_str, fw):
     ivy.previous_backend()
 
 
-def test_sampled_volume_density_to_occupancy_probability(dev_str, fw):
+def test_sampled_volume_density_to_occupancy_probability(device, fw):
     ivy.set_backend(fw)
     occ_prob = ivy_imp.sampled_volume_density_to_occupancy_probability(
         ivy.array(td.densities), ivy.array(td.inter_sample_distances)
@@ -203,7 +203,7 @@ def test_sampled_volume_density_to_occupancy_probability(dev_str, fw):
     ivy.previous_backend()
 
 
-def test_ray_termination_probabilities(dev_str, fw):
+def test_ray_termination_probabilities(device, fw):
     ivy.set_backend(fw)
     ray_term_probs = ivy_imp.ray_termination_probabilities(
         ivy.array(td.densities), ivy.array(td.inter_sample_distances)
@@ -213,7 +213,7 @@ def test_ray_termination_probabilities(dev_str, fw):
     ivy.previous_backend()
 
 
-def test_stratified_sample(dev_str, fw):
+def test_stratified_sample(device, fw):
     ivy.set_backend(fw)
     num = 10
     res = ivy_imp.stratified_sample(
@@ -226,7 +226,7 @@ def test_stratified_sample(dev_str, fw):
     ivy.previous_backend()
 
 
-def test_render_rays_via_termination_probabilities(dev_str, fw):
+def test_render_rays_via_termination_probabilities(device, fw):
     ivy.set_backend(fw)
     rendering, var = ivy_imp.render_rays_via_termination_probabilities(
         ivy.array(td.ray_term_probs), ivy.array(td.features), render_variance=True
@@ -240,9 +240,7 @@ def test_render_rays_via_termination_probabilities(dev_str, fw):
 
 @pytest.mark.parametrize("with_features", [True, False])
 @pytest.mark.parametrize("with_timestamps", [True, False])
-def test_render_implicit_features_and_depth(
-    dev_str, fw, with_features, with_timestamps
-):
+def test_render_implicit_features_and_depth(device, fw, with_features, with_timestamps):
     if fw == "mxnet":
         # MXNet does not support splitting with remainder
         pytest.skip()

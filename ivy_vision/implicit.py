@@ -52,7 +52,7 @@ def create_sampled_pixel_coords_image(
     normalized=False,
     randomize=True,
     homogeneous=False,
-    dev_str=None,
+    device=None,
 ):
     r"""Create image of randomly sampled homogeneous integer :math:`xy` pixel
     co-ordinates :math:`\mathbf{X}\in\mathbb{Z}^{h×w×3}`, stored as floating point
@@ -81,7 +81,7 @@ def create_sampled_pixel_coords_image(
     homogeneous
         Whether the pixel co-ordinates should be 3D homogeneous or just 2D.
         Default is True.
-    dev_str
+    device
         device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
         (Default value = None)
 
@@ -93,7 +93,7 @@ def create_sampled_pixel_coords_image(
     """
     # BS x DH x DW x 2
     low_res_pix_coords = ivy_svg.create_uniform_pixel_coords_image(
-        samples_per_dim, batch_shape, homogeneous=False, dev_str=dev_str
+        samples_per_dim, batch_shape, homogeneous=False, device=device
     )
 
     # 2
@@ -106,7 +106,7 @@ def create_sampled_pixel_coords_image(
                 ]
             )
         ),
-        device=dev_str,
+        device=device,
     )
 
     # BS x DH x DW x 2
@@ -118,13 +118,13 @@ def create_sampled_pixel_coords_image(
             low=ivy.to_scalar(-window_size[0] / 2),
             high=ivy.to_scalar(window_size[0] / 2),
             shape=list(downsam_pix_coords.shape[:-1]) + [1],
-            device=dev_str,
+            device=device,
         )
         rand_y = ivy.random_uniform(
             low=ivy.to_scalar(-window_size[1] / 2),
             high=ivy.to_scalar(window_size[1] / 2),
             shape=list(downsam_pix_coords.shape[:-1]) + [1],
-            device=dev_str,
+            device=device,
         )
 
         # BS x DH x DW x 2
@@ -132,13 +132,13 @@ def create_sampled_pixel_coords_image(
         downsam_pix_coords += rand_offsets
     downsam_pix_coords = ivy.clip(
         ivy.round(downsam_pix_coords),
-        ivy.array([0.0] * 2, device=dev_str),
-        ivy.array(list(reversed(image_dims)), dtype="float32", device=dev_str) - 1,
+        ivy.array([0.0] * 2, device=device),
+        ivy.array(list(reversed(image_dims)), dtype="float32", device=device) - 1,
     )
 
     if normalized:
         downsam_pix_coords /= (
-            ivy.array([image_dims[1], image_dims[0]], dtype="float32", device=dev_str)
+            ivy.array([image_dims[1], image_dims[0]], dtype="float32", device=device)
             + MIN_DENOMINATOR
         )
 
@@ -152,7 +152,7 @@ def create_sampled_pixel_coords_image(
     return downsam_pix_coords
 
 
-def sample_images(list_of_images, num_pixels, batch_shape, image_dims, dev_str=None):
+def sample_images(list_of_images, num_pixels, batch_shape, image_dims, device=None):
     """Samples each image in a list of aligned images at num_pixels random pixel
     co-ordinates, within a unifrom grid over the image.
 
@@ -166,7 +166,7 @@ def sample_images(list_of_images, num_pixels, batch_shape, image_dims, dev_str=N
         Shape of batch. Inferred from inputs if None.
     image_dims
         Image dimensions. Inferred from inputs in None.
-    dev_str
+    device
         device on which to create the array 'cuda:0', 'cuda:1', 'cpu' etc.
         Same as images if None. (Default value = None)
 
@@ -177,8 +177,8 @@ def sample_images(list_of_images, num_pixels, batch_shape, image_dims, dev_str=N
     if image_dims is None:
         image_dims = list_of_images[0].shape[-3:-1]
 
-    if dev_str is None:
-        dev_str = ivy.dev(list_of_images[0])
+    if device is None:
+        device = ivy.dev(list_of_images[0])
 
     image_channels = [img.shape[-1] for img in list_of_images]
 
@@ -194,7 +194,7 @@ def sample_images(list_of_images, num_pixels, batch_shape, image_dims, dev_str=N
     # BS x DH x DW x 2
     sampled_pix_coords = ivy.astype(
         create_sampled_pixel_coords_image(
-            image_dims, new_img_dims, batch_shape, homogeneous=False, dev_str=dev_str
+            image_dims, new_img_dims, batch_shape, homogeneous=False, device=device
         ),
         "int32",
     )
@@ -209,8 +209,8 @@ def sample_images(list_of_images, num_pixels, batch_shape, image_dims, dev_str=N
         ivy.permute_dims(
             ivy.astype(
                 ivy.linspace(
-                    ivy.zeros(new_img_dims, device=dev_str),
-                    ivy.ones(new_img_dims, device=dev_str) * (flat_batch_size - 1),
+                    ivy.zeros(new_img_dims, device=device),
+                    ivy.ones(new_img_dims, device=device) * (flat_batch_size - 1),
                     flat_batch_size,
                     axis=-1,
                 ),

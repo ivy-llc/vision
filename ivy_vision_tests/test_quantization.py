@@ -162,7 +162,7 @@
 #         self.validity_mask = self.quantized_counter > 0
 
 
-# def test_quantize_pixel_coords(dev_str, fw):
+# def test_quantize_pixel_coords(device, fw):
 #     td = QuantizationTestData()
 #     mean, var, counter = ivy_quant.quantize_to_image(
 #         td.pixel_coords_to_scatter,
@@ -176,7 +176,7 @@
 #     assert np.allclose(var[..., 2:], td.quantized_cov_values, atol=1e-3)
 
 
-# def test_quantize_pixel_coordinates_with_var(dev_str, fw):
+# def test_quantize_pixel_coordinates_with_var(device, fw):
 #     td = QuantizationTestData()
 #     mean, var, counter = ivy_quant.quantize_to_image(
 #         td.pixel_coords_to_scatter,
@@ -195,7 +195,7 @@
 # td.quantized_cov_values_from_cov, atol=1.5, rtol=1)
 
 
-# def test_quantize_pixel_coords_with_var_db(dev_str, fw):
+# def test_quantize_pixel_coords_with_var_db(device, fw):
 #     td = QuantizationTestData()
 #     mean, var, counter = ivy_quant.quantize_to_image(
 #         td.pixel_coords_to_scatter,

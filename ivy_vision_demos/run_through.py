@@ -325,7 +325,7 @@ def show_forward_warped_images(dep1, col1, f1_f_warp_no_db, f1_f_warp_w_db, dep_
     plt.show()
 
 
-def main(interactive=True, f=None, fw=None):
+def main(interactive=True, fw=None):
     global INTERACTIVE
     INTERACTIVE = interactive
 
@@ -335,7 +335,6 @@ def main(interactive=True, f=None, fw=None):
     # choose random framework
     fw = ivy.choose_random_backend() if fw is None else fw
     ivy.set_backend(fw)
-    f = ivy.get_backend(backend=fw) if f is None else f
 
     # Camera Geometry #
     # ----------------#
@@ -558,5 +557,4 @@ if __name__ == "__main__":
     )
     parsed_args = parser.parse_args()
     fw = parsed_args.backend
-    f = None if fw is None else ivy.get_backend(backend=fw)
-    main(not parsed_args.non_interactive, f=f, fw=fw)
+    main(not parsed_args.non_interactive, fw=fw)

@@ -73,7 +73,7 @@ class OpticalFlowTestData(TestData):
 td = OpticalFlowTestData()
 
 
-def test_depth_from_flow_and_cam_poses(dev_str, fw):
+def test_depth_from_flow_and_cam_poses(device, fw):
     assert np.allclose(
         ivy_flow.depth_from_flow_and_cam_mats(
             ivy.array(td.optical_flow), ivy.array(td.full_mats)
@@ -90,7 +90,7 @@ def test_depth_from_flow_and_cam_poses(dev_str, fw):
     )
 
 
-def test_flow_from_depth_and_cam_poses(dev_str, fw):
+def test_flow_from_depth_and_cam_poses(device, fw):
     assert np.allclose(
         ivy_flow.flow_from_depth_and_cam_mats(
             ivy.array(td.pixel_coords_to_scatter[:, 0:1]),
@@ -109,7 +109,7 @@ def test_flow_from_depth_and_cam_poses(dev_str, fw):
     )
 
 
-def test_project_flow_to_epipolar_line(dev_str, fw):
+def test_project_flow_to_epipolar_line(device, fw):
     assert np.allclose(
         ivy_flow.project_flow_to_epipolar_line(
             ivy.array(td.optical_flow), ivy.array(td.fund_mats[0])
@@ -126,7 +126,7 @@ def test_project_flow_to_epipolar_line(dev_str, fw):
     )
 
 
-def test_pixel_cost_volume(dev_str, fw):
+def test_pixel_cost_volume(device, fw):
     assert np.allclose(
         ivy_flow.pixel_cost_volume(
             ivy.array(td.cv_image1.copy()), ivy.array(td.cv_image2.copy()), 1
@@ -143,7 +143,7 @@ def test_pixel_cost_volume(dev_str, fw):
     )
 
 
-def test_velocity_from_flow_cam_coords_and_cam_mats(dev_str, fw):
+def test_velocity_from_flow_cam_coords_and_cam_mats(device, fw):
     assert ivy_flow.velocity_from_flow_cam_coords_and_cam_mats(
         ivy.array(td.optical_flow),
         ivy.array(td.cam_coords[:, 0]),
@@ -153,7 +153,7 @@ def test_velocity_from_flow_cam_coords_and_cam_mats(dev_str, fw):
     )
 
 
-def test_project_cam_coords_with_object_transformations(dev_str, fw):
+def test_project_cam_coords_with_object_transformations(device, fw):
     # test data
     np.random.seed(0)
     cam_coords_t = np.array(
@@ -204,7 +204,7 @@ def test_project_cam_coords_with_object_transformations(dev_str, fw):
     )
 
 
-def test_velocity_from_cam_coords_id_image_and_object_trans(dev_str, fw):
+def test_velocity_from_cam_coords_id_image_and_object_trans(device, fw):
     # test data
     np.random.seed(0)
     cam_coords_t = np.array(
@@ -251,7 +251,7 @@ def test_velocity_from_cam_coords_id_image_and_object_trans(dev_str, fw):
     )
 
 
-def test_flow_from_cam_coords_id_image_and_object_trans(dev_str, fw):
+def test_flow_from_cam_coords_id_image_and_object_trans(device, fw):
     # test data
     np.random.seed(0)
     cam_coords_1 = np.array(

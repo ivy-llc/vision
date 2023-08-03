@@ -21,7 +21,7 @@ class ProjectiveGeometryTestData(TestData):
 td = ProjectiveGeometryTestData()
 
 
-def test_transform(dev_str, fw):
+def test_transform(device, fw):
     ivy.set_backend(fw)
     assert np.allclose(
         ivy_pg.transform(ivy.array(td.world_coords), ivy.array(td.ext_mats)),
@@ -36,7 +36,7 @@ def test_transform(dev_str, fw):
     ivy.previous_backend()
 
 
-def test_projection_matrix_pseudo_inverse(dev_str, fw):
+def test_projection_matrix_pseudo_inverse(device, fw):
     ivy.set_backend(fw)
     assert np.allclose(
         ivy_pg.projection_matrix_pseudo_inverse(ivy.array(td.ext_mats)),
@@ -51,7 +51,7 @@ def test_projection_matrix_pseudo_inverse(dev_str, fw):
     ivy.previous_backend()
 
 
-def test_projection_matrix_inverse(dev_str, fw):
+def test_projection_matrix_inverse(device, fw):
     ivy.set_backend(fw)
     assert np.allclose(
         ivy_pg.projection_matrix_inverse(ivy.array(td.ext_mats)),
@@ -66,7 +66,7 @@ def test_projection_matrix_inverse(dev_str, fw):
     ivy.previous_backend()
 
 
-def test_solve_homogeneous_dlt(dev_str, fw):
+def test_solve_homogeneous_dlt(device, fw):
     ivy.set_backend(fw)
     assert np.allclose(ivy_pg.solve_homogeneous_dlt(ivy.array(td.A)), td.X, atol=1e-6)
     assert np.allclose(
