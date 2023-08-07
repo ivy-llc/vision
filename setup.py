@@ -113,18 +113,18 @@ long_description = "\n".join(lines)
 
 setup(
     name="ivy-vision",
-    version="1.1.9",
-    author="Ivy Team",
-    author_email="ivydl.team@gmail.com",
+    version="0.0.0.dev0",
+    author="Unify",
+    author_email="hello@unify.ai",
     description=(
         "3D Vision functions with end-to-end support for "
         "machine learning developers, written in Ivy."
     ),
     long_description=long_description,
     long_description_content_type="text/x-rst",
-    url="https://lets-unify.ai/vision",
+    url="https://unify.ai/docs/vision",
     project_urls={
-        "Docs": "https://lets-unify.ai/vision/",
+        "Docs": "https://unify.ai/docs/vision/",
         "Source": "https://github.com/unifyai/vision",
     },
     packages=setuptools.find_packages(),
