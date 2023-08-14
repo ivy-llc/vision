@@ -83,7 +83,7 @@ cd ~/ivy_vision/ivy_vision_demos
 At the end of the demo, a video nerf_video.mp4 is created of renderings from unseen camera poses around a sphere.
 
 <p align="center">
-    <img width="50%" style="display: block;" src='https://github.com/unifyai/unifyai.github.io/blob/master/img/externally_linked/ivy_vision/nerf_demo.gif?raw=true'>
+    <img width="50%" style="display: block;" src='https://github.com/unifyai/unifyai.github.io/blob/main/img/externally_linked/ivy_vision/nerf_demo.gif?raw=true'>
 </p>
 
 ### Co-ordinates to Voxel Grid
@@ -100,7 +100,7 @@ cd ~/ivy_vision/ivy_vision_demos
 Example output from the simulator, and Open3D renderings, are given below:
 
 <p align="center">
-    <img width="75%" style="display: block;" src='https://github.com/unifyai/unifyai.github.io/blob/master/img/externally_linked/ivy_vision/voxel_grid_demo.gif?raw=true'>
+    <img width="75%" style="display: block;" src='https://github.com/unifyai/unifyai.github.io/blob/main/img/externally_linked/ivy_vision/voxel_grid_demo.gif?raw=true'>
 </p>
 
 ### Point Rendering
@@ -116,7 +116,7 @@ cd ~/ivy_vision/ivy_vision_demos
 Example output from the simulator, and the forward warp point renderings, are given below:
 
 <p align="center">
-    <img width="75%" style="display: block;" src='https://github.com/unifyai/unifyai.github.io/blob/master/img/externally_linked/ivy_vision/point_render_demo.gif?raw=true'>
+    <img width="75%" style="display: block;" src='https://github.com/unifyai/unifyai.github.io/blob/main/img/externally_linked/ivy_vision/point_render_demo.gif?raw=true'>
 </p>
 
 ## Get Involved
