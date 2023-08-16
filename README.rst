@@ -194,7 +194,7 @@ neural memory, pre-trained models + implementations, and builder tools with trai
 
 **Quick Start**
 
-Ivy vision can be installed like so: ``pip install ivy-vision``
+Ivy vision can be installed like so: ``pip install ivy-vision==0.0.1.post0``
 
 .. _demos: https://github.com/unifyai/vision/tree/main/ivy_vision_demos
 .. _interactive: https://github.com/unifyai/vision/tree/main/ivy_vision_demos/interactive
