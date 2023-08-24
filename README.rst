@@ -58,7 +58,7 @@ Contents
 Overview
 --------
 
-.. _docs: https://lets-unify.ai/vision
+.. _docs: https://unify.ai/docs/vision/
 
 **What is Ivy Vision?**
 
