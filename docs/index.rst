@@ -1,3 +1,5 @@
+.. title:: Ivy Vision
+
 .. include:: ../README.rst
 
 .. autosummary::
